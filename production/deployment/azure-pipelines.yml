@@ -1,0 +1,243 @@
+# Azure DevOps パイプライン定義 - ITマネジメントシステム
+
+trigger:
+  branches:
+    include:
+    - main
+    - release/*
+
+variables:
+  # 環境変数
+  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+  appVersion: '1.0.0.$(Build.BuildId)'
+  
+  # リソース設定
+  azureSubscription: 'Production-Subscription'
+  resourceGroup: 'rg-it-management-prod'
+  
+  # コンテナレジストリ設定
+  containerRegistry: 'itmanagementacr'
+  frontendImageRepo: 'it-management-frontend'
+  backendImageRepo: 'it-management-backend'
+  
+  # デプロイ設定
+  frontendAppName: 'it-management-web'
+  backendAppName: 'it-management-api'
+  stagingSlot: 'staging'
+
+stages:
+- stage: Build
+  displayName: 'ビルドステージ'
+  jobs:
+  - job: BuildFrontend
+    displayName: 'フロントエンドビルド'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Node.jsのインストール'
+    
+    - script: |
+        cd frontend
+        npm install
+      displayName: '依存関係のインストール'
+    
+    - script: |
+        cd frontend
+        npm run lint
+      displayName: 'Lintチェック'
+    
+    - script: |
+        cd frontend
+        npm run test
+      displayName: 'ユニットテスト実行'
+    
+    - script: |
+        cd frontend
+        npm run build:prod
+      displayName: '本番用ビルド'
+    
+    - task: Docker@2
+      displayName: 'Dockerイメージのビルドとプッシュ'
+      inputs:
+        containerRegistry: '$(containerRegistry)'
+        repository: '$(frontendImageRepo)'
+        command: 'buildAndPush'
+        Dockerfile: 'frontend/Dockerfile'
+        buildContext: 'frontend'
+        tags: |
+          $(appVersion)
+          latest
+  
+  - job: BuildBackend
+    displayName: 'バックエンドビルド'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.9'
+      displayName: 'Pythonのインストール'
+    
+    - script: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pylint pytest
+      displayName: '依存関係のインストール'
+    
+    - script: |
+        cd backend
+        pylint --disable=C0111,C0103 *.py models/*.py
+      displayName: 'Lintチェック'
+    
+    - script: |
+        cd backend
+        pytest
+      displayName: 'ユニットテスト実行'
+    
+    - task: Docker@2
+      displayName: 'Dockerイメージのビルドとプッシュ'
+      inputs:
+        containerRegistry: '$(containerRegistry)'
+        repository: '$(backendImageRepo)'
+        command: 'buildAndPush'
+        Dockerfile: 'backend/Dockerfile'
+        buildContext: 'backend'
+        tags: |
+          $(appVersion)
+          latest
+
+- stage: DeployToStaging
+  displayName: 'ステージング環境へのデプロイ'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeployFrontend
+    displayName: 'フロントエンドデプロイ'
+    environment: 'staging'
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebAppContainer@1
+            displayName: 'フロントエンドのデプロイ'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              appName: '$(frontendAppName)'
+              slotName: '$(stagingSlot)'
+              containers: '$(containerRegistry)/$(frontendImageRepo):$(appVersion)'
+              appSettings: |
+                -WEBSITES_PORT=80
+                -NODE_ENV=production
+
+  - deployment: DeployBackend
+    displayName: 'バックエンドデプロイ'
+    environment: 'staging'
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebAppContainer@1
+            displayName: 'バックエンドのデプロイ'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              appName: '$(backendAppName)'
+              slotName: '$(stagingSlot)'
+              containers: '$(containerRegistry)/$(backendImageRepo):$(appVersion)'
+              appSettings: |
+                -WEBSITES_PORT=5000
+                -ENVIRONMENT=staging
+
+- stage: Test
+  displayName: '統合テスト'
+  dependsOn: DeployToStaging
+  condition: succeeded()
+  jobs:
+  - job: IntegrationTests
+    displayName: '統合テスト実行'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        cd tests
+        npm install
+        npm run integration-tests -- --base-url https://staging.it-management.example.com
+      displayName: '統合テスト実行'
+
+  - job: SecurityTests
+    displayName: 'セキュリティテスト'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        docker run --rm -v $(pwd)/security-reports:/zap/reports owasp/zap2docker-stable zap-baseline.py -t https://staging.it-management.example.com -r security-report.html
+      displayName: 'OWASP ZAPスキャン'
+    
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'security-reports'
+        artifactName: 'security-scan-results'
+      displayName: 'セキュリティスキャン結果の公開'
+
+- stage: DeployToProduction
+  displayName: '本番環境へのデプロイ'
+  dependsOn: Test
+  condition: and(succeeded(), eq(variables.isMain, true))
+  jobs:
+  - deployment: DeployFrontend
+    displayName: 'フロントエンドデプロイ'
+    environment: 'production'
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebAppContainer@1
+            displayName: 'フロントエンドのデプロイ'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              appName: '$(frontendAppName)'
+              containers: '$(containerRegistry)/$(frontendImageRepo):$(appVersion)'
+              appSettings: |
+                -WEBSITES_PORT=80
+                -NODE_ENV=production
+
+  - deployment: DeployBackend
+    displayName: 'バックエンドデプロイ'
+    environment: 'production'
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebAppContainer@1
+            displayName: 'バックエンドのデプロイ'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              appName: '$(backendAppName)'
+              containers: '$(containerRegistry)/$(backendImageRepo):$(appVersion)'
+              appSettings: |
+                -WEBSITES_PORT=5000
+                -ENVIRONMENT=production
+
+  - job: SmokeTests
+    dependsOn: 
+      - DeployFrontend
+      - DeployBackend
+    displayName: 'スモークテスト'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        curl -f https://it-management.example.com/health
+        curl -f https://api.it-management.example.com/health
+      displayName: 'ヘルスチェック'
