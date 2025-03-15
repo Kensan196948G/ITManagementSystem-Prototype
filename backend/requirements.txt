@@ -1,0 +1,14 @@
+flask==2.0.1
+flask-sqlalchemy==2.5.1
+flask-cors==3.0.10
+flask-jwt-extended==4.3.1
+python-dotenv==0.19.1
+gunicorn==20.1.0
+pytest==6.2.5
+pyjwt==2.1.0
+requests==2.26.0
+pyodbc==4.0.32
+azure-identity>=1.12.0
+azure-mgmt-resource==21.0.0
+msgraph-core>=1.0.0a2
+msgraph-sdk==1.0.0a13
