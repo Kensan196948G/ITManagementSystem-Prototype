@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   DocumentChartBarIcon, 
   ArrowPathIcon,
@@ -7,8 +7,11 @@ import {
   PresentationChartLineIcon,
   ClockIcon,
   ChartBarIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  EnvelopeIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
+import { useAuth } from '../contexts/AuthContext';
 
 // レポートカードコンポーネント
 const ReportCard = ({ title, description, category, date, icon: Icon, onClick }) => {
@@ -255,6 +258,110 @@ const ReportDetailModal = ({ report, onClose, onExportPDF }) => {
 };
 
 const Reports = () => {
+  const { generateReport, currentUser } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [generationSuccess, setGenerationSuccess] = useState(false);
+  const [selectedReportType, setSelectedReportType] = useState('system_overview');
+  const [selectedPeriod, setSelectedPeriod] = useState('today');
+  const [emailNotification, setEmailNotification] = useState(true);
+  
+  // 生成成功メッセージをリセット
+  useEffect(() => {
+    let timer;
+    if (generationSuccess) {
+      timer = setTimeout(() => {
+        setGenerationSuccess(false);
+      }, 5000);
+    }
+    return () => clearTimeout(timer);
+  }, [generationSuccess]);
+
+  // レポート即時生成処理
+  const handleGenerateReport = async () => {
+    setLoading(true);
+    try {
+      const reportData = await generateReport(selectedReportType, selectedPeriod);
+      console.log('レポート生成結果:', reportData);
+      
+      if (reportData) {
+        // 新しいレポートを追加
+        const newReport = {
+          id: `RPT-${new Date().getTime()}`,
+          title: `${getReportTypeName(selectedReportType)} - ${getReportPeriodName(selectedPeriod)}`,
+          description: `${getReportTypeName(selectedReportType)}の${getReportPeriodName(selectedPeriod)}レポートです`,
+          category: getReportCategory(selectedReportType),
+          date: new Date().toLocaleDateString('ja-JP'),
+          icon: getReportIcon(selectedReportType)
+        };
+        
+        // レポートデータに追加
+        setReportsData(prev => [newReport, ...prev]);
+        setGenerationSuccess(true);
+        
+        // メール通知がオンの場合
+        if (emailNotification) {
+          // メール送信をシミュレート
+          console.log(`メール送信: ${currentUser?.email} 宛に "${newReport.title}" を送信しました`);
+        }
+      }
+    } catch (err) {
+      console.error('レポート生成エラー:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // レポートタイプ名の取得
+  const getReportTypeName = (type) => {
+    const types = {
+      system_overview: 'システム概要',
+      incident_summary: 'インシデント概要',
+      user_activity: 'ユーザーアクティビティ',
+      security_events: 'セキュリティイベント',
+      performance_metrics: 'パフォーマンス指標',
+      user_login_status: 'ユーザーログイン状況'
+    };
+    return types[type] || type;
+  };
+  
+  // レポート期間名の取得
+  const getReportPeriodName = (period) => {
+    const periods = {
+      today: '今日',
+      yesterday: '昨日',
+      last7days: '過去7日間',
+      last30days: '過去30日間',
+      thismonth: '今月',
+      lastmonth: '先月'
+    };
+    return periods[period] || period;
+  };
+  
+  // レポートカテゴリの取得
+  const getReportCategory = (type) => {
+    const categories = {
+      system_overview: 'システム稼働状況',
+      incident_summary: 'インシデント',
+      user_activity: 'ユーザー分析',
+      security_events: 'セキュリティ分析',
+      performance_metrics: 'パフォーマンス',
+      user_login_status: 'ユーザー管理'
+    };
+    return categories[type] || 'その他';
+  };
+  
+  // レポートアイコンの取得
+  const getReportIcon = (type) => {
+    const icons = {
+      system_overview: PresentationChartLineIcon,
+      incident_summary: ClockIcon,
+      user_activity: ChartBarIcon,
+      security_events: ShieldCheckIcon,
+      performance_metrics: DocumentChartBarIcon
+    };
+    return icons[type] || DocumentTextIcon;
+  };
+  
   // PDFダウンロード関数
   const exportToPDF = (report) => {
     if (!report) return;
@@ -313,7 +420,13 @@ ITマネジメントシステム
     </svg>
   );
 
-  const reportsData = [
+
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [dateFilter, setDateFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+
+  // レポートデータ状態
+  const [reportsData, setReportsData] = useState([
     {
       id: 'RPT-2025-0001',
       title: 'システム稼働状況月次レポート',
@@ -361,15 +474,27 @@ ITマネジメントシステム
       category: 'インシデント',
       date: '2025/03/10',
       icon: ClockIcon
+    },
+    {
+      id: 'RPT-2025-0007',
+      title: 'システム稼働状況日次レポート',
+      description: '全システムの可用性、パフォーマンス、インシデント対応状況の日次サマリー',
+      category: 'システム稼働状況',
+      date: '2025/03/16',
+      icon: PresentationChartLineIcon
+    },
+    {
+      id: 'RPT-2025-0008',
+      title: 'セキュリティイベント日次分析',
+      description: '検出されたセキュリティイベントの分析と対応状況の日次レポート',
+      category: 'セキュリティ分析',
+      date: '2025/03/16',
+      icon: ShieldCheckIcon
     }
-  ];
-
-  const [selectedReport, setSelectedReport] = useState(null);
-  const [dateFilter, setDateFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  ]);
 
   // 日付の一覧を取得（フィルター用）
-  const dates = [...new Set(reportsData.map(report => report.date))];
+  const dates = [...new Set(reportsData.map(report => report.date))].sort((a, b) => new Date(b) - new Date(a));
   
   // カテゴリの一覧を取得（フィルター用）
   const categories = [...new Set(reportsData.map(report => report.category))];
@@ -387,53 +512,156 @@ ITマネジメントシステム
         <h1 className="text-2xl font-bold text-secondary-900">レポート</h1>
         <div className="flex items-center text-primary-600">
           <ArrowPathIcon className="h-5 w-5 mr-2" />
-          <span className="text-sm">最終更新: 2025/03/13 18:25</span>
+          <span className="text-sm">最終更新: {new Date().toLocaleString('ja-JP', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit'
+          })}</span>
         </div>
       </div>
 
-      {/* フィルターエリア */}
-      <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-        <div className="flex items-center space-x-2">
-          <CalendarIcon className="h-5 w-5 text-secondary-500" />
-          <select
-            className="form-input w-full sm:w-auto"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-          >
-            <option value="all">すべての日付</option>
-            {dates.map(date => (
-              <option key={date} value={date}>{date}</option>
-            ))}
-          </select>
+      {/* 即時レポート生成エリア */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-secondary-200">
+        <h2 className="text-lg font-medium text-secondary-900 mb-4">即時レポート生成</h2>
+        <p className="text-sm text-secondary-600 mb-4">
+          選択したタイプと期間のレポートを即時生成し、ブラウザに表示します。必要に応じてダウンロードや配信も可能です。
+        </p>
+        
+        {generationSuccess && (
+          <div className="bg-success-50 border border-success-200 text-success-800 px-4 py-3 rounded mb-4 flex items-center">
+            <CheckCircleIcon className="h-5 w-5 mr-2" />
+            <span>レポートが正常に生成されました！レポート一覧に追加されました。</span>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-secondary-700 mb-1">レポートタイプ</label>
+            <select 
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              value={selectedReportType}
+              onChange={(e) => setSelectedReportType(e.target.value)}
+              disabled={loading}
+            >
+              <option value="system_overview">システム概要</option>
+              <option value="incident_summary">インシデント概要</option>
+              <option value="user_activity">ユーザーアクティビティ</option>
+              <option value="security_events">セキュリティイベント</option>
+              <option value="performance_metrics">パフォーマンス指標</option>
+              <option value="user_login_status">ユーザーログイン状況</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-secondary-700 mb-1">期間</label>
+            <select 
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              disabled={loading}
+            >
+              <option value="today">今日</option>
+              <option value="yesterday">昨日</option>
+              <option value="last7days">過去7日間</option>
+              <option value="last30days">過去30日間</option>
+              <option value="thismonth">今月</option>
+              <option value="lastmonth">先月</option>
+            </select>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <DocumentChartBarIcon className="h-5 w-5 text-secondary-500" />
-          <select
-            className="form-input w-full sm:w-auto"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            <option value="all">すべてのカテゴリー</option>
-            {categories.map(category => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* レポート一覧 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredReports.map(report => (
-          <ReportCard
-            key={report.id}
-            title={report.title}
-            description={report.description}
-            category={report.category}
-            date={report.date}
-            icon={report.icon}
-            onClick={() => setSelectedReport(report)}
+        
+        <div className="flex items-center mb-4">
+          <input 
+            id="email_notification" 
+            type="checkbox" 
+            className="h-4 w-4 rounded text-primary-600 border-secondary-300"
+            checked={emailNotification}
+            onChange={(e) => setEmailNotification(e.target.checked)}
+            disabled={loading}
           />
-        ))}
+          <label htmlFor="email_notification" className="ml-2 text-sm text-secondary-700">
+            レポートをメールでも受け取る ({currentUser?.email || 'メールアドレス'})
+          </label>
+        </div>
+        
+        <div className="flex justify-end">
+          <button
+            className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleGenerateReport}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>生成中...</span>
+              </>
+            ) : (
+              <>
+                <PresentationChartLineIcon className="h-5 w-5 mr-2" />
+                <span>レポート生成</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* フィルターと過去レポート一覧 */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-secondary-200">
+        <h2 className="text-lg font-medium text-secondary-900 mb-4">レポート一覧</h2>
+        
+        {/* フィルターエリア */}
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-6">
+          <div className="flex items-center space-x-2">
+            <CalendarIcon className="h-5 w-5 text-secondary-500" />
+            <select
+              className="form-input w-full sm:w-auto"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            >
+              <option value="all">すべての日付</option>
+              {dates.map(date => (
+                <option key={date} value={date}>{date}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <DocumentChartBarIcon className="h-5 w-5 text-secondary-500" />
+            <select
+              className="form-input w-full sm:w-auto"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+            >
+              <option value="all">すべてのカテゴリー</option>
+              {categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* レポート一覧 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredReports.map(report => (
+            <ReportCard
+              key={report.id}
+              title={report.title}
+              description={report.description}
+              category={report.category}
+              date={report.date}
+              icon={report.icon}
+              onClick={() => setSelectedReport(report)}
+            />
+          ))}
+        </div>
+        
+        {filteredReports.length === 0 && (
+          <div className="text-center py-8 text-secondary-500">
+            <DocumentTextIcon className="h-12 w-12 mx-auto text-secondary-300" />
+            <p className="mt-2">検索条件に一致するレポートがありません</p>
+          </div>
+        )}
       </div>
 
       {/* レポート詳細モーダル */}

@@ -9,8 +9,6 @@ import Layout from './components/layout/Layout';
 // ページコンポーネント
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
-import MicrosoftAuth from './pages/MicrosoftAuth';
-import MicrosoftCallback from './pages/MicrosoftCallback';
 import SystemMonitoring from './pages/SystemMonitoring';
 import IncidentManagement from './pages/IncidentManagement';
 import SecurityEvents from './pages/SecurityEvents';
@@ -48,8 +46,7 @@ function AppRoutes() {
     if (DEV_MODE) {
       // 開発モードでローカルストレージをチェック
       const token = localStorage.getItem('token');
-      const msUserInfo = localStorage.getItem('msUserInfo');
-      console.log("認証状態チェック:", { token, msUserInfo, isAuthenticated, currentUser });
+      console.log("認証状態チェック:", { token, isAuthenticated, currentUser });
     }
   }, [isAuthenticated, currentUser]);
   
@@ -62,11 +59,6 @@ function AppRoutes() {
       
       {/* ログインページは常に表示する - 内部でログアウト処理を行う */}
       <Route path="/login" element={<Login />} />
-      <Route path="/microsoft-auth" element={<MicrosoftAuth />} />
-      <Route path="/microsoft-callback" element={<MicrosoftCallback />} />
-      {/* Microsoft認証のリダイレクトURIに合わせたルート */}
-      <Route path="/auth/callback" element={<MicrosoftCallback />} />
-      <Route path="/auth/microsoft/callback" element={<MicrosoftCallback />} />
       
       {/* 認証が必要なルート */}
       <Route path="/" element={

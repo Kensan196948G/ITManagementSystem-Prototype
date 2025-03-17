@@ -104,7 +104,6 @@ const Settings = () => {
     accountLockTime: '30',
     mfaPolicy: 'all',
     mfaMethods: {
-      authenticator: true,
       sms: true,
       email: true,
       fido2: false
@@ -112,10 +111,27 @@ const Settings = () => {
     riskBasedAuth: false
   });
   
+  // レポート設定の状態
+  const [reportSettings, setReportSettings] = useState({
+    enableDailyReports: false,
+    enableWeeklyReports: true,
+    enableMonthlyReports: true,
+    emailReports: true,
+    reportSubscription: true
+  });
+  
   // 言語オプション
   const languageOptions = [
     { value: 'ja', label: '日本語' },
     { value: 'en', label: '英語' }
+  ];
+  
+  // レポート配信頻度オプション
+  const reportFrequencyOptions = [
+    { value: 'daily', label: '日次' },
+    { value: 'weekly', label: '週次' },
+    { value: 'monthly', label: '月次' },
+    { value: 'all', label: 'すべて' }
   ];
   
   // タイムゾーンオプション
@@ -165,6 +181,15 @@ const Settings = () => {
     { value: 'all', label: '全ユーザー必須' },
     { value: 'risk', label: '条件付き (リスクベース)' }
   ];
+  
+  // レポート種類オプション
+  const reportTypeOptions = [
+    { value: 'system_overview', label: 'システム概要' },
+    { value: 'incident_summary', label: 'インシデント概要' },
+    { value: 'user_activity', label: 'ユーザーアクティビティ' },
+    { value: 'security_events', label: 'セキュリティイベント' },
+    { value: 'performance_metrics', label: 'パフォーマンス指標' }
+  ];
 
   // 設定変更ハンドラー
   const handleSettingChange = (key, value) => {
@@ -190,6 +215,14 @@ const Settings = () => {
         ...prev.mfaMethods,
         [method]: value
       }
+    }));
+  };
+  
+  // レポート設定変更ハンドラー
+  const handleReportSettingChange = (key, value) => {
+    setReportSettings(prev => ({
+      ...prev,
+      [key]: value
     }));
   };
 
@@ -256,6 +289,12 @@ const Settings = () => {
             label="セキュリティ" 
             active={activeTab === 'security'} 
             onClick={() => setActiveTab('security')} 
+          />
+          <SettingsTab 
+            icon={ArrowPathIcon} 
+            label="レポート設定" 
+            active={activeTab === 'reports'} 
+            onClick={() => setActiveTab('reports')} 
           />
         </div>
 
@@ -649,15 +688,6 @@ const Settings = () => {
                         <input 
                           type="checkbox" 
                           className="h-4 w-4 rounded text-primary-600 border-secondary-300"
-                          checked={securitySettings.mfaMethods.authenticator}
-                          onChange={(e) => handleMfaMethodChange('authenticator', e.target.checked)}
-                        />
-                        <span className="ml-2">Microsoft Authenticatorアプリ</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          className="h-4 w-4 rounded text-primary-600 border-secondary-300"
                           checked={securitySettings.mfaMethods.sms}
                           onChange={(e) => handleMfaMethodChange('sms', e.target.checked)}
                         />
@@ -683,6 +713,115 @@ const Settings = () => {
                       </label>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* レポート設定 */}
+          {activeTab === 'reports' && (
+            <div className="space-y-6">
+              <SectionHeader title="レポート設定" />
+              
+              <div className="bg-white p-6 rounded-lg border border-secondary-200">
+                <h3 className="text-lg font-medium text-secondary-900 mb-4">レポート生成設定</h3>
+                
+                <div className="space-y-4">
+                  <SettingToggle 
+                    label="日次レポート" 
+                    description="毎日のシステム状態とアクティビティのレポートを生成" 
+                    enabled={reportSettings.enableDailyReports} 
+                    onChange={(value) => handleReportSettingChange('enableDailyReports', value)} 
+                  />
+                  
+                  <SettingToggle 
+                    label="週次レポート" 
+                    description="週間のシステム状態とアクティビティの詳細分析レポート（毎週月曜日に生成）" 
+                    enabled={reportSettings.enableWeeklyReports} 
+                    onChange={(value) => handleReportSettingChange('enableWeeklyReports', value)} 
+                  />
+                  
+                  <SettingToggle 
+                    label="月次レポート" 
+                    description="月間のシステム状態とパフォーマンス指標の詳細レポート（毎月1日に生成）" 
+                    enabled={reportSettings.enableMonthlyReports} 
+                    onChange={(value) => handleReportSettingChange('enableMonthlyReports', value)} 
+                  />
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg border border-secondary-200">
+                <h3 className="text-lg font-medium text-secondary-900 mb-4">レポート配信設定</h3>
+                
+                <div className="space-y-4">
+                  <SettingToggle 
+                    label="レポートをメールで受け取る" 
+                    description="有効化したレポートをメールで自動配信します" 
+                    enabled={reportSettings.emailReports} 
+                    onChange={(value) => handleReportSettingChange('emailReports', value)} 
+                  />
+                  
+                  <SettingToggle 
+                    label="レポート配信に登録する" 
+                    description="自分自身をレポート配信リストに登録します" 
+                    enabled={reportSettings.reportSubscription} 
+                    onChange={(value) => handleReportSettingChange('reportSubscription', value)} 
+                  />
+                  
+                  <div className="py-4 border-b border-secondary-200">
+                    <p className="font-medium text-secondary-900">生成するレポートの種類</p>
+                    <p className="text-sm text-secondary-500 mt-1">配信するレポートの種類を選択</p>
+                    
+                    <div className="mt-3 space-y-2">
+                      {reportTypeOptions.map(option => (
+                        <label key={option.value} className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            className="h-4 w-4 rounded text-primary-600 border-secondary-300"
+                            defaultChecked={option.value === 'system_overview' || option.value === 'incident_summary'}
+                          />
+                          <span className="ml-2">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg border border-secondary-200">
+                <h3 className="text-lg font-medium text-secondary-900 mb-4">即時レポート生成</h3>
+                <p className="text-sm text-secondary-600 mb-4">
+                  即時でレポートを生成してブラウザに表示します。必要に応じてダウンロードや印刷も可能です。
+                </p>
+                
+                <div className="mt-4 flex space-x-4">
+                  <div className="w-64">
+                    <label className="block text-sm font-medium text-secondary-700 mb-1">レポートタイプ</label>
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                      {reportTypeOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="w-64">
+                    <label className="block text-sm font-medium text-secondary-700 mb-1">期間</label>
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                      <option value="today">今日</option>
+                      <option value="yesterday">昨日</option>
+                      <option value="last7days">過去7日間</option>
+                      <option value="last30days">過去30日間</option>
+                      <option value="thismonth">今月</option>
+                      <option value="lastmonth">先月</option>
+                      <option value="custom">カスタム範囲</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <button className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700">
+                    レポート生成
+                  </button>
                 </div>
               </div>
             </div>

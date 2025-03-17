@@ -56,34 +56,7 @@ export const AuthProvider = ({ children }) => {
       // 開発モードフラグ - バックエンドが動作しない環境でのテスト用
       const DEV_MODE = true;
       
-      // 開発モードで、かつMSユーザー情報がある場合はモックデータを設定
-      const msUserInfo = localStorage.getItem('msUserInfo');
-      if (DEV_MODE && msUserInfo) {
-        try {
-          const userInfo = JSON.parse(msUserInfo);
-          
-          // Microsoft ADユーザーのモックデータを作成
-          const mockMsUser = {
-            id: 'ms-dev-user',
-            first_name: userInfo.displayName?.split(' ')[0] || '太郎',
-            last_name: userInfo.displayName?.split(' ')[1] || '山田',
-            email: userInfo.userPrincipalName || 'dev@example.com',
-            role: USER_ROLES.GENERAL_USER,
-            department: '開発部門',
-            permissions: ['read', 'write', 'api_access'],
-            microsoftInfo: userInfo
-          };
-          
-          console.log('開発モード: Microsoftユーザー情報をセット', mockMsUser);
-          setCurrentUser(mockMsUser);
-          setLoading(false);
-          return;
-        } catch (err) {
-          console.error('開発モードユーザー設定エラー:', err);
-        }
-      }
-      
-      // 通常の認証チェック（開発モードでない場合、またはMSユーザー情報がない場合）
+      // 通常の認証チェック
       const token = localStorage.getItem('token');
       const userRole = localStorage.getItem('userRole');
       
@@ -92,22 +65,6 @@ export const AuthProvider = ({ children }) => {
           if (MOCK_USERS[userRole]) {
             // モックユーザーデータをセット
             setCurrentUser(MOCK_USERS[userRole]);
-          } else if (userRole === 'msuser') {
-            // MSユーザーだが詳細情報がない場合
-            const mockMsUser = {
-              id: 'ms-user-default',
-              first_name: '太郎',
-              last_name: '山田',
-              email: 'taro.yamada@example.com',
-              role: USER_ROLES.GENERAL_USER,
-              permissions: ['read', 'write'],
-              microsoftInfo: {
-                displayName: '山田 太郎',
-                userPrincipalName: 'taro.yamada@example.com',
-                accountType: 'Microsoft Entra ID'
-              }
-            };
-            setCurrentUser(mockMsUser);
           }
         } catch (err) {
           console.error('認証エラー:', err);
@@ -124,12 +81,7 @@ export const AuthProvider = ({ children }) => {
           email: 'dev@example.com',
           role: USER_ROLES.GENERAL_USER,
           department: '開発部門',
-          permissions: ['read', 'write', 'api_access'],
-          microsoftInfo: {
-            displayName: '開発 ユーザー',
-            userPrincipalName: 'dev@example.com',
-            accountType: 'Development'
-          }
+          permissions: ['read', 'write', 'api_access']
         };
         console.log('開発モード: デフォルトユーザーを設定', defaultUser);
         setCurrentUser(defaultUser);
@@ -142,107 +94,56 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  // Microsoft認証処理関数
-  const loginWithMicrosoft = async (msUserData) => {
+  // レポート購読設定関数
+  const subscribeToReports = async (reportTypes = [], frequency = 'weekly') => {
+    try {
+      setError(null);
+      
+      // APIコールをシミュレート
+      console.log(`レポート購読設定: タイプ=${reportTypes.join(',')}, 頻度=${frequency}`);
+      
+      // 成功メッセージをコンソールに表示
+      console.log('レポート購読設定が保存されました');
+      return true;
+    } catch (err) {
+      console.error('レポート購読エラー:', err);
+      setError('レポート購読設定の保存に失敗しました。');
+      return false;
+    }
+  };
+
+  // レポート生成関数
+  const generateReport = async (reportType, period, format = 'html') => {
     try {
       setError(null);
       setLoading(true);
       
-      // Microsoft Graph API からのレスポンスを扱う場合
-      if (msUserData && msUserData.account) {
-        console.log('Microsoft認証成功 - 実際のユーザーデータ:', msUserData);
-        
-        // Microsoft ADからのユーザー情報を処理
-        const msUser = {
-          id: msUserData.account.homeAccountId || 'ms-user',
-          first_name: msUserData.account.name ? msUserData.account.name.split(' ')[0] : '名前なし',
-          last_name: msUserData.account.name ? msUserData.account.name.split(' ')[1] || '' : '',
-          email: msUserData.account.username || 'unknown@example.com',
-          // MSユーザーのロールは固定または別途APIから取得する
-          role: USER_ROLES.GENERAL_USER,
-          department: msUserData.account.department || '未設定',
-          permissions: ['read', 'write'],
-          avatar: null,
-          // Microsoft独自の情報を保存
-          microsoftInfo: {
-            displayName: msUserData.account.name || 'Microsoft User',
-            userPrincipalName: msUserData.account.username,
-            tenantId: msUserData.account.homeAccountId?.split('.')[1] || '',
-            accountType: msUserData.account.environment || 'Azure AD',
-            // その他のMicrosoft固有情報
-          }
-        };
-        
-        // トークン保存
-        const token = msUserData.accessToken || ('ms-token-' + Math.random().toString(36).substring(2));
-        localStorage.setItem('token', token);
-        localStorage.setItem('userRole', 'msuser');  // Microsoftユーザーのマーカー
-        localStorage.setItem('msUserInfo', JSON.stringify({
-          displayName: msUser.microsoftInfo.displayName,
-          userPrincipalName: msUser.microsoftInfo.userPrincipalName,
-          accountType: msUser.microsoftInfo.accountType
-        }));
-        
-        setCurrentUser(msUser);
-        setLoading(false);
-        return true;
-      } else {
-        console.log('Microsoft認証をモックモードで実行中...');
-        
-        // モック認証: Microsoft認証情報がない場合
-        await new Promise(resolve => setTimeout(resolve, 1000)); // 1秒遅延で認証を模擬
-        
-        // Microsoft ADユーザーを模擬
-        // ログイン時のメールアドレスから名前生成（実際の環境ではGraph APIから取得）
-        const loginEmail = 'microsoft.login@contoso.com'; // 実際の環境では認証時に使用したメールアドレス
-        const nameParts = loginEmail.split('@')[0].split('.');
-        const firstName = nameParts.length > 1 ? nameParts[1] : nameParts[0];
-        const lastName = nameParts.length > 1 ? nameParts[0] : '';
-        
-        // メールアドレスから推測したフルネーム（姓名）
-        const fullName = lastName && firstName 
-          ? `${lastName} ${firstName}` 
-          : firstName;
-          
-        const mockMsUser = {
-          id: 'ms-user-123',
-          first_name: firstName,
-          last_name: lastName,
-          email: loginEmail,
-          role: USER_ROLES.GENERAL_USER,
-          department: '自動取得部署',
-          permissions: ['read', 'write'],
-          avatar: null,
-          // Microsoft独自の情報
-          microsoftInfo: {
-            // 実際のMicrosoft Entra IDから取得される情報（ここではメールからの推測）
-            displayName: fullName,      // 表示名（Microsoft Graph APIのdisplayName）
-            userPrincipalName: loginEmail, // UPN（ログインに使用されたメールアドレス）
-            tenantId: 'a7232f7a-a9e5-4f71-9372-dc8b1c6645ea',
-            accountType: 'Microsoft Entra ID',
-          }
-        };
-        
-        const token = 'mock-ms-token-' + Math.random().toString(36).substring(2);
-        localStorage.setItem('token', token);
-        localStorage.setItem('userRole', 'msuser');
-        localStorage.setItem('msUserInfo', JSON.stringify({
-          displayName: mockMsUser.microsoftInfo.displayName,
-          userPrincipalName: mockMsUser.microsoftInfo.userPrincipalName,
-          accountType: mockMsUser.microsoftInfo.accountType
-        }));
-        
-        setCurrentUser(mockMsUser);
-        setLoading(false);
-        
-        console.log('Microsoft認証成功（モックモード）');
-        return true;
-      }
-    } catch (err) {
-      console.error('Microsoft認証エラー:', err);
-      setError('Microsoft認証に失敗しました。再度お試しください。');
+      // APIコールをシミュレート
+      console.log(`レポート生成: タイプ=${reportType}, 期間=${period}, 形式=${format}`);
+      
+      // 非同期操作をシミュレート
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // レポートデータのモック作成
+      const reportData = {
+        type: reportType,
+        period: period,
+        generatedAt: new Date().toISOString(),
+        data: {
+          title: `${reportType}レポート (${period})`,
+          summary: 'これはシミュレートされたレポートデータです。',
+          url: `/reports/${reportType}_${period}.${format}`
+        }
+      };
+      
+      console.log('レポート生成完了:', reportData);
       setLoading(false);
-      return false;
+      return reportData;
+    } catch (err) {
+      console.error('レポート生成エラー:', err);
+      setError('レポート生成中にエラーが発生しました。');
+      setLoading(false);
+      return null;
     }
   };
 
@@ -316,11 +217,12 @@ export const AuthProvider = ({ children }) => {
     loading,
     error,
     login,
-    loginWithMicrosoft,
     logout,
     hasPermission,
     isAuthenticated: !!currentUser,
-    USER_ROLES // ロール定数をエクスポート
+    USER_ROLES, // ロール定数をエクスポート
+    subscribeToReports, // レポート購読設定
+    generateReport // レポート生成
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

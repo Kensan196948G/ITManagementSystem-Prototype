@@ -2,18 +2,18 @@
 
 ## 1. 事前準備
 ### 1.1 環境要件確認
-- [ ] Azureサブスクリプションの有効性確認
+- [ ] サーバー環境の要件確認
 - [ ] ドメイン名の取得（例：it-management.example.com）
 - [ ] 本番用SSL証明書の準備（Let's Encrypt推奨）
 - [ ] ファイアウォール設定の見直し
+- [ ] メール送信サーバーの設定（レポート配信用）
 
 ### 1.2 設定ファイルの更新
 ```env
 # .env.production
 REACT_APP_API_BASE_URL=https://api.it-management.example.com
-REACT_APP_MS_CLIENT_ID=本番用クライアントID
-REACT_APP_MS_AUTHORITY=https://login.microsoftonline.com/テナントID
-REACT_APP_REDIRECT_URI=https://it-management.example.com/auth/callback
+REACT_APP_SMTP_SERVER=smtp.example.com
+REACT_APP_REPORT_SENDER=reports@example.com
 ```
 
 ## 2. インフラストラクチャ設定
@@ -25,7 +25,8 @@ graph TD
     C --> D[フロントエンドサーバー]
     C --> E[バックエンドサーバー]
     E --> F[データベース]
-    E --> G[Azure Active Directory]
+    E --> G[メールサーバー]
+    G --> H[ユーザーメールボックス]
 ```
 
 ### 2.2 サーバー要件
@@ -33,7 +34,8 @@ graph TD
 |---------|------|
 | フロントエンド | 2vCPU / 4GB RAM |
 | バックエンド | 4vCPU / 8GB RAM |
-| データベース | Azure SQL Standard Tier |
+| データベース | SQL Standard Tier |
+| レポート生成サーバー | 4vCPU / 8GB RAM |
 
 ## 3. 移行手順
 ### 3.1 データベース移行
@@ -56,21 +58,41 @@ cd ../backend
 gunicorn --workers 4 --bind 0.0.0.0:5000 main:app
 ```
 
-## 4. 認証設定の移行
-1. Azureポータルで新しいアプリ登録を作成
-2. 本番環境用のリダイレクトURIを追加：
-   - `https://it-management.example.com/auth/callback`
-3. APIアクセス許可の更新：
-   - Microsoft Graph > User.Read.All
-   - Azure Key Vault > Secret.Read
+## 4. レポート機能の設定
+1. レポート生成スケジューラの設定:
+   ```bash
+   # crontabの設定
+   30 1 * * * /path/to/scripts/generate-daily-reports.sh  # 日次レポート(毎日1:30に実行)
+   0 2 * * 1 /path/to/scripts/generate-weekly-reports.sh  # 週次レポート(毎週月曜2:00に実行)
+   0 3 1 * * /path/to/scripts/generate-monthly-reports.sh # 月次レポート(毎月1日3:00に実行)
+   ```
+
+2. メール配信設定:
+   ```yaml
+   # mail-config.yml
+   smtp_server: smtp.example.com
+   port: 587
+   use_tls: true
+   sender: reports@example.com
+   reply_to: no-reply@example.com
+   subject_prefix: "[ITマネジメントシステム]"
+   ```
+
+3. レポートストレージの設定:
+   - 生成されたレポートの保存先ディレクトリの作成
+   - アクセス権限の設定
+   - 自動クリーンアップポリシーの設定（古いレポートの削除）
 
 ## 5. 検証手順
 ```bash
 # ヘルスチェック
 curl -I https://api.it-management.example.com/health
 
-# 認証フローテスト
-open https://it-management.example.com/login
+# レポート生成機能テスト
+curl -X POST https://api.it-management.example.com/api/reports/generate \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -d '{"type":"system_overview","period":"today"}'
 ```
 
 ## 6. モニタリング設定
@@ -79,7 +101,7 @@ open https://it-management.example.com/login
 - job_name: 'it_management'
   metrics_path: '/metrics'
   static_configs:
-    - targets: ['backend:5000', 'frontend:3000']
+    - targets: ['backend:5000', 'frontend:3000', 'report-generator:5001']
 ```
 
 ## 7. ロールバック手順
@@ -96,3 +118,6 @@ docker pull registry.example.com/it-management:previous
 - [ ] ログローテーション設定
 - [ ] 自動バックアップ設定
 - [ ] アラート通知設定（Slack/Teams連携）
+- [ ] レポート生成スケジューラの動作確認
+- [ ] メール配信機能のテスト
+- [ ] レポートデータの保持期間設定の確認
