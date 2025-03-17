@@ -10,9 +10,9 @@ const MicrosoftAuth = () => {
 
   // Microsoft認証設定
   const msAuthConfig = {
-    clientId: process.env.REACT_APP_MS_CLIENT_ID || '12345678-1234-1234-1234-123456789012', // 環境変数から取得、またはテスト用の代替ID
-    redirectUri: 'https://localhost:5000/auth/callback', // Azure portalで設定されたリダイレクトURIに合わせる
-    authority: `https://login.microsoftonline.com/${process.env.REACT_APP_MS_TENANT_ID || 'common'}`, // テナントIDを使用
+    clientId: process.env.REACT_APP_MS_CLIENT_ID,
+    redirectUri: process.env.REACT_APP_REDIRECT_URI,
+    authority: process.env.REACT_APP_MS_AUTHORITY,
     scopes: ['openid', 'profile', 'email', 'User.Read']
   };
 
@@ -28,19 +28,10 @@ const MicrosoftAuth = () => {
         authUrl.searchParams.append('scope', msAuthConfig.scopes.join(' '));
         authUrl.searchParams.append('response_mode', 'query');
         authUrl.searchParams.append('state', btoa(JSON.stringify({ timestamp: new Date().getTime() })));
-        
-        // 開発モードではログインをシミュレート
-        console.log('Microsoft認証URL:', authUrl.toString());
-        
-        // 開発用: 認証成功をシミュレート
-        const success = await loginWithMicrosoft();
-        
-        if (success) {
-          navigate('/dashboard');
-        } else {
-          setError('認証に失敗しました。もう一度お試しください。');
-          setLoading(false);
-        }
+
+        // 本番環境では実際の認証フローを実行
+        window.location.href = authUrl.toString();
+
       } catch (err) {
         console.error('認証エラー:', err);
         setError('認証処理中にエラーが発生しました。もう一度お試しください。');
