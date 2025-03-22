@@ -10,16 +10,9 @@ ITマネジメントシステムの本番環境（社内オンプレミス）へ
 - Node.js 16.x以上
 - Python 3.9以上
 
-## SSL証明書の設定
+## HTTP設定
 
-### 1. 自己署名証明書の生成
-
-```powershell
-# 証明書生成スクリプト実行
-.\production\scripts\Generate-SelfSignedCertificate.ps1 -Domain "it-management.local" -IPAddress "<サーバー内部IP>"
-```
-
-### 2. フロントエンドのデプロイ
+### 1. フロントエンドのデプロイ
 
 ```powershell
 # フロントエンドアプリケーションのビルド
@@ -54,8 +47,7 @@ Start-Service -Name "ITManagementAPI"
 ```
 
 ## ネットワーク設定
-- アクセスURL: `https://<サーバー内部IP>:5000`
-- SSL証明書: 自己署名証明書（下記PowerShellスクリプトで生成）
+- アクセスURL: `http://<サーバー内部IP>:5000`
 - ファイアウォール設定: 5000ポートを開放
 - ホストファイル設定例:
   ```
@@ -64,11 +56,11 @@ Start-Service -Name "ITManagementAPI"
 
 ## Apache Webサーバー設定
 
-### 1. Apacheインストール
+### 1. Apacheインストール（HTTPモード）
 
 ```powershell
 # Chocolateyを使用したApacheインストール
-choco install apache-httpd -y
+choco install apache-httpd -y --params "'/noSSL'"
 
 # Apache設定ディレクトリ
 $apacheConfDir = "C:\tools\Apache24\conf"
@@ -84,39 +76,30 @@ $certFile = "C:\certs\it-management.local.crt"
 $keyFile = "C:\certs\it-management.local.key"
 ```
 
-### 2. HTTPS設定
+### 2. HTTP基本設定
 
 ```powershell
-# SSLモジュール有効化確認
+# メイン設定ファイルの確認
 $httpdConfPath = Join-Path -Path $apacheConfDir -ChildPath "httpd.conf"
-$sslModuleLine = 'LoadModule ssl_module modules/mod_ssl.so'
+$baseConfig = @"
+Listen 5000
+ServerName it-management.local
+DocumentRoot "C:/ITManagementSystem/wwwroot"
+"@
 
-if (-not (Select-String -Path $httpdConfPath -Pattern $sslModuleLine -SimpleMatch -Quiet)) {
-    Add-Content -Path $httpdConfPath -Value "`n# Enable SSL Module`n$sslModuleLine"
-}
+Add-Content -Path $httpdConfPath -Value "`n$baseConfig"
 
-# SSL設定ファイル読み込み確認
-$sslConfInclude = 'Include conf/extra/httpd-ssl.conf'
-if (-not (Select-String -Path $httpdConfPath -Pattern $sslConfInclude -SimpleMatch -Quiet)) {
-    Add-Content -Path $httpdConfPath -Value "`n# Include SSL Configuration`n$sslConfInclude"
-}
-```
-
-### 3. バーチャルホスト設定
+### 3. バーチャルホスト設定（HTTP）
 
 ```powershell
 # 仮想ホスト設定ファイル作成
 $virtualHostConf = Join-Path -Path $apacheSitesDir -ChildPath "it-management.conf"
 @"
-<VirtualHost *:443>
+<VirtualHost *:5000>
     ServerName it-management.local
     DocumentRoot "C:/ITManagementSystem/wwwroot"
     ErrorLog "logs/it-management-error.log"
     CustomLog "logs/it-management-access.log" common
-
-    SSLEngine on
-    SSLCertificateFile "$certFile"
-    SSLCertificateKeyFile "$keyFile"
 
     <Directory "C:/ITManagementSystem/wwwroot">
         Options Indexes FollowSymLinks
@@ -179,11 +162,8 @@ if (-not (Test-Path -Path $nginxSitesDir)) {
 $nginxConfFile = Join-Path -Path $nginxSitesDir -ChildPath "it-management.conf"
 @"
 server {
-    listen 443 ssl;
+    listen 80;
     server_name it-management.local;
-    
-    ssl_certificate C:/certs/it-management.local.crt;
-    ssl_certificate_key C:/certs/it-management.local.key;
     
     root C:/ITManagementSystem/wwwroot;
     index index.html;
@@ -219,8 +199,8 @@ if ($httpBlock -and -not ($httpBlock.Context.PostContext -join "`n" -match [rege
 ## ファイアウォール設定
 
 ```powershell
-# HTTPSポート開放
-New-NetFirewallRule -DisplayName "IT Management HTTPS" -Direction Inbound -Protocol TCP -LocalPort 443 -Action Allow
+# HTTPポート開放
+New-NetFirewallRule -DisplayName "IT Management HTTP" -Direction Inbound -Protocol TCP -LocalPort 5000 -Action Allow
 
 # APIポート開放
 New-NetFirewallRule -DisplayName "IT Management API" -Direction Inbound -Protocol TCP -LocalPort 5000 -Action Allow
@@ -233,7 +213,7 @@ New-NetFirewallRule -DisplayName "IT Management API" -Direction Inbound -Protoco
 ### フロントエンドの検証
 ```powershell
 # ヘルスチェック
-Invoke-WebRequest -Uri "https://it-management.local" -SkipCertificateCheck
+Invoke-WebRequest -Uri "http://it-management.local"
 
 # 管理者権限でホストファイル設定確認
 $internalIP = "<サーバー内部IP>"
@@ -250,13 +230,13 @@ if (-not (Get-Content -Path $hostsPath | Where-Object { $_ -match $hostsEntry })
 ### バックエンドの検証
 ```powershell
 # APIヘルスチェック
-Invoke-WebRequest -Uri "https://localhost:5000/health" -SkipCertificateCheck
+Invoke-WebRequest -Uri "http://localhost:5000/health"
 
 # 認証テスト
 $headers = @{
     "Authorization" = "Bearer $env:TEST_TOKEN"
 }
-Invoke-WebRequest -Uri "https://localhost:5000/api/v1/self" -Headers $headers -SkipCertificateCheck
+Invoke-WebRequest -Uri "http://localhost:5000/api/v1/self" -Headers $headers
 ```
 
 ## デプロイ自動化
