@@ -64,14 +64,6 @@ try {
         New-Item -ItemType Directory -Path $backendDir -Force | Out-Null
     }
     
-    # 証明書の生成
-    Log-Message "自己署名証明書を生成しています..."
-    $domain = "it-management.local"
-    $certOutputPath = Join-Path -Path $InstallPath -ChildPath "certs"
-    New-Item -ItemType Directory -Path $certOutputPath -Force | Out-Null
-    
-    # 証明書生成スクリプトを実行
-    .\Generate-SelfSignedCertificate.ps1 -Domain $domain -OutputPath $certOutputPath
     
     # 実行中のサービスがあれば停止
     Log-Message "既存サービスを停止しています..."
@@ -167,18 +159,6 @@ try {
     $httpdConfPath = Join-Path -Path $apacheConfDir -ChildPath "httpd.conf"
     Log-Message "Apache設定ファイルを更新しています..."
     
-    # SSLモジュール有効化確認
-    $sslModuleLine = 'LoadModule ssl_module modules/mod_ssl.so'
-    if (-not (Select-String -Path $httpdConfPath -Pattern $sslModuleLine -SimpleMatch -Quiet)) {
-        Add-Content -Path $httpdConfPath -Value "`n# Enable SSL Module`n$sslModuleLine"
-    }
-    
-    # SSL設定ファイル読み込み確認
-    $sslConfInclude = 'Include conf/extra/httpd-ssl.conf'
-    if (-not (Select-String -Path $httpdConfPath -Pattern $sslConfInclude -SimpleMatch -Quiet)) {
-        Add-Content -Path $httpdConfPath -Value "`n# Include SSL Configuration`n$sslConfInclude"
-    }
-    
     # プロキシモジュールの有効化
     $proxyModules = @(
         'LoadModule proxy_module modules/mod_proxy.so',
@@ -197,15 +177,11 @@ try {
     Log-Message "Apache仮想ホスト設定を作成しています: $virtualHostConf"
     
     @"
-<VirtualHost *:443>
+<VirtualHost *:80>
     ServerName $domain
     DocumentRoot "$iisDir"
     ErrorLog "logs/$domain-error.log"
     CustomLog "logs/$domain-access.log" common
-
-    SSLEngine on
-    SSLCertificateFile "$certFile"
-    SSLCertificateKeyFile "$keyFile"
 
     <Directory "$iisDir">
         Options Indexes FollowSymLinks
@@ -253,11 +229,10 @@ python "$backendDir\main.py"
     
     # ファイアウォール設定
     Log-Message "ファイアウォール設定を構成しています..."
-    New-NetFirewallRule -DisplayName "IT Management HTTPS" -Direction Inbound -Protocol TCP -LocalPort 443 -Action Allow -ErrorAction SilentlyContinue
-    New-NetFirewallRule -DisplayName "IT Management API" -Direction Inbound -Protocol TCP -LocalPort 5000 -Action Allow -ErrorAction SilentlyContinue
+    New-NetFirewallRule -DisplayName "IT Management HTTP" -Direction Inbound -Protocol TCP -LocalPort 5000 -Action Allow -ErrorAction SilentlyContinue
     
     Log-Message "デプロイ成功！"
-    Log-Message "アクセスURL: https://$domain"
+    Log-Message "アクセスURL: http://$domain:5000"
     Log-Message "クライアントPCからアクセスするには、ホストファイルに以下を追加してください:"
     Log-Message "<サーバー内部IP> $domain"
     

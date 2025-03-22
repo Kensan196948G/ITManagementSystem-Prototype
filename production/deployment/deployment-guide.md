@@ -24,7 +24,7 @@ npm run build:prod
 Copy-Item -Path .\build\* -Destination "C:\inetpub\wwwroot\it-management\" -Recurse -Force
 ```
 
-### 3. バックエンドのデプロイ
+### 2. バックエンドのデプロイ
 
 ```powershell
 # バックエンドAPI準備
@@ -36,7 +36,7 @@ New-Service -Name "ITManagementAPI" -BinaryPathName "python.exe C:\path\to\backe
 Start-Service -Name "ITManagementAPI"
 ```
 
-### 4. 環境変数の設定
+### 3. 環境変数の設定
 
 ```powershell
 # システム環境変数の設定
@@ -56,11 +56,11 @@ Start-Service -Name "ITManagementAPI"
 
 ## Apache Webサーバー設定
 
-### 1. Apacheインストール（HTTPモード）
+### 1. Apacheインストール
 
 ```powershell
 # Chocolateyを使用したApacheインストール
-choco install apache-httpd -y --params "'/noSSL'"
+choco install apache-httpd -y
 
 # Apache設定ディレクトリ
 $apacheConfDir = "C:\tools\Apache24\conf"
@@ -70,10 +70,6 @@ $apacheSitesDir = "C:\tools\Apache24\conf\sites-available"
 if (-not (Test-Path -Path $apacheSitesDir)) {
     New-Item -ItemType Directory -Path $apacheSitesDir -Force
 }
-
-# 証明書のパス
-$certFile = "C:\certs\it-management.local.crt"
-$keyFile = "C:\certs\it-management.local.key"
 ```
 
 ### 2. HTTP基本設定
@@ -88,8 +84,9 @@ DocumentRoot "C:/ITManagementSystem/wwwroot"
 "@
 
 Add-Content -Path $httpdConfPath -Value "`n$baseConfig"
+```
 
-### 3. バーチャルホスト設定（HTTP）
+### 3. バーチャルホスト設定
 
 ```powershell
 # 仮想ホスト設定ファイル作成
@@ -120,128 +117,14 @@ if (-not (Select-String -Path $httpdConfPath -Pattern $virtualHostsInclude -Simp
 }
 ```
 
-### 4. 必要なモジュールの有効化
-
-```powershell
-# プロキシモジュールの有効化
-$proxyModules = @(
-    'LoadModule proxy_module modules/mod_proxy.so',
-    'LoadModule proxy_http_module modules/mod_proxy_http.so',
-    'LoadModule rewrite_module modules/mod_rewrite.so'
-)
-
-foreach ($module in $proxyModules) {
-    if (-not (Select-String -Path $httpdConfPath -Pattern $module -SimpleMatch -Quiet)) {
-        Add-Content -Path $httpdConfPath -Value "`n# Enable Proxy Modules`n$module"
-    }
-}
-```
-
-## Nginx Webサーバー設定（代替オプション）
-
-### 1. Nginxインストール
-
-```powershell
-# Chocolateyを使用したNginxインストール
-choco install nginx -y
-
-# Nginx設定ディレクトリ
-$nginxConfDir = "C:\tools\nginx\conf"
-$nginxSitesDir = "C:\tools\nginx\conf\sites-available"
-
-# sites-availableディレクトリがなければ作成
-if (-not (Test-Path -Path $nginxSitesDir)) {
-    New-Item -ItemType Directory -Path $nginxSitesDir -Force
-}
-```
-
-### 2. SSL設定とバーチャルホスト
-
-```powershell
-# 仮想ホスト設定ファイル作成
-$nginxConfFile = Join-Path -Path $nginxSitesDir -ChildPath "it-management.conf"
-@"
-server {
-    listen 80;
-    server_name it-management.local;
-    
-    root C:/ITManagementSystem/wwwroot;
-    index index.html;
-    
-    location / {
-        try_files `$uri `$uri/ =404;
-    }
-    
-    location /api/ {
-        proxy_pass http://localhost:5000/api/;
-        proxy_set_header Host `$host;
-        proxy_set_header X-Real-IP `$remote_addr;
-    }
-    
-    error_log logs/it-management-error.log;
-    access_log logs/it-management-access.log;
-}
-"@ | Out-File -FilePath $nginxConfFile -Encoding utf8
-
-# nginx.conf にインクルード設定を追加
-$nginxMainConf = Join-Path -Path $nginxConfDir -ChildPath "nginx.conf"
-$includeDirective = "include sites-available/*.conf;"
-
-# 既存のinclude行を確認
-$httpBlock = Select-String -Path $nginxMainConf -Pattern "http {" -Context 0,50
-if ($httpBlock -and -not ($httpBlock.Context.PostContext -join "`n" -match [regex]::Escape($includeDirective))) {
-    $content = Get-Content -Path $nginxMainConf -Raw
-    $updatedContent = $content -replace "http {", "http {`n    $includeDirective"
-    Set-Content -Path $nginxMainConf -Value $updatedContent
-}
-```
-
 ## ファイアウォール設定
 
 ```powershell
 # HTTPポート開放
 New-NetFirewallRule -DisplayName "IT Management HTTP" -Direction Inbound -Protocol TCP -LocalPort 5000 -Action Allow
-
-# APIポート開放
-New-NetFirewallRule -DisplayName "IT Management API" -Direction Inbound -Protocol TCP -LocalPort 5000 -Action Allow
-```
-
-## デプロイ検証
-
-各コンポーネントのデプロイ後、以下の検証を実施します：
-
-### フロントエンドの検証
-```powershell
-# ヘルスチェック
-Invoke-WebRequest -Uri "http://it-management.local"
-
-# 管理者権限でホストファイル設定確認
-$internalIP = "<サーバー内部IP>"
-$hostsEntry = "$internalIP it-management.local"
-$hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
-
-# ホストファイルに設定がなければ追加
-if (-not (Get-Content -Path $hostsPath | Where-Object { $_ -match $hostsEntry })) {
-    Add-Content -Path $hostsPath -Value $hostsEntry -Force
-    Write-Host "ホストファイルにエントリを追加しました"
-}
-```
-
-### バックエンドの検証
-```powershell
-# APIヘルスチェック
-Invoke-WebRequest -Uri "http://localhost:5000/health"
-
-# 認証テスト
-$headers = @{
-    "Authorization" = "Bearer $env:TEST_TOKEN"
-}
-Invoke-WebRequest -Uri "http://localhost:5000/api/v1/self" -Headers $headers
 ```
 
 ## デプロイ自動化
-
-オンプレミス環境でのデプロイ自動化スクリプト例：
 
 ```powershell
 # deploy-production.ps1
@@ -304,68 +187,8 @@ try {
     Log-Message "エラー発生: $_"
     if ($BackupFirst) {
         Log-Message "ロールバック開始..."
-        # ここにロールバック処理を実装
+        .\rollback-production.ps1 -BackupDir $backupDir
     }
     Log-Message "デプロイ失敗"
-    exit 1
-}
-```
-
-## ロールバック手順
-
-デプロイ失敗時のロールバック手順：
-
-```powershell
-# rollback-production.ps1
-param (
-    [Parameter(Mandatory=$true)]
-    [string]$BackupDir
-)
-
-# ロギング設定
-$logDir = "C:\Logs\ITManagementSystem"
-$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$logFile = Join-Path -Path $logDir -ChildPath "rollback_$timestamp.log"
-
-# ロギング関数
-function Log-Message {
-    param($message)
-    $timeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$timeStamp - $message" | Tee-Object -FilePath $logFile -Append
-}
-
-Log-Message "ロールバック開始: $BackupDir"
-
-# バックアップディレクトリ確認
-if (-not (Test-Path -Path $BackupDir)) {
-    Log-Message "指定されたバックアップディレクトリが存在しません: $BackupDir"
-    exit 1
-}
-
-try {
-    # サービス停止
-    Log-Message "サービス停止中..."
-    Stop-Service -Name "ITManagementAPI" -Force
-    
-    # フロントエンドロールバック
-    Log-Message "フロントエンドロールバック中..."
-    Copy-Item -Path "$BackupDir\frontend\*" -Destination "C:\inetpub\wwwroot\it-management\" -Recurse -Force
-    
-    # バックエンドロールバック
-    Log-Message "バックエンドロールバック中..."
-    Copy-Item -Path "$BackupDir\backend\*" -Destination "C:\path\to\backend\" -Recurse -Force
-    
-    # サービス開始
-    Log-Message "サービス開始中..."
-    Start-Service -Name "ITManagementAPI"
-    
-    # IIS再起動
-    Log-Message "IISリセット中..."
-    iisreset
-    
-    Log-Message "ロールバック成功"
-} catch {
-    Log-Message "ロールバック中にエラーが発生しました: $_"
-    Log-Message "ロールバック失敗"
     exit 1
 }
