@@ -13,7 +13,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'dev-jwt-secret')
 
 # CORSの設定 - フロントエンドからのリクエストを許可
-CORS(app, resources={r"/*": {"origins": "https://localhost:5000"}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:5000"}})
 
 # JWTの設定
 jwt = JWTManager(app)
@@ -100,7 +100,7 @@ def auth_callback():
         result = app.acquire_token_by_authorization_code(
             code,
             scopes=["User.Read"],
-            redirect_uri="https://localhost:5000/auth/callback"
+            redirect_uri="http://localhost:5000/auth/callback"
         )
         
         if "error" in result:
@@ -133,7 +133,7 @@ def auth_callback():
         }
         
         # フロントエンドダッシュボードへリダイレクト
-        return redirect("https://localhost:5000/dashboard")
+        return redirect("http://localhost:5000/dashboard")
         
     except requests.exceptions.RequestException as e:
         return jsonify({
@@ -161,18 +161,8 @@ def server_error(e):
 # アプリケーション実行
 if __name__ == '__main__':
     # 開発環境では、デバッグモードで実行し、フロントエンド証明書を使用してHTTPSを有効化
-    cert_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'frontend', 'certificates')
-    ssl_context = (
-        os.path.join(cert_path, 'cert.pem'),  # 証明書
-        os.path.join(cert_path, 'key.pem')    # 秘密鍵
-    )
-    
-    print(f"証明書パス: {ssl_context[0]}")
-    print(f"キーパス: {ssl_context[1]}")
-    
     app.run(
-        debug=True, 
-        host='0.0.0.0', 
-        port=5000, 
-        ssl_context=ssl_context
+        debug=True,
+        host='0.0.0.0',
+        port=5000
     )

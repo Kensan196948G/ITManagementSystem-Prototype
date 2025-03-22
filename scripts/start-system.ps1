@@ -274,8 +274,8 @@ function Start-Servers {
     Write-Host " ITサービス管理システム起動完了!" -ForegroundColor Green
     Write-Host "=================================================" -ForegroundColor Green
     Write-Host ""
-    Write-Host "バックエンドAPI: https://localhost:5000" -ForegroundColor Cyan
-    Write-Host "フロントエンドUI: https://localhost:5000" -ForegroundColor Cyan
+    Write-Host "バックエンドAPI: http://localhost:5000" -ForegroundColor Cyan
+    Write-Host "フロントエンドUI: http://localhost:5000" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "ログファイル:" -ForegroundColor Cyan
     Write-Host "  バックエンド: $backendLogPath" -ForegroundColor Cyan
@@ -305,8 +305,8 @@ try {
     $openBrowser = Read-Host
     
     if ($openBrowser -eq "Y" -or $openBrowser -eq "y") {
-        Start-Process "https://localhost:5000"
-        Write-Host "ブラウザでフロントエンドを開きました（HTTPS）" -ForegroundColor Green
+        Start-Process "http://localhost:5000"
+        Write-Host "ブラウザでフロントエンドを開きました（HTTP）" -ForegroundColor Green
     }
     
 } catch {
