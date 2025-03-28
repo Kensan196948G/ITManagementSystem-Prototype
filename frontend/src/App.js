@@ -17,6 +17,11 @@ import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import MetricsAnalysis from './pages/MetricsAnalysis';
 import UserManagement from './pages/UserManagement';
+import CMDB from './pages/CMDB';
+import Requests from './pages/Requests';
+import Knowledge from './pages/Knowledge';
+import Changes from './pages/Changes';
+import Audit from './pages/Audit';
 
 // 認証コンテキスト
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -74,6 +79,11 @@ function AppRoutes() {
         <Route path="metrics" element={<MetricsAnalysis />} />
         <Route path="users" element={<UserManagement />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="cmdb" element={<CMDB />} />
+        <Route path="requests" element={<Requests />} />
+        <Route path="knowledge" element={<Knowledge />} />
+        <Route path="changes" element={<Changes />} />
+        <Route path="audit" element={<Audit />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

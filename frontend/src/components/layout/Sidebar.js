@@ -8,7 +8,12 @@ import {
   DocumentChartBarIcon,
   Cog6ToothIcon,
   UserGroupIcon,
-  ServerIcon
+  ServerIcon,
+  CubeIcon,
+  ClipboardDocumentIcon,
+  BookOpenIcon,
+  ArrowsRightLeftIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 
 const navItems = [
@@ -18,6 +23,11 @@ const navItems = [
   { name: 'セキュリティイベント', path: '/security', icon: ShieldCheckIcon },
   { name: 'レポート', path: '/reports', icon: DocumentChartBarIcon },
   { name: 'メトリクス分析', path: '/metrics', icon: ChartBarIcon },
+  { name: 'CI管理', path: '/cmdb', icon: CubeIcon },
+  { name: 'リクエスト管理', path: '/requests', icon: ClipboardDocumentIcon },
+  { name: 'ナレッジ', path: '/knowledge', icon: BookOpenIcon },
+  { name: '変更管理', path: '/changes', icon: ArrowsRightLeftIcon },
+  { name: '監査ログ / 操作履歴', path: '/audit', icon: ClockIcon },
   { name: 'ユーザー管理', path: '/users', icon: UserGroupIcon },
   { name: '設定', path: '/settings', icon: Cog6ToothIcon },
 ];
