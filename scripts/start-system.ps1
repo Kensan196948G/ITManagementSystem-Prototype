@@ -252,7 +252,7 @@ function Start-Servers {
         # 現在のディレクトリをフロントエンドディレクトリに設定
         Set-Location -Path $frontendPath
         
-        # npm startを実行
+        # npm startを実行 (HTTPS=falseで起動)
         npm start > $frontendLogPath 2>&1
     } -ArgumentList $frontendPath, $frontendLogPath
     
@@ -305,8 +305,8 @@ try {
     $openBrowser = Read-Host
     
     if ($openBrowser -eq "Y" -or $openBrowser -eq "y") {
-        Start-Process "http://localhost:5000"
-        Write-Host "ブラウザでフロントエンドを開きました（HTTP）" -ForegroundColor Green
+    Start-Process "http://localhost:5000"
+    Write-Host "ブラウザでフロントエンドを開きました（HTTP）" -ForegroundColor Green
     }
     
 } catch {

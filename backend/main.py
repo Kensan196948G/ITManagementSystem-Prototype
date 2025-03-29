@@ -1,5 +1,7 @@
 import os
-from flask import Flask, jsonify
+import sqlite3
+from datetime import datetime
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
@@ -13,7 +15,14 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'dev-jwt-secret')
 
 # CORSの設定 - フロントエンドからのリクエストを許可
-CORS(app, resources={r"/*": {"origins": "http://localhost:5000"}})
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:5000", "http://localhost:3000", "http://localhost:5001"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
+    }
+})
 
 # JWTの設定
 jwt = JWTManager(app)
@@ -44,6 +53,103 @@ def index():
         'message': 'ITSM API起動中',
         'version': '0.1.0'
     })
+
+# SkySea Client View APIエンドポイント
+@app.route('/api/skysea/clients', methods=['GET'])
+def get_skysea_clients():
+    """SkySeaに登録されているクライアント情報を取得"""
+    conn = sqlite3.connect('itms.db')
+    c = conn.cursor()
+    
+    c.execute('SELECT COUNT(*) FROM skysea_clients')
+    total_clients = c.fetchone()[0]
+    
+    c.execute('SELECT COUNT(*) FROM skysea_clients WHERE last_updated >= datetime("now", "-1 day")')
+    updated_clients = c.fetchone()[0]
+    
+    c.execute('SELECT COUNT(*) FROM skysea_violations WHERE status = "open"')
+    open_violations = c.fetchone()[0]
+    
+    conn.close()
+    
+    return jsonify({
+        'status': 'success',
+        'data': {
+            'total_clients': total_clients,
+            'updated_clients': updated_clients,
+            'open_violations': open_violations
+        }
+    })
+
+@app.route('/api/skysea/violations', methods=['GET'])
+def get_skysea_violations():
+    """SkySeaで検知された違反情報を取得"""
+    conn = sqlite3.connect('itms.db')
+    c = conn.cursor()
+    
+    c.execute('''
+        SELECT type, COUNT(*) as count 
+        FROM skysea_violations 
+        WHERE status = "open"
+        GROUP BY type
+    ''')
+    violations = [{'type': row[0], 'count': row[1]} for row in c.fetchall()]
+    
+    conn.close()
+    
+    return jsonify({
+        'status': 'success',
+        'data': violations
+    })
+
+# 監査ログAPIエンドポイント
+@app.route('/api/audit/logs', methods=['GET'])
+def get_audit_logs():
+    """監査ログを取得するAPI"""
+    print(f"監査ログAPIへのリクエスト受信 - ヘッダー: {request.headers}")
+    try:
+        conn = sqlite3.connect('itms.db')
+        c = conn.cursor()
+        
+        # 監査ログテーブルからデータ取得
+        c.execute('''
+            SELECT 
+                log_id, user_id, operation_type, 
+                target_system, timestamp, status,
+                status_code, command, host, privilege
+            FROM audit_logs
+            ORDER BY timestamp DESC
+            LIMIT 100
+        ''')
+        
+        logs = []
+        for row in c.fetchall():
+            logs.append({
+                'id': row[0],
+                'user': row[1],
+                'operationType': row[2],
+                'targetSystem': row[3],
+                'timestamp': row[4],
+                'status': row[5],
+                'statusCode': row[6],
+                'command': row[7],
+                'host': row[8],
+                'privilege': row[9]
+            })
+            
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'data': logs
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': '監査ログ取得エラー',
+            'details': str(e)
+        }), 500
 
 # テスト用エンドポイント
 @app.route('/api/health')
@@ -158,9 +264,9 @@ def not_found(e):
 def server_error(e):
     return jsonify({'status': 'error', 'message': 'サーバーエラーが発生しました'}), 500
 
-# アプリケーション実行
+    # アプリケーション実行
 if __name__ == '__main__':
-    # 開発環境では、デバッグモードで実行し、フロントエンド証明書を使用してHTTPSを有効化
+    # 開発環境では、デバッグモードで実行
     app.run(
         debug=True,
         host='0.0.0.0',

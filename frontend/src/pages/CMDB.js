@@ -20,11 +20,23 @@ const CMDBPage = () => {
                   </tr>
                   <tr>
                     <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">CI種別</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">PC端末</td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <select className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-blue-50 text-blue-800">
+                        <option value="pc">PC端末</option>
+                        <option value="server">サーバ</option>
+                        <option value="license">ライセンス</option>
+                        <option value="user">ユーザー</option>
+                      </select>
+                    </td>
                   </tr>
                   <tr>
                     <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">状態（ステータス）</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">稼働中</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center">
+                        <span className="flex-shrink-0 h-4 w-4 rounded-full bg-green-500 mr-2"></span>
+                        <span>稼働中</span>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -46,8 +58,31 @@ const CMDBPage = () => {
                   <tr>
                     <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">関連CI（依存関係）</td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                      <div>端末 → ユーザー: 山田太郎</div>
-                      <div>ユーザー → ライセンス: Microsoft 365 E3</div>
+                      <div className="space-y-1">
+                        <div className="flex items-center">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            端末
+                          </span>
+                          <span className="mx-2">→</span>
+                          <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline">
+                            ユーザー: 山田太郎
+                          </a>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            ユーザー
+                          </span>
+                          <span className="mx-2">→</span>
+                          <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline">
+                            ライセンス: Microsoft 365 E3
+                          </a>
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        <button className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                          依存関係マップを表示
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -65,7 +100,33 @@ const CMDBPage = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   <tr>
                     <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">所有部署 / 担当者</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">営業部 / 山田太郎</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                      <div className="mb-2">
+                        <details className="group">
+                          <summary className="flex items-center cursor-pointer text-blue-600 hover:text-blue-800">
+                            <span className="mr-1">▶</span>
+                            <span>営業部</span>
+                          </summary>
+                          <div className="ml-4 mt-1 space-y-1">
+                            <div className="flex items-center">
+                              <span className="mr-1">├─</span>
+                              <span>営業1課</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="mr-1">└─</span>
+                              <span>営業2課</span>
+                            </div>
+                          </div>
+                        </details>
+                      </div>
+                      <div>
+                        <select className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-gray-50">
+                          <option value="1">山田太郎</option>
+                          <option value="2">佐藤花子</option>
+                          <option value="3">鈴木一郎</option>
+                        </select>
+                      </div>
+                    </td>
                   </tr>
                   <tr>
                     <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">設置場所</td>
@@ -107,19 +168,65 @@ const CMDBPage = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   <tr>
                     <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">IPアドレス</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">192.168.1.100</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center">
+                        <span className="font-mono">192.168.1.100</span>
+                        <button 
+                          className="ml-2 p-1 rounded hover:bg-gray-100"
+                          onClick={() => navigator.clipboard.writeText('192.168.1.100')}
+                          title="コピー"
+                        >
+                          📋
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">MAC</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">00:1A:2B:3C:4D:5E</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">MACアドレス</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center">
+                        <span className="font-mono">00:1A:2B:3C:4D:5E</span>
+                        <button 
+                          className="ml-2 p-1 rounded hover:bg-gray-100"
+                          onClick={() => navigator.clipboard.writeText('00:1A:2B:3C:4D:5E')}
+                          title="コピー"
+                        >
+                          📋
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                   <tr>
                     <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">OS</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">Windows 11</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center">
+                        <span className="mr-2">🖥️</span>
+                        <div>
+                          <div>Windows 11 Pro</div>
+                          <div className="text-xs text-gray-500">バージョン: 22H2 (ビルド 22621)</div>
+                          <div className="text-xs text-gray-500">アーキテクチャ: 64-bit</div>
+                        </div>
+                      </div>
+                    </td>
                   </tr>
                   <tr>
                     <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">スペック情報</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">Core i7 / 16GB / 512GB SSD</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                      <ul className="space-y-1">
+                        <li className="flex items-center">
+                          <span className="mr-2">💻</span>
+                          <span>CPU: Core i7</span>
+                        </li>
+                        <li className="flex items-center">
+                          <span className="mr-2">🧠</span>
+                          <span>メモリ: 16GB</span>
+                        </li>
+                        <li className="flex items-center">
+                          <span className="mr-2">💾</span>
+                          <span>ストレージ: 512GB SSD</span>
+                        </li>
+                      </ul>
+                    </td>
                   </tr>
                 </tbody>
               </table>

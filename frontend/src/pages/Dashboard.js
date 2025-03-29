@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ChartBarIcon,
@@ -141,6 +141,39 @@ const Dashboard = () => {
     }
   ];
 
+  // SkySea Client Viewの状態管理
+  const [skyseaStatus, setSkyseaStatus] = useState({
+    name: 'SkySea Client View',
+    status: '取得中...',
+    uptime: ''
+  });
+
+  // SkySeaデータ取得
+  useEffect(() => {
+    const fetchSkyseaData = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/skysea/clients');
+        if (!response.ok) throw new Error('SkySeaデータの取得に失敗しました');
+        
+        const data = await response.json();
+        setSkyseaStatus({
+          name: 'SkySea Client View',
+          status: '正常',
+          uptime: `${data.data.updated_clients}/${data.data.total_clients} クライアント更新済み`
+        });
+      } catch (error) {
+        console.error('SkySeaデータ取得エラー:', error);
+        setSkyseaStatus({
+          name: 'SkySea Client View',
+          status: '異常',
+          uptime: 'データ取得失敗'
+        });
+      }
+    };
+
+    fetchSkyseaData();
+  }, []);
+
   // システムステータスデータ
   const systemStatusData = [
     { name: 'Microsoft 365', status: '正常', uptime: '30日間' },
@@ -149,7 +182,8 @@ const Dashboard = () => {
     { name: 'Exchange Online', status: '警告', uptime: '29日間' },
     { name: 'HENGEOINE', status: '正常', uptime: '30日間' },
     { name: 'DirectCloud', status: '正常', uptime: '30日間' },
-    { name: 'ファイルサーバー', status: '正常', uptime: '30日間' }
+    { name: 'ファイルサーバー', status: '正常', uptime: '30日間' },
+    skyseaStatus
   ];
 
   // 最近のインシデントデータ
