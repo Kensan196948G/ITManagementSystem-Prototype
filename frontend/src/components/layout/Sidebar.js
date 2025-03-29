@@ -12,8 +12,7 @@ import {
   CubeIcon,
   ClipboardDocumentIcon,
   BookOpenIcon,
-  ArrowsRightLeftIcon,
-  ClockIcon
+  ArrowsRightLeftIcon
 } from '@heroicons/react/24/outline';
 
 const navItems = [
@@ -27,7 +26,6 @@ const navItems = [
   { name: 'リクエスト管理', path: '/requests', icon: ClipboardDocumentIcon },
   { name: 'ナレッジ', path: '/knowledge', icon: BookOpenIcon },
   { name: '変更管理', path: '/changes', icon: ArrowsRightLeftIcon },
-  { name: '監査ログ / 操作履歴', path: '/audit', icon: ClockIcon },
   { name: 'ユーザー管理', path: '/users', icon: UserGroupIcon },
   { name: '設定', path: '/settings', icon: Cog6ToothIcon },
 ];

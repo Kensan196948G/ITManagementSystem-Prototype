@@ -17,7 +17,7 @@ app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'dev-jwt-secret'
 # CORSの設定 - フロントエンドからのリクエストを許可
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:5000", "http://localhost:3000", "http://localhost:5001"],
+        "origins": ["http://localhost:5000", "http://localhost:3000"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True
@@ -101,55 +101,6 @@ def get_skysea_violations():
         'status': 'success',
         'data': violations
     })
-
-# 監査ログAPIエンドポイント
-@app.route('/api/audit/logs', methods=['GET'])
-def get_audit_logs():
-    """監査ログを取得するAPI"""
-    print(f"監査ログAPIへのリクエスト受信 - ヘッダー: {request.headers}")
-    try:
-        conn = sqlite3.connect('itms.db')
-        c = conn.cursor()
-        
-        # 監査ログテーブルからデータ取得
-        c.execute('''
-            SELECT 
-                log_id, user_id, operation_type, 
-                target_system, timestamp, status,
-                status_code, command, host, privilege
-            FROM audit_logs
-            ORDER BY timestamp DESC
-            LIMIT 100
-        ''')
-        
-        logs = []
-        for row in c.fetchall():
-            logs.append({
-                'id': row[0],
-                'user': row[1],
-                'operationType': row[2],
-                'targetSystem': row[3],
-                'timestamp': row[4],
-                'status': row[5],
-                'statusCode': row[6],
-                'command': row[7],
-                'host': row[8],
-                'privilege': row[9]
-            })
-            
-        conn.close()
-        
-        return jsonify({
-            'status': 'success',
-            'data': logs
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': '監査ログ取得エラー',
-            'details': str(e)
-        }), 500
 
 # テスト用エンドポイント
 @app.route('/api/health')
