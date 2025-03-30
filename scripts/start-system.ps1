@@ -51,8 +51,8 @@ if ($help) {
 function Stop-Servers {
     Write-Host "実行中のサーバーを停止しています..." -ForegroundColor Yellow
     
-    # バックエンドサーバーの停止 (Flaskサーバー - ポート5000)
-    $backendProcess = Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue | 
+    # バックエンドサーバーの停止 (Flaskサーバー - ポート5001)
+    $backendProcess = Get-NetTCPConnection -LocalPort 5001 -ErrorAction SilentlyContinue | 
                      Where-Object { $_.State -eq "Listen" } | 
                      ForEach-Object { Get-Process -Id $_.OwningProcess }
     
@@ -274,7 +274,7 @@ function Start-Servers {
     Write-Host " ITサービス管理システム起動完了!" -ForegroundColor Green
     Write-Host "=================================================" -ForegroundColor Green
     Write-Host ""
-    Write-Host "バックエンドAPI: http://localhost:5000" -ForegroundColor Cyan
+    Write-Host "バックエンドAPI: http://localhost:5001" -ForegroundColor Cyan
     Write-Host "フロントエンドUI: http://localhost:5000" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "ログファイル:" -ForegroundColor Cyan
@@ -300,14 +300,10 @@ try {
     # サーバーの起動
     Start-Servers
     
-    # ブラウザをインタラクティブモードで開く
-    Write-Host "ブラウザでフロントエンドを開きますか？ (Y/N)" -ForegroundColor Yellow
-    $openBrowser = Read-Host
-    
-    if ($openBrowser -eq "Y" -or $openBrowser -eq "y") {
-    Start-Process "http://localhost:5000"
-    Write-Host "ブラウザでフロントエンドを開きました（HTTP）" -ForegroundColor Green
-    }
+    # ブラウザ起動はユーザーが手動で行うように変更
+    Write-Host "フロントエンドにアクセスするにはブラウザで以下を開いてください:" -ForegroundColor Cyan
+    Write-Host "  http://localhost:5000" -ForegroundColor Cyan
+    Write-Host ""
     
 } catch {
     Write-Host "エラーが発生しました: $_" -ForegroundColor Red
