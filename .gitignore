@@ -20,3 +20,5 @@ venv/
 # OS 一般
 .DS_Store
 Thumbs.db
+
+config.json
