@@ -12,7 +12,13 @@ Write-Host ""
 # 実運用では環境変数または暗号化された設定ファイルから読み込むことを推奨
 $clientId = $env:M365_CLIENT_ID
 # テナントIDを設定 - ユーザー環境の実際のテナントID
-$tenantId = "a7232f7a-a9e5-4f71-9372-dc8b1c6645ea"
+# 環境変数からテナントIDを取得（実運用では環境変数または設定ファイルを使用）
+$tenantId = $env:M365_TENANT_ID
+if (-not $tenantId) {
+    $tenantId = Read-Host "Microsoft 365 テナントIDを入力してください"
+    # セッション中のみ保持するように環境変数に設定
+    $env:M365_TENANT_ID = $tenantId
+}
 $logPath = ".\logs\apiPermission_$(Get-Date -Format 'yyyyMMdd').log"
 
 # 環境変数が設定されていない場合は、ユーザーに入力を促す
@@ -45,7 +51,16 @@ function Write-Log {
     $logMessage = "[$timestamp] [$Level] $Message"
     
     # ログファイルに書き込み
-    Add-Content -Path $logPath -Value $logMessage
+    # 大規模ログに対応するためストリームライターを使用
+    try {
+        $streamWriter = [System.IO.StreamWriter]::new($logPath, $true)
+        $streamWriter.WriteLine($logMessage)
+    }
+    finally {
+        if ($null -ne $streamWriter) {
+            $streamWriter.Dispose()
+        }
+    }
     
     # コンソールにも出力（色分け）
     switch ($Level) {
@@ -111,7 +126,9 @@ function Get-DeviceCodeAuthToken {
             }
             catch {
                 # authorization_pending の場合は待機
-                if ($_.Exception.Response.StatusCode.value__ -eq 400) {
+                if ($_.Exception.Response.StatusCode.value__ -eq 400 -and
+                    $_.ErrorDetails.Message -like "*authorization_pending*") {
+                    Write-Log "認証待機中... ($retryCount/$maxRetries)" -Level "INFO"
                     Start-Sleep -Seconds 5
                     $retryCount++
                 }
@@ -471,7 +488,6 @@ switch ($operationChoice) {
         Write-Host "`n付与可能なAPIパーミッション一覧:" -ForegroundColor Cyan
         
         # カテゴリごとにパーミッションを表示
-        $globalIndex = 0
         $categoryIndexMap = @{}
         
         foreach ($category in $categories) {

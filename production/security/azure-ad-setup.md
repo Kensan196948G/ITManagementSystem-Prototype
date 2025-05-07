@@ -20,14 +20,14 @@ ITマネジメントシステムの本番環境におけるAzure Active Director
    - サポートされているアカウントの種類：「この組織のディレクトリ内のアカウントのみ」
    - リダイレクトURI：
      - プラットフォーム：Web
-     - URL：`https://it-management.example.com/auth/callback`
+     - URL：`https://it-management.mirai-const.co.jp/auth/callback`
 4. 「登録」ボタンをクリックします。
 
 ### 1.2 ステージング環境用のリダイレクトURIを追加
 
 1. 作成したアプリケーション登録を開きます。
 2. 「認証」→「プラットフォームの追加」→「Web」を選択します。
-3. リダイレクトURI：`https://staging.it-management.example.com/auth/callback` を追加します。
+3. リダイレクトURI：`https://staging.it-management.mirai-const.co.jp/auth/callback` を追加します。
 4. 「構成」をクリックして保存します。
 
 ## 2. APIアクセス許可の設定
@@ -145,7 +145,7 @@ def validate_token(token):
 ### 7.1 ステージング環境でのテスト
 
 1. ステージング環境にデプロイします。
-2. ブラウザで `https://staging.it-management.example.com` にアクセスします。
+2. ブラウザで `https://staging.it-management.mirai-const.co.jp` にアクセスします。
 3. 「ログイン」ボタンをクリックします。
 4. Microsoft認証画面にリダイレクトされることを確認します。
 5. テストユーザーでログインします。

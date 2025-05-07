@@ -64,7 +64,7 @@ az webapp config ssl upload --certificate-file ./fullchain.pem --certificate-pas
 ### Azure AD設定
 1. Azureポータルで本番環境用のアプリ登録を作成
 2. 必要なリダイレクトURIを設定:
-   - `https://it-management.example.com/auth/callback`
+   - `https://it-management.mirai-const.co.jp/auth/callback`
 3. APIアクセス許可:
    - Microsoft Graph > User.Read.All
    - Azure Key Vault > Secret.Read
@@ -79,7 +79,7 @@ az webapp config ssl upload --certificate-file ./fullchain.pem --certificate-pas
 
 ```env
 # 管理者通知先メールアドレス
-ADMIN_EMAIL=admin@example.com
+ADMIN_EMAIL=admin@mirai-const.co.jp
 
 # ロックアウトまでの失敗試行回数 (デフォルト: 5)
 ACCOUNT_LOCK_THRESHOLD=5
@@ -138,7 +138,7 @@ log_sources:
 5. 報告と再発防止策の実施
 
 ### 連絡先
-- セキュリティ責任者: security-team@example.com
+- セキュリティ責任者: security-team@mirai-const.co.jp
 - 緊急連絡先: +81-XX-XXXX-XXXX（24時間対応）
 
 ## コンプライアンス要件

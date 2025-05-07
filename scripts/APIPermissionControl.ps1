@@ -66,7 +66,13 @@ if ($Help) {
 
 # 環境変数から認証情報を取得
 $clientId = $env:M365_CLIENT_ID
-$tenantId = "a7232f7a-a9e5-4f71-9372-dc8b1c6645ea"
+# 環境変数からテナントIDを取得（実運用では環境変数または設定ファイルを使用）
+$tenantId = $env:M365_TENANT_ID
+if (-not $tenantId) {
+    $tenantId = Read-Host "Microsoft 365 テナントIDを入力してください"
+    # セッション中のみ保持するように環境変数に設定
+    $env:M365_TENANT_ID = $tenantId
+}
 
 # 時刻付きログファイル名の生成
 $timestamp = Get-Date -Format "yyyyMMddHHmmss"
@@ -102,7 +108,16 @@ function Write-Log {
     $logMessage = "[$timestamp] [$Level] $Message"
     
     # ログファイルに書き込み
-    Add-Content -Path $logPath -Value $logMessage
+    # 大規模ログに対応するためストリームライターを使用
+    try {
+        $streamWriter = [System.IO.StreamWriter]::new($logPath, $true)
+        $streamWriter.WriteLine($logMessage)
+    }
+    finally {
+        if ($null -ne $streamWriter) {
+            $streamWriter.Dispose()
+        }
+    }
     
     # コンソールにも出力（色分け）
     switch ($Level) {
@@ -229,11 +244,46 @@ function Increment-ApiRequestCounter {
 }
 
 # Microsoft Graph モジュールの確認と自動インストール
+<#
+.SYNOPSIS
+必要なPowerShellモジュールをインストールします
+
+.DESCRIPTION
+この関数はMicrosoft Graph関連のモジュールがインストールされているか確認し、
+必要な場合はインストールします。また、必要なスコープを確認します。
+
+.EXAMPLE
+Install-RequiredModules
+
+.NOTES
+バージョン: 1.0
+作成日: 2025-05-07
+#>
 function Install-RequiredModules {
+    [CmdletBinding()]
+    param()
+
+    # 必要なモジュールと最小バージョン
+    $requiredModules = @{
+        "Microsoft.Graph" = "2.0.0"
+        "Microsoft.Graph.Authentication" = "2.0.0"
+        "Microsoft.Graph.Users" = "2.0.0"
+        "Microsoft.Graph.Groups" = "2.0.0"
+        "Microsoft.Graph.Identity.DirectoryManagement" = "2.0.0"
+    }
     Write-Log "必要なモジュールを確認しています..." -Level "INFO"
     
-    # Microsoft.Graph モジュールの確認
-    $graphModule = Get-Module -Name Microsoft.Graph -ListAvailable
+    Write-Log "必要なモジュールを確認しています..." -Level "INFO"
+
+    # 各モジュールの確認とインストール
+    foreach ($module in $requiredModules.GetEnumerator()) {
+        $moduleName = $module.Key
+        $minVersion = $module.Value
+        
+        $installedModule = Get-Module -Name $moduleName -ListAvailable |
+                          Where-Object { $_.Version -ge [version]$minVersion } |
+                          Sort-Object Version -Descending |
+                          Select-Object -First 1
     
     if (-not $graphModule) {
         Write-Log "Microsoft.Graph モジュールが見つかりません。インストールを開始します..." -Level "INFO"

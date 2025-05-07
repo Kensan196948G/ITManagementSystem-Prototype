@@ -66,13 +66,11 @@ const Login = () => {
         navigate('/');
       }
     } catch (e) {
-      const { accountLocked, lockUntil, loginAttempts } = useAuth();
-      
-      if (accountLocked && lockUntil) {
-        const minutesLeft = Math.ceil((new Date(lockUntil) - new Date()) / (1000 * 60));
+      if (authError?.accountLocked && authError?.lockUntil) {
+        const minutesLeft = Math.ceil((new Date(authError.lockUntil) - new Date()) / (1000 * 60));
         setError(`アカウントが一時的にロックされています。あと${minutesLeft}分お待ちください。`);
-      } else if (loginAttempts >= 3) {
-        setError(`ログインに失敗しました。あと${5 - loginAttempts}回失敗するとアカウントがロックされます。`);
+      } else if (authError?.loginAttempts >= 3) {
+        setError(`ログインに失敗しました。あと${5 - authError.loginAttempts}回失敗するとアカウントがロックされます。`);
       } else {
         setError(e.message || 'ログインに失敗しました');
       }
@@ -168,7 +166,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={handleLogin}
-                disabled={loading || (accountLocked && lockUntil && new Date(lockUntil) > new Date())}
+                disabled={loading || (authError?.accountLocked && authError?.lockUntil && new Date(authError.lockUntil) > new Date())}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
                 {loading ? (

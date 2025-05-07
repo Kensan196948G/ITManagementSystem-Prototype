@@ -35,7 +35,12 @@ Write-Host ""
 # グローバル変数
 $script:ApiRequests = @()
 $script:RequestLimitReached = $false
-$script:ConfigFile = ".\config\api_requests_config.json"
+# 設定ファイルパスを環境変数から取得（デフォルト値あり）
+$script:ConfigFile = $env:API_REQUESTS_CONFIG_PATH
+if (-not $script:ConfigFile) {
+    $script:ConfigFile = ".\config\api_requests_config.json"
+    Write-Log "環境変数API_REQUESTS_CONFIG_PATHが未設定のため、デフォルト設定ファイルを使用します: $script:ConfigFile" -Level "WARNING"
+}
 $script:VerboseMode = $false
 
 # ヘルプ表示
@@ -83,7 +88,26 @@ if (-not (Test-Path -Path $logDir)) {
     Write-Host "ログディレクトリを作成しました: $logDir" -ForegroundColor Green
 }
 
-# ログ記録関数
+<#
+.SYNOPSIS
+ログメッセージをファイルとコンソールに出力します
+
+.DESCRIPTION
+指定されたメッセージをログファイルに記録し、同時にコンソールにも色分けして出力します。
+ログレベルに応じて異なる色で表示されます。
+
+.PARAMETER Message
+記録するメッセージ内容
+
+.PARAMETER Level
+ログレベル（INFO, WARNING, ERROR, SUCCESS, AUDIT, DEBUG）
+
+.EXAMPLE
+Write-Log -Message "処理を開始します" -Level "INFO"
+
+.NOTES
+ログファイルはスクリプト実行時に作成されます
+#>
 function Write-Log {
     param (
         [Parameter(Mandatory = $true)]
@@ -98,7 +122,16 @@ function Write-Log {
     $logMessage = "[$timestamp] [$Level] $Message"
     
     # ログファイルに書き込み
-    Add-Content -Path $logPath -Value $logMessage
+    # 大規模ログに対応するためストリームライターを使用
+    try {
+        $streamWriter = [System.IO.StreamWriter]::new($logPath, $true)
+        $streamWriter.WriteLine($logMessage)
+    }
+    finally {
+        if ($null -ne $streamWriter) {
+            $streamWriter.Dispose()
+        }
+    }
     
     # コンソールにも出力（色分け）
     switch ($Level) {
@@ -115,7 +148,20 @@ function Write-Log {
     }
 }
 
-# 設定の読み込み
+<#
+.SYNOPSIS
+設定ファイルを読み込みます
+
+.DESCRIPTION
+JSON形式の設定ファイルを読み込み、スクリプト変数に反映します。
+設定ファイルが存在しない場合は新規作成します。
+
+.EXAMPLE
+Load-Configuration
+
+.NOTES
+設定ファイルパスは$script:ConfigFileで指定されます
+#>
 function Load-Configuration {
     try {
         if (Test-Path -Path $script:ConfigFile) {
