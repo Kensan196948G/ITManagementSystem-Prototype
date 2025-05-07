@@ -16,6 +16,8 @@ class User(db.Model):
     department = db.Column(db.String(50))
     active = db.Column(db.Boolean, default=True)
     last_login = db.Column(db.DateTime)
+    failed_login_attempts = db.Column(db.Integer, default=0)  # 失敗したログイン試行回数
+    account_locked_until = db.Column(db.DateTime)  # アカウントロック期限
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

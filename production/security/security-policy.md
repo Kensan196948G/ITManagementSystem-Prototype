@@ -74,6 +74,27 @@ az webapp config ssl upload --certificate-file ./fullchain.pem --certificate-pas
 - ユーザーロール: 自分のリソースと共有リソースのみアクセス可能
 - 閲覧者ロール: 読み取り専用アクセス
 
+### アカウントロックアウト設定
+以下の環境変数でロックアウト動作を制御できます：
+
+```env
+# 管理者通知先メールアドレス
+ADMIN_EMAIL=admin@example.com
+
+# ロックアウトまでの失敗試行回数 (デフォルト: 5)
+ACCOUNT_LOCK_THRESHOLD=5
+
+# ロックアウト時間(分) (デフォルト: 15)
+ACCOUNT_LOCK_DURATION_MINUTES=15
+
+# ロックアウト機能を無効化する場合はTrue (デフォルト: False)
+DISABLE_ACCOUNT_LOCK=False
+```
+
+- ロックアウト発生時、管理者に通知メールが送信されます
+- ロックアウト機能を無効化する場合は`DISABLE_ACCOUNT_LOCK=True`に設定
+- 閾値とロック時間は環境ごとに調整可能
+
 ## セキュリティ監視
 
 ### ログ監視設定

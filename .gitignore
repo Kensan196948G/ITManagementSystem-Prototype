@@ -1,1 +1,22 @@
-node_modules
+# Node.js フロントエンド
+node_modules/
+dist/
+build/
+.env
+*.log
+
+# Python バックエンド
+__pycache__/
+*.pyc
+*.pyo
+*.db
+instance/
+venv/
+.env
+
+# PowerShell スクリプト
+*.ps1~
+
+# OS 一般
+.DS_Store
+Thumbs.db

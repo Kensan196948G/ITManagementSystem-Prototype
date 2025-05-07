@@ -1,10 +1,75 @@
 import sqlite3
 from datetime import datetime, timedelta
+import json
 
 def init_database():
     # データベース接続
     conn = sqlite3.connect('itms.db')
     c = conn.cursor()
+
+    # ユーザーテーブル作成
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            first_name TEXT,
+            last_name TEXT,
+            is_active BOOLEAN DEFAULT TRUE,
+            mfa_enabled BOOLEAN DEFAULT FALSE,
+            mfa_method TEXT,
+            phone_number TEXT,
+            backup_codes TEXT,
+            last_login TEXT,
+            failed_login_attempts INTEGER DEFAULT 0,
+            account_locked_until TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # ロールテーブル作成
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS roles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            description TEXT,
+            is_system_role BOOLEAN DEFAULT FALSE
+        )
+    ''')
+
+    # 権限テーブル作成
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS permissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT NOT NULL UNIQUE,
+            name TEXT NOT NULL,
+            description TEXT
+        )
+    ''')
+
+    # ユーザーロール関連テーブル
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS user_roles (
+            user_id INTEGER NOT NULL,
+            role_id INTEGER NOT NULL,
+            PRIMARY KEY (user_id, role_id),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (role_id) REFERENCES roles(id)
+        )
+    ''')
+
+    # ロール権限関連テーブル
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS role_permissions (
+            role_id INTEGER NOT NULL,
+            permission_id INTEGER NOT NULL,
+            PRIMARY KEY (role_id, permission_id),
+            FOREIGN KEY (role_id) REFERENCES roles(id),
+            FOREIGN KEY (permission_id) REFERENCES permissions(id)
+        )
+    ''')
 
     # skysea_clientsテーブル作成
     c.execute('''
@@ -69,6 +134,52 @@ def init_database():
         (1, 'policy', 'Policy violation', yesterday, 'closed'),
         (2, 'unauthorized', 'Unauthorized access', now, 'open')
     ])
+
+    # 基本ロールと権限の初期データ
+    c.executemany('''
+        INSERT OR IGNORE INTO roles (name, description, is_system_role)
+        VALUES (?, ?, ?)
+    ''', [
+        ('admin', 'システム管理者', 1),
+        ('user', '一般ユーザー', 1),
+        ('auditor', '監査担当者', 1)
+    ])
+
+    c.executemany('''
+        INSERT OR IGNORE INTO permissions (code, name, description)
+        VALUES (?, ?, ?)
+    ''', [
+        ('user:read', 'ユーザー閲覧', 'ユーザー情報の閲覧権限'),
+        ('user:write', 'ユーザー編集', 'ユーザー情報の編集権限'),
+        ('report:generate', 'レポート生成', 'レポート生成権限')
+    ])
+
+    # 管理者ユーザーの作成
+    c.execute('''
+        INSERT OR IGNORE INTO users (username, email, password_hash, first_name, last_name, is_active)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (
+        'admin',
+        'admin@example.com',
+        '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',  # password=secret
+        'Admin',
+        'User',
+        1
+    ))
+
+    # 管理者にadminロールを割り当て
+    c.execute('''
+        INSERT OR IGNORE INTO user_roles (user_id, role_id)
+        SELECT u.id, r.id FROM users u, roles r
+        WHERE u.username = 'admin' AND r.name = 'admin'
+    ''')
+
+    # 管理者ロールに全権限を割り当て
+    c.execute('''
+        INSERT OR IGNORE INTO role_permissions (role_id, permission_id)
+        SELECT r.id, p.id FROM roles r, permissions p
+        WHERE r.name = 'admin'
+    ''')
 
     # audit_logsテストデータ
     c.executemany('''
