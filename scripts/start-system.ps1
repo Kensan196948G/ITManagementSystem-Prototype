@@ -128,15 +128,11 @@ function Install-Dependencies {
     Set-Location -Path $backendPath
     
     # 仮想環境内でpipを実行
-    if ($IsWindows) {
-        & "$pythonVenvPath\Scripts\activate.ps1"
-        python -m pip install --upgrade pip
-        python -m pip install -r requirements.txt
-        deactivate
-    } else {
-        & "$pythonVenvPath/bin/pip" install --upgrade pip
-        & "$pythonVenvPath/bin/pip" install -r requirements.txt
-    }
+    # Windows環境では常にバックスラッシュを使用
+    & "$pythonVenvPath\Scripts\activate.ps1"
+    python -m pip install --upgrade pip
+    python -m pip install -r requirements.txt
+    deactivate
     
     # 元のディレクトリに戻る
     Set-Location -Path $currentLocation
@@ -230,12 +226,14 @@ function Start-Servers {
         # 現在のディレクトリをバックエンドディレクトリに設定
         Set-Location -Path $backendPath
         
-        # 仮想環境の有効化とFlaskサーバーの起動
+        # Flaskサーバ゙ー起動
         if ($IsWindows) {
             & "$pythonVenvPath\Scripts\activate.ps1"
-            python main.py > $backendLogPath 2>&1
+            cd $backendPath/..
+            python -m backend.main > $backendLogPath 2>&1
         } else {
-            & "$pythonVenvPath/bin/python" main.py > $backendLogPath 2>&1
+            cd $backendPath/..
+            & "$pythonVenvPath/bin/python" -m backend.main > $backendLogPath 2>&1
         }
     } -ArgumentList $backendPath, $pythonVenvPath, $backendLogPath
     
@@ -252,8 +250,8 @@ function Start-Servers {
         # 現在のディレクトリをフロントエンドディレクトリに設定
         Set-Location -Path $frontendPath
         
-        # npm startを実行 (HTTPS=falseで起動)
-        npm start > $frontendLogPath 2>&1
+        # npm startを実行 (.envの設定を尊重)
+        npm start | Out-File -FilePath $frontendLogPath -Encoding utf8 -Force
     } -ArgumentList $frontendPath, $frontendLogPath
     
     # 元のディレクトリに戻る

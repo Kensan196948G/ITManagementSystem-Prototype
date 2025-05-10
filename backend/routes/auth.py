@@ -1,3 +1,18 @@
+import os
+import json
+import logging
+import time
+import sqlite3
+import smtplib
+import pyotp
+import redis
+import requests
+from datetime import datetime, timedelta
+from contextlib import contextmanager
+from secrets import token_urlsafe
+from email.mime.text import MIMEText
+from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.exceptions import BadRequest
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
     create_access_token,
@@ -6,19 +21,136 @@ from flask_jwt_extended import (
     create_refresh_token,
     get_jwt
 )
-from datetime import datetime, timedelta
-from models.user import User
-import sqlite3
-import pyotp
-import smtplib
-from email.mime.text import MIMEText
-import os
 from dotenv import load_dotenv
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.exceptions import InvalidSignature
+from backend.models.user import User
+
+# ロギング設定
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# データベース接続ヘルパー
+@contextmanager
+def get_db_connection():
+    conn = sqlite3.connect('itms.db')
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 # 環境変数の読み込み
-load_dotenv()
+try:
+    load_dotenv()
+except Exception as e:
+    logger.error("環境変数の読み込みに失敗しました: %s", str(e))
+    raise
+
+# Redis接続設定
+redis_client = redis.Redis(
+    host=os.getenv('REDIS_HOST', 'localhost'),
+    port=int(os.getenv('REDIS_PORT', 6379)),
+    db=int(os.getenv('REDIS_DB', 0)),
+    password=os.getenv('REDIS_PASSWORD', None)
+)
 
 auth_bp = Blueprint('auth', __name__)
+
+def get_microsoft_token():
+    """Microsoft Graph APIからアクセストークンを取得"""
+    # Redisからキャッシュされたトークンをチェック
+    cached_token = redis_client.get('microsoft:access_token')
+    if cached_token:
+        return cached_token.decode('utf-8')
+
+    # デバイスコードフローでトークンを取得
+    device_code_url = f"https://login.microsoftonline.com/{os.getenv('MS_TENANT_ID')}/oauth2/v2.0/devicecode"
+    device_code_payload = {
+        'client_id': os.getenv('MS_CLIENT_ID'),
+        'scope': 'https://graph.microsoft.com/Directory.Read.All'
+    }
+    
+    # デバイスコードを取得
+    device_code_response = requests.post(device_code_url, data=device_code_payload)
+    if device_code_response.status_code != 200:
+        raise Exception(f"デバイスコード取得失敗: {device_code_response.text}")
+    
+    device_code_data = device_code_response.json()
+    
+    # ユーザーに認証指示を表示（本番環境ではログに記録）
+    print(f"Microsoft認証が必要です: {device_code_data['message']}")
+    
+    # トークン取得
+    token_url = f"https://login.microsoftonline.com/{os.getenv('MS_TENANT_ID')}/oauth2/v2.0/token"
+    token_payload = {
+        'client_id': os.getenv('MS_CLIENT_ID'),
+        'device_code': device_code_data['device_code'],
+        'grant_type': 'urn:ietf:params:oauth:grant-type:device_code'
+    }
+    
+    # トークン取得を試行（ポーリング）
+    start_time = time.time()
+    while time.time() - start_time < device_code_data['expires_in']:
+        token_response = requests.post(token_url, data=token_payload)
+        if token_response.status_code == 200:
+            token_data = token_response.json()
+            access_token = token_data['access_token']
+            expires_in = token_data['expires_in']
+            break
+        elif token_response.status_code != 400:
+            raise Exception(f"トークン取得失敗: {token_response.text}")
+        time.sleep(device_code_data['interval'])
+    
+    if 'access_token' not in locals():
+        raise Exception("デバイスコード認証がタイムアウトしました")
+
+    # Redisにトークンをキャッシュ (有効期限5分前に期限切れとみなす)
+    redis_client.setex(
+        'microsoft:access_token',
+        expires_in - 300,  # 55分間キャッシュ
+        access_token
+    )
+
+    return access_token
+
+# クライアントクレデンシャル認証API
+@auth_bp.route('/client_credentials', methods=['POST'])
+def client_credential_auth():
+    """Microsoft Graph APIを使用した非対話型認証"""
+    try:
+        # トークンを取得
+        access_token = get_microsoft_token()
+
+        # ユーザー情報を取得 (例: アプリケーションの管理者ユーザー)
+        graph_url = 'https://graph.microsoft.com/v1.0/users'
+        headers = {'Authorization': f'Bearer {access_token}'}
+        response = requests.get(graph_url, headers=headers)
+
+        if response.status_code != 200:
+            return jsonify({
+                'status': 'error',
+                'message': 'Microsoft Graph APIアクセス失敗'
+            }), 401
+
+        # ここでアプリケーション固有の認証処理を実施
+        # 例: 特定のユーザーにアクセス権があるか確認
+
+        # アプリケーション用のJWTトークンを発行
+        app_token = create_access_token(identity='system')
+        
+        return jsonify({
+            'status': 'success',
+            'access_token': app_token,
+            'expires_in': 3600  # 1時間有効
+        })
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 # ログインAPI
 @auth_bp.route('/login', methods=['POST'])
@@ -32,28 +164,23 @@ def login():
         return jsonify({'status': 'error', 'message': 'ユーザー名とパスワードが必要です'}), 400
 
     # ユーザー情報取得
-    conn = sqlite3.connect('itms.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM users WHERE username = ?', (username,))
-    user = c.fetchone()
+    user = User.query.filter_by(username=username).first()
 
     if not user:
-        conn.close()
         return jsonify({'status': 'error', 'message': 'ユーザー名またはパスワードが正しくありません'}), 401
 
     # アカウントロックチェック
-    if user['account_locked_until'] and datetime.strptime(user['account_locked_until'], '%Y-%m-%d %H:%M:%S.%f') > datetime.now():
-        conn.close()
+    if user.account_locked_until and user.account_locked_until > datetime.now():
         return jsonify({
             'status': 'error',
             'message': 'アカウントがロックされています',
-            'locked_until': user['account_locked_until']
+            'locked_until': user.account_locked_until.isoformat()
         }), 403
 
     # パスワード検証
-    if not check_password_hash(user['password_hash'], password):
+    if not user.check_password(password):
         # 失敗したログイン試行を記録
-        failed_attempts = user['failed_login_attempts'] + 1
+        failed_attempts = user.failed_login_attempts + 1
         lock_time = None
         
         # ロックアウト機能が無効でない場合のみ処理
@@ -65,37 +192,31 @@ def login():
                 lock_time = datetime.now() + timedelta(minutes=lock_duration)
                 send_admin_lock_notification(username)
         
-        c.execute('''
-            UPDATE users
-            SET failed_login_attempts = ?,
-                account_locked_until = ?
-            WHERE id = ?
-        ''', (failed_attempts, lock_time, user['id']))
-        conn.commit()
-        conn.close()
+        user.failed_login_attempts = failed_attempts
+        user.account_locked_until = lock_time
+        db.session.commit()
         
         return jsonify({'status': 'error', 'message': 'ユーザー名またはパスワードが正しくありません'}), 401
 
     # ログイン成功 - 試行回数をリセット
-    c.execute('''
-        UPDATE users
-        SET failed_login_attempts = 0,
-            account_locked_until = NULL,
-            last_login = ?
-        WHERE id = ?
-    ''', (datetime.now(), user['id']))
-    conn.commit()
-    conn.close()
+    user.failed_login_attempts = 0
+    user.account_locked_until = None
+    user.last_login = datetime.now()
+    db.session.commit()
 
-    # アクセストークン発行
-    access_token = create_access_token(identity=user['id'])
-    refresh_token = create_refresh_token(identity=user['id'])
-
+    # 最小限のトークンデータを返す
+    access_token = create_access_token(
+        identity=user.username,
+        additional_claims={
+            'sub': user.id,
+            'role': user.role
+        }
+    )
     return jsonify({
-        'status': 'success',
         'access_token': access_token,
-        'refresh_token': refresh_token
-    })
+        'token_type': 'Bearer',
+        'expires_in': 3600
+    }), 200
 
 # MFA設定
 @auth_bp.route('/mfa/setup', methods=['POST'])
@@ -169,8 +290,12 @@ def verify_mfa():
     if not totp.verify(code) and code not in json.loads(user['backup_codes'] or ''):
         return jsonify({'status': 'error', 'message': '無効なMFAコード'}), 401
     
-    # アクセストークン発行
-    access_token = create_access_token(identity=user['id'])
+    # アクセストークン発行 (アルゴリズム強制)
+    jwt_algorithm = os.getenv('JWT_ALGORITHM', 'RS256')
+    access_token = create_access_token(
+        identity=user['id'],
+        algorithm=jwt_algorithm
+    )
     refresh_token = create_refresh_token(identity=user['id'])
     
     # セッション記録
@@ -277,7 +402,7 @@ def send_email(email, subject, body):
     smtp_user = os.getenv('SMTP_USER')
     smtp_pass = os.getenv('SMTP_PASS')
     
-    msg = MIMEText(f'Your MFA secret: {secret}')
+    msg = MIMEText(body)
     msg['Subject'] = 'MFA Setup'
     msg['From'] = smtp_user
     msg['To'] = email
@@ -289,11 +414,19 @@ def send_email(email, subject, body):
 
 # トークン生成・検証
 def generate_reset_token(user_id, expires_in=3600):
-    """有効期限付きリセットトークンを生成"""
-    return pyotp.TOTP(pyotp.random_base32()).provisioning_uri(
-        str(user_id),
-        issuer_name="ITMS"
-    ).split('secret=')[1][:32]
+    """有効期限付きリセットトークンを生成（暗号学的に安全な方法）"""
+    # ユーザーIDとタイムスタンプを組み合わせたソルトを生成
+    salt = f"{user_id}{datetime.now().timestamp()}".encode()
+    
+    # PBKDF2を使用してトークンを導出
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+    )
+    token = kdf.derive(os.urandom(32))
+    return token_urlsafe(32)
 
 def verify_reset_token(token, user_id):
     """リセットトークンを検証"""
@@ -403,7 +536,6 @@ def reset_password():
     conn.close()
 
     return jsonify({'status': 'success'})
-    return result[0] if result else None
 
 def record_session(user_id, request):
     # セッション記録

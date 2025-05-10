@@ -82,7 +82,7 @@ ITマネジメントシステムを本番環境にデプロイするためのス
 
 ### 3. Rollback-Production.ps1
 
-デプロイに問題があった場合に、以前のバージョンに戻すためのスクリプトです。
+デプロイに問題があった場合に、以前のバージョンに戻すためのスクリプトです。完全なロールバックと段階的なロールバックの両方をサポートします。
 
 #### パラメータ
 
@@ -91,24 +91,44 @@ ITマネジメントシステムを本番環境にデプロイするためのス
 | BackupDir | はい | ロールバック元のバックアップディレクトリパス | なし |
 | InstallPath | いいえ | インストール先ディレクトリ | C:\ITManagementSystem |
 | IISSiteName | いいえ | IISサイト名 | ITManagementSystem |
+| RollbackVersion | いいえ | 段階的ロールバックするバージョン (例: "20250317_121530") | なし |
+| PartialRollback | いいえ | 段階的ロールバックを有効にする | $false |
+| SkipIntegrityCheck | いいえ | データベース整合性チェックをスキップする | $false |
 
 #### 使用例
 
 ```powershell
-# バックアップディレクトリを指定してロールバック
+# 完全ロールバック
 .\Rollback-Production.ps1 -BackupDir "C:\Backups\ITManagementSystem\20250317_121530"
 
-# インストール先も指定
-.\Rollback-Production.ps1 -BackupDir "C:\Backups\ITManagementSystem\20250317_121530" -InstallPath "D:\Applications\ITManagement"
+# 段階的ロールバック (特定バージョンのみ)
+.\Rollback-Production.ps1 -BackupDir "C:\Backups\ITManagementSystem" -RollbackVersion "20250317_121530" -PartialRollback $true
+
+# 整合性チェックをスキップ
+.\Rollback-Production.ps1 -BackupDir "C:\Backups\ITManagementSystem\20250317_121530" -SkipIntegrityCheck $true
 ```
 
 #### 主な処理内容
 
-1. サービスとIISサイトの停止
-2. 現在の状態の一時バックアップ
-3. バックアップからのファイル復元
-4. IISサイト設定の復元
-5. サービスとIISサイトの再起動
+1. データベース整合性チェック (オプションでスキップ可能)
+2. サービスとIISサイトの停止
+3. 現在の状態の一時バックアップ
+4. バックアップからのファイル復元 (段階的ロールバックの場合はトランザクションログを適用)
+5. IISサイト設定の復元
+6. サービスとIISサイトの再起動
+
+#### 段階的ロールバックについて
+
+- トランザクションログを使用して特定の変更のみを元に戻します
+- データベースの状態を保ちながら、問題のある変更のみをロールバック
+- バージョン指定が必要 (`RollbackVersion` パラメータ)
+- トランザクションログは `BackupDir/txlogs/` 以下に保存されている必要があります
+
+#### 整合性チェックについて
+
+- ロールバック前にバックアップファイルの整合性を自動チェック
+- チェックサムファイル (`checksum.sha256`) を使用して検証
+- 整合性チェックに失敗した場合はロールバックを中止
 
 ## トラブルシューティング
 

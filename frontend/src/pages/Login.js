@@ -21,6 +21,19 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  // モックログイン処理
+  const mockLogin = async (username, password) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (username === 'admin' && password === 'password') {
+          resolve({ success: true });
+        } else {
+          resolve({ success: false, error: 'Invalid credentials' });
+        }
+      }, 500);
+    });
+  };
+
   // 初回レンダリング追跡用
   const isInitialRender = React.useRef(true);
   

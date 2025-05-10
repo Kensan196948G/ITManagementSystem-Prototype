@@ -152,7 +152,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchSkyseaData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/skysea/clients');
+        const response = await fetch('http://localhost:5001/api/skysea/clients');
         if (!response.ok) throw new Error('SkySeaデータの取得に失敗しました');
         
         const data = await response.json();

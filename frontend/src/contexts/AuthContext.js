@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import * as msal from '@azure/msal-browser';
+import axios from 'axios';
 
 // 認証コンテキストの作成
 const AuthContext = createContext();
@@ -11,7 +12,8 @@ const USER_ROLES = {
   GUEST: 'ゲスト'
 };
 
-// 開発用のモックユーザーデータ
+// 開発用のモックユーザーデータ（ESLint警告を抑制）
+// eslint-disable-next-line
 const MOCK_USERS = {
   'admin': {
     id: '1',
@@ -22,35 +24,70 @@ const MOCK_USERS = {
     department: 'IT部門',
     permissions: ['admin', 'read', 'write', 'api_management'],
     avatar: 'https://i.pravatar.cc/150?img=1'
-  },
-  'user': {
-    id: '2',
-    first_name: '一郎',
-    last_name: '鈴木',
-    email: 'ichiro.suzuki@example.com',
-    role: USER_ROLES.GENERAL_USER,
-    department: 'IT部門',
-    permissions: ['read', 'write'],
-    avatar: 'https://i.pravatar.cc/150?img=2'
-  },
-  'guest': {
-    id: '3',
-    first_name: '次郎',
-    last_name: '佐藤',
-    email: 'jiro.sato@example.com',
-    role: USER_ROLES.GUEST,
-    department: '営業部',
-    permissions: ['read'],
-    avatar: 'https://i.pravatar.cc/150?img=3'
   }
 };
 
 // 認証プロバイダーコンポーネント
 export const AuthProvider = ({ children }) => {
+  // MSALインスタンスの初期化
+  const [msalInstance, setMsalInstance] = useState(() => {
+    const msalConfig = {
+      auth: {
+        clientId: '22e5d6e4-805f-4516-af09-ff09c7c224c4',
+        authority: 'https://login.microsoftonline.com/a7232f7a-a9e5-4f71-9372-dc8b1c6645ea'
+      }
+    };
+    return new msal.PublicClientApplication(msalConfig);
+  });
+
+  // トークン取得関数 (サイレント)
+  const acquireTokenSilent = useCallback(async () => {
+    try {
+      if (!msalInstance) {
+        console.error('MSALインスタンスが初期化されていません');
+        return null;
+      }
+
+      const account = msalInstance.getAllAccounts()[0];
+      if (!account) {
+        console.warn('認証アカウントが見つかりません');
+        return null;
+      }
+
+      const response = await msalInstance.acquireTokenSilent({
+        scopes: ['https://graph.microsoft.com/.default'],
+        account: account
+      });
+
+      if (response.accessToken) {
+        // トークンを保存
+        localStorage.setItem('msal_token', response.accessToken);
+        const expiryDate = new Date();
+        expiryDate.setSeconds(expiryDate.getSeconds() + response.expiresIn - 300); // 5分前に更新
+        localStorage.setItem('msal_token_expiry', expiryDate.toISOString());
+        setTokenExpiration(expiryDate);
+
+        console.log('トークン取得成功:', {
+          expiresIn: response.expiresIn,
+          scopes: response.scopes
+        });
+
+        return response.accessToken;
+      }
+    } catch (err) {
+      console.error('サイレントトークン取得エラー:', {
+        errorCode: err.errorCode,
+        message: err.message,
+        stack: err.stack
+      });
+      throw err;
+    }
+  }, [msalInstance]);
+
   const [currentUser, setCurrentUser] = useState(null);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [msalInstance, setMsalInstance] = useState(null);
   const [tokenExpiration, setTokenExpiration] = useState(null);
   const [mfaRequired, setMfaRequired] = useState(false);
   const [sessions, setSessions] = useState([]);
@@ -88,13 +125,38 @@ export const AuthProvider = ({ children }) => {
               role: USER_ROLES.GENERAL_USER,
               permissions: ['read', 'write']
             });
+            console.log('既存の有効なトークンを使用');
           }
         } else {
           // トークンがないか期限切れの場合、新しいトークンを取得
-          await acquireTokenSilent();
+          try {
+            const token = await acquireTokenSilent();
+            if (token) {
+              const account = msalInstance.getAllAccounts()[0];
+              if (account) {
+                setCurrentUser({
+                  id: account.localAccountId,
+                  name: account.name,
+                  email: account.username,
+                  role: USER_ROLES.GENERAL_USER,
+                  permissions: ['read', 'write']
+                });
+                console.log('新しいトークンを取得');
+              }
+            }
+          } catch (tokenError) {
+            console.error('トークン取得エラー:', {
+              message: tokenError.message,
+              stack: tokenError.stack
+            });
+            setError('認証トークンの取得に失敗しました');
+          }
         }
       } catch (err) {
-        console.error('認証チェックエラー:', err);
+        console.error('認証チェックエラー:', {
+          message: err.message,
+          stack: err.stack
+        });
         setError('認証チェック中にエラーが発生しました');
       } finally {
         setLoading(false);
@@ -103,7 +165,7 @@ export const AuthProvider = ({ children }) => {
 
     // 認証状態チェックを即時実行（開発モードではすぐに認証完了状態にする）
     checkAuthStatus();
-  }, []);
+  }, [acquireTokenSilent]);
 
   // レポート購読設定関数
   const subscribeToReports = async (reportTypes = [], frequency = 'weekly') => {
@@ -159,6 +221,64 @@ export const AuthProvider = ({ children }) => {
   };
 
   // 通常ログイン関数
+  const login = async (username, password) => {
+    try {
+      setError(null);
+      setLoading(true);
+      
+      // 既存のトークンを全てクリア
+      localStorage.removeItem('msal_token');
+      localStorage.removeItem('msal_token_expiry');
+      localStorage.removeItem('token');
+      
+      // 最小限のヘッダーでリクエスト
+      const response = await axios.post('/api/auth/login', {
+        username,
+        password
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+        setCurrentUser({ username });
+        setLoginAttempts(0);
+        setAccountLocked(false);
+        setLockUntil(null);
+        return true;
+      }
+    } catch (error) {
+      if (process.env.REACT_APP_ENV === 'development') {
+        console.error('ログイン失敗:', {
+          status: error.response?.status || '応答なし',
+          message: error.message,
+          details: error.response?.data || '詳細情報なし'
+        });
+      }
+      
+      // ユーザー向けの統一されたエラーメッセージ
+      const errorMessage = error.response?.data?.message ||
+                         error.message ||
+                         'ログインに失敗しました。もう一度お試しください';
+      
+      if (error.response?.status === 401) {
+        setError(errorMessage);
+      } else if (error.response?.status === 403) {
+        setError('アカウントがロックされています。後ほど再度お試しください。');
+      } else {
+        setError(errorMessage);
+      }
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  /*
+  // 本番用ログイン関数 (コメントアウト)
   const login = async (username, password) => {
     try {
       setError(null);
@@ -223,49 +343,12 @@ export const AuthProvider = ({ children }) => {
       console.error('ログインエラー:', err);
       setError(err.message || 'ログインに失敗しました。');
       return false;
+    } finally {
+      setLoading(false);
     }
   };
+  */
 
-  // トークン取得関数 (サイレント)
-  const acquireTokenSilent = useCallback(async () => {
-    try {
-      if (!msalInstance) return;
-
-      const account = msalInstance.getAllAccounts()[0];
-      if (!account) {
-        throw new Error('認証アカウントが見つかりません');
-      }
-
-      const response = await msalInstance.acquireTokenSilent({
-        scopes: ['https://graph.microsoft.com/.default'],
-        account: account
-      });
-
-      if (response.accessToken) {
-        // トークンを保存
-        localStorage.setItem('msal_token', response.accessToken);
-        const expiryDate = new Date();
-        expiryDate.setSeconds(expiryDate.getSeconds() + response.expiresIn - 300); // 5分前に更新
-        localStorage.setItem('msal_token_expiry', expiryDate.toISOString());
-        setTokenExpiration(expiryDate);
-
-        // ユーザー情報を設定
-        const account = msalInstance.getAllAccounts()[0];
-        setCurrentUser({
-          id: account.localAccountId,
-          name: account.name,
-          email: account.username,
-          role: USER_ROLES.GENERAL_USER,
-          permissions: ['read', 'write']
-        });
-
-        return response.accessToken;
-      }
-    } catch (err) {
-      console.error('サイレントトークン取得エラー:', err);
-      throw err;
-    }
-  }, [msalInstance]);
 
   // トークン自動更新用のエフェクト
   useEffect(() => {

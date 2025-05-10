@@ -1,27 +1,40 @@
 import os
+import sys
+from werkzeug.serving import is_running_from_reloader
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import sys
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
+
+# 実行パスの絶対パス化
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
+from backend.models.user import User
+from backend import db
 
 # 環境変数の読み込み
 load_dotenv()
-
-# JWT設定
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
 
 # Flaskアプリケーション初期化
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'dev-jwt-secret')
 
+# 🔒 Security Update: セキュリティヘッダーミドルウェア登録
+from backend.middleware.security_headers import security_headers_middleware
+app = security_headers_middleware(app)
+
+# JWT設定
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
+
 # CORSの設定 - フロントエンドからのリクエストを許可
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:5000", "http://localhost:3000"],
+        "origins": ["http://localhost:5000", "http://localhost:3000", "http://127.0.0.1:3000"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True
@@ -35,16 +48,23 @@ jwt = JWTManager(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../db/database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+def create_initial_users():
+    """初期ユーザーを自動登録する関数"""
+    if not User.query.filter_by(username='admin').first():
+        admin = User(username='admin', password='admin', role='admin')
+        db.session.add(admin)
+        db.session.commit()
+
 # ルートの読み込み
-from routes.auth import auth_bp
-from routes.system import system_bp
-from routes.reports import reports_bp
-from routes.workflow import workflow_bp
-from routes.security import security_bp
+from backend.routes.auth import auth_bp
+from backend.routes.system import system_bp
+from backend.routes.reports import reports_bp
+from backend.routes.workflow import workflow_bp
+from backend.routes.security import security_bp
 
 # Blueprint登録
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
-app.register_blueprint(system_bp, url_prefix='/api/system')
+app.register_blueprint(system_bp)
 app.register_blueprint(reports_bp, url_prefix='/api/reports')
 app.register_blueprint(workflow_bp, url_prefix='/api/workflow')
 app.register_blueprint(security_bp, url_prefix='/api/security')
@@ -120,7 +140,7 @@ def health_check():
     })
 
 # Microsoft認証関連エンドポイント
-@app.route('/auth/client_credentials', methods=['POST'])
+# このルートはauth_bpに移動しました
 def get_client_credentials_token():
     """
     Client Credentialsフローでトークンを取得するエンドポイント
@@ -227,9 +247,15 @@ def server_error(e):
 
     # アプリケーション実行
 if __name__ == '__main__':
-    # 開発環境では、デバッグモードで実行
-    app.run(
-        debug=True,
-        host='0.0.0.0',
-        port=5001
-    )
+    # 初期ユーザー作成
+    create_initial_users()
+    
+    # リローダーでない場合のみ実行
+    if not is_running_from_reloader():
+        # 開発環境では、デバッグモードで実行
+        app.run(
+            debug=True,
+            host='0.0.0.0',
+            port=5000,
+            use_reloader=False  # リローダーを無効化
+        )
