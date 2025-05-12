@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "<frozen runpy>", line 198, in _run_module_as_main
-  File "<frozen runpy>", line 88, in _run_code
-  File "C:\kitting\ITManagementSystem-Prototype\backend\main.py", line 3, in <module>
-    from werkzeug.serving import is_running_from_reloader
-ModuleNotFoundError: No module named 'werkzeug'

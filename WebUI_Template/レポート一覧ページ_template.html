@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レポート一覧 - ITSM運用管理システム - テンプレート</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#3b82f6', secondary: '#64748b' }, borderRadius: { 'none': '0px', 'sm': '4px', DEFAULT: '8px', 'md': '12px', 'lg': '16px', 'xl': '20px', '2xl': '24px', '3xl': '32px', 'full': '9999px', 'button': '8px' } } } }</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <style>
+        :where([class^="ri-"])::before {
+            content: "\f3c2";
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f9fafb;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e2e8f0;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.switch-slider {
+            background-color: #3b82f6;
+        }
+
+        input:checked+.switch-slider:before {
+            transform: translateX(20px);
+        }
+
+        .custom-radio {
+            display: inline-block;
+            position: relative;
+            padding-left: 28px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .custom-radio input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .radio-checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 20px;
+            width: 20px;
+            background-color: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+        }
+
+        .custom-radio:hover input~.radio-checkmark {
+            border-color: #d1d5db;
+        }
+
+        .custom-radio input:checked~.radio-checkmark {
+            border-color: #3b82f6;
+        }
+
+        .radio-checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .custom-radio input:checked~.radio-checkmark:after {
+            display: block;
+        }
+
+        .custom-radio .radio-checkmark:after {
+            top: 3px;
+            left: 3px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #3b82f6;
+        }
+
+        .custom-checkbox {
+            display: inline-block;
+            position: relative;
+            padding-left: 28px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .checkbox-checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 20px;
+            width: 20px;
+            background-color: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .custom-checkbox:hover input~.checkbox-checkmark {
+            border-color: #d1d5db;
+        }
+
+        .custom-checkbox input:checked~.checkbox-checkmark {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .checkbox-checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .custom-checkbox input:checked~.checkbox-checkmark:after {
+            display: block;
+        }
+
+        .custom-checkbox .checkbox-checkmark:after {
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="flex h-screen overflow-hidden bg-white">
+        <!-- サイドナビゲーション -->
+        <div class="w-64 bg-gray-900 text-white flex flex-col">
+            <div class="p-4 flex items-center border-b border-gray-800">
+                <div class="ml-2 text-sm font-medium">ITSM Platform</div>
+            </div>
+            <div class="flex-1 overflow-y-auto scrollbar-hide">
+                <nav class="mt-4">
+                    <div class="px-4 py-2 text-xs font-medium text-gray-400 uppercase">メインメニュー</div>
+                    <a href="./ITサービス運用プラットフォーム_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-dashboard-line"></i>
+                        </div>
+                        <span>ダッシュボード</span>
+                    </a>
+                    <a href="./インシデント管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-error-warning-line"></i>
+                        </div>
+                        <span>インシデント管理</span>
+                    </a>
+                    <a href="./問題管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-question-line"></i>
+                        </div>
+                        <span>問題管理</span>
+                    </a>
+                    <a href="./変更管理ダッシュボード_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-refresh-line"></i>
+                        </div>
+                        <span>変更管理</span>
+                    </a>
+                    <a href="./リリース管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-rocket-line"></i>
+                        </div>
+                        <span>リリース管理</span>
+                    </a>
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">ISO準拠管理</div>
+                    <a href="./構成管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-settings-3-line"></i>
+                        </div>
+                        <span>構成管理</span>
+                    </a>
+                    <a href="./セキュリティ管理画面_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-shield-check-line"></i>
+                        </div>
+                        <span>セキュリティ管理</span>
+                    </a>
+                    <a href="./可用性管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-timer-line"></i>
+                        </div>
+                        <span>可用性管理</span>
+                    </a>
+                    <a href="./キャパシティ管理ダッシュボード_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-database-2-line"></i>
+                        </div>
+                        <span>キャパシティ管理</span>
+                    </a>
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">レポート</div>
+                    <a href="./レポート一覧ページ_template.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-800">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-file-chart-line"></i>
+                        </div>
+                        <span>レポート</span>
+                    </a>
+                    <a href="./設定ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-settings-line"></i>
+                        </div>
+                        <span>設定</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-gray-800">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+                        <i class="ri-user-line"></i>
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-sm font-medium">ユーザー名</div>
+                        <div class="text-xs text-gray-400">役職</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- メインコンテンツ -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- ヘッダー -->
+            <header class="bg-white border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-3">
+                    <div class="flex items-center">
+                        <div class="text-lg font-medium">レポート一覧 - テンプレート</div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="mr-6 text-sm text-gray-600">
+                            <span id="current-date">YYYY年MM月DD日</span>
+                            <span id="current-time">HH:MM:SS</span>
+                            <span class="ml-1">JST</span>
+                        </div>
+                        <button class="relative p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-notification-3-line"></i>
+                            </div>
+                            <!-- <span class="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">N</span> -->
+                        </button>
+                        <button class="p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-settings-4-line"></i>
+                            </div>
+                        </button>
+                        <button class="p-2 text-gray-600 hover:text-gray-900">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-question-line"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <!-- コンテンツエリア -->
+            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <div class="max-w-7xl mx-auto">
+                    <!-- フィルターとアクションエリア -->
+                    <div class="bg-white rounded shadow mb-6">
+                        <div class="flex flex-wrap items-center justify-between p-4 border-b border-gray-200">
+                            <!-- 期間選択タブ -->
+                            <div class="flex bg-gray-100 p-1 rounded-full">
+                                <button id="daily-tab"
+                                    class="px-4 py-2 text-sm font-medium rounded-full bg-primary text-white">日次</button>
+                                <button id="weekly-tab"
+                                    class="px-4 py-2 text-sm font-medium rounded-full text-gray-600 hover:bg-gray-200">週次</button>
+                                <button id="monthly-tab"
+                                    class="px-4 py-2 text-sm font-medium rounded-full text-gray-600 hover:bg-gray-200">月次</button>
+                            </div>
+                            <!-- 検索バー -->
+                            <div class="relative mt-4 sm:mt-0">
+                                <input type="text" placeholder="レポートを検索..."
+                                    class="pl-10 pr-4 py-2 border-none bg-gray-100 rounded-full w-64 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                                <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                    <div class="w-4 h-4 flex items-center justify-center">
+                                        <i class="ri-search-line"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- カスタムレポート作成ボタン -->
+                            <button
+                                class="mt-4 sm:mt-0 px-4 py-2 bg-primary text-white rounded-button flex items-center text-sm font-medium hover:bg-blue-600 transition">
+                                <div class="w-4 h-4 flex items-center justify-center mr-2">
+                                    <i class="ri-add-line"></i>
+                                </div>
+                                カスタムレポート作成
+                            </button>
+                        </div>
+                        <div class="p-4 flex flex-wrap items-center gap-4">
+                            <!-- カテゴリフィルター -->
+                            <div class="relative">
+                                <button id="category-dropdown-btn"
+                                    class="flex items-center justify-between w-48 px-3 py-2 bg-white border border-gray-300 rounded-button text-sm text-gray-700">
+                                    <span>カテゴリ: すべて</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-2">
+                                        <i class="ri-arrow-down-s-line"></i>
+                                    </div>
+                                </button>
+                                <div id="category-dropdown"
+                                    class="hidden absolute z-10 mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg">
+                                    <div class="p-2">
+                                        <label
+                                            class="custom-checkbox block py-1 px-2 hover:bg-gray-100 rounded text-sm">
+                                            <input type="checkbox" checked>
+                                            <span class="checkbox-checkmark"></span>
+                                            すべて
+                                        </label>
+                                        <label
+                                            class="custom-checkbox block py-1 px-2 hover:bg-gray-100 rounded text-sm">
+                                            <input type="checkbox" checked>
+                                            <span class="checkbox-checkmark"></span>
+                                            インシデント
+                                        </label>
+                                        <!-- 他のカテゴリはそのまま -->
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ステータスフィルター -->
+                            <div class="relative">
+                                <button id="status-dropdown-btn"
+                                    class="flex items-center justify-between w-48 px-3 py-2 bg-white border border-gray-300 rounded-button text-sm text-gray-700">
+                                    <span>ステータス: すべて</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-2">
+                                        <i class="ri-arrow-down-s-line"></i>
+                                    </div>
+                                </button>
+                                <div id="status-dropdown"
+                                    class="hidden absolute z-10 mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg">
+                                    <div class="p-2">
+                                        <label
+                                            class="custom-checkbox block py-1 px-2 hover:bg-gray-100 rounded text-sm">
+                                            <input type="checkbox" checked>
+                                            <span class="checkbox-checkmark"></span>
+                                            すべて
+                                        </label>
+                                        <!-- 他のステータスはそのまま -->
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 日付範囲フィルター -->
+                            <div class="flex items-center space-x-2">
+                                <div class="relative">
+                                    <input type="date"
+                                        class="px-3 py-2 bg-white border border-gray-300 rounded-button text-sm text-gray-700 w-40"
+                                        value="YYYY-MM-DD">
+                                </div>
+                                <span class="text-gray-500">〜</span>
+                                <div class="relative">
+                                    <input type="date"
+                                        class="px-3 py-2 bg-white border border-gray-300 rounded-button text-sm text-gray-700 w-40"
+                                        value="YYYY-MM-DD">
+                                </div>
+                            </div>
+                            <!-- 並び替え -->
+                            <div class="relative ml-auto">
+                                <button id="sort-dropdown-btn"
+                                    class="flex items-center justify-between px-3 py-2 bg-white border border-gray-300 rounded-button text-sm text-gray-700">
+                                    <span>並び替え: 最新順</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-2">
+                                        <i class="ri-arrow-down-s-line"></i>
+                                    </div>
+                                </button>
+                                <div id="sort-dropdown"
+                                    class="hidden absolute right-0 z-10 mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg">
+                                    <div class="py-1">
+                                        <button
+                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">最新順</button>
+                                        <!-- 他のソートオプションはそのまま -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- レポートサマリーセクション -->
+                    <div class="grid grid-cols-4 gap-6 mb-6">
+                        <div class="bg-white rounded shadow p-5">
+                            <div class="flex items-center">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+                                    <div class="w-6 h-6 flex items-center justify-center">
+                                        <i class="ri-file-chart-line ri-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm text-gray-500">総レポート数</div>
+                                    <div class="text-2xl font-bold">N</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded shadow p-5">
+                            <div class="flex items-center">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+                                    <div class="w-6 h-6 flex items-center justify-center">
+                                        <i class="ri-calendar-check-line ri-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm text-gray-500">今週作成</div>
+                                    <div class="text-2xl font-bold">N</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded shadow p-5">
+                            <div class="flex items-center">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-500">
+                                    <div class="w-6 h-6 flex items-center justify-center">
+                                        <i class="ri-star-line ri-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm text-gray-500">お気に入り</div>
+                                    <div class="text-2xl font-bold">N</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded shadow p-5">
+                            <div class="flex items-center">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
+                                    <div class="w-6 h-6 flex items-center justify-center">
+                                        <i class="ri-download-line ri-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm text-gray-500">ダウンロード数</div>
+                                    <div class="text-2xl font-bold">N</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- レポート一覧 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                        <!-- レポートカード テンプレート -->
+                        <div class="bg-white rounded shadow overflow-hidden group">
+                            <div class="relative">
+                                <div class="h-40 bg-gray-100 flex items-center justify-center">
+                                    <div id="report-chart-dummy-1" class="w-full h-full"></div>
+                                    <p class="text-xs text-gray-400">チャート表示エリア</p>
+                                </div>
+                                <div class="absolute top-3 right-3 flex space-x-2">
+                                    <button
+                                        class="w-8 h-8 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-primary">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-star-line"></i>
+                                        </div>
+                                    </button>
+                                    <div class="relative">
+                                        <button
+                                            class="report-options-btn w-8 h-8 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-primary">
+                                            <div class="w-4 h-4 flex items-center justify-center">
+                                                <i class="ri-more-2-fill"></i>
+                                            </div>
+                                        </button>
+                                        <div
+                                            class="report-options-menu hidden absolute right-0 mt-2 w-48 bg-white rounded shadow-lg z-10">
+                                            <div class="py-1">
+                                                <button
+                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">プレビュー</button>
+                                                <button
+                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">ダウンロード</button>
+                                                <button
+                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">共有</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                        カテゴリ</div>
+                                    <div
+                                        class="ml-2 px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                        期間</div>
+                                </div>
+                                <h3 class="text-lg font-medium mb-1">レポートタイトルプレースホルダー</h3>
+                                <p class="text-sm text-gray-500 mb-3">レポート概要プレースホルダー</p>
+                                <div class="flex items-center justify-between text-xs text-gray-500">
+                                    <div class="flex items-center">
+                                        <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                            <i class="ri-time-line"></i>
+                                        </div>
+                                        <span>YYYY/MM/DD 更新</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                            <i class="ri-user-line"></i>
+                                        </div>
+                                        <span>作成者名</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-between">
+                                <button
+                                    class="flex items-center text-sm text-primary hover:text-blue-700 !rounded-button report-preview-btn">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-eye-line"></i>
+                                    </div>
+                                    プレビュー
+                                </button>
+                                <div class="flex space-x-2">
+                                    <button
+                                        class="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full text-gray-600 hover:bg-gray-300 hover:text-gray-800">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-file-pdf-line"></i>
+                                        </div>
+                                    </button>
+                                    <button
+                                        class="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full text-gray-600 hover:bg-gray-300 hover:text-gray-800">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-file-excel-line"></i>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- レポートカードの繰り返しは省略（上記をテンプレートとして利用） -->
+                    </div>
+
+                    <!-- レポートテンプレートセクション -->
+                    <div class="bg-white rounded shadow mb-6">
+                        <div class="px-5 py-4 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-medium">レポートテンプレート (テンプレート)</h2>
+                                <button
+                                    class="text-sm text-primary hover:text-primary-dark flex items-center !rounded-button">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-add-line"></i>
+                                    </div>
+                                    新規テンプレート作成
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div
+                                    class="border border-gray-200 rounded p-4 hover:border-primary hover:shadow-md transition cursor-pointer">
+                                    <div class="flex items-center mb-3">
+                                        <div
+                                            class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full mr-3">
+                                            <div class="w-5 h-5 flex items-center justify-center">
+                                                <i class="ri-file-chart-line"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-medium">テンプレート名1</h3>
+                                            <p class="text-xs text-gray-500">期間タイプ</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        テンプレート説明プレースホルダー
+                                    </div>
+                                </div>
+                                <!-- 他のテンプレートカードも同様にプレースホルダー化 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ページネーション -->
+                    <div class="flex items-center justify-between bg-white px-4 py-3 rounded shadow">
+                        <div class="flex items-center">
+                            <p class="text-sm text-gray-700">
+                                全 <span class="font-medium">N</span> 件中 <span class="font-medium">1-M</span> 件を表示
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button
+                                class="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-500 bg-white hover:bg-gray-50 !rounded-button">前へ</button>
+                            <button
+                                class="px-3 py-1 border border-gray-300 rounded-md text-sm bg-primary text-white hover:bg-blue-600 !rounded-button">1</button>
+                            <button
+                                class="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 !rounded-button">2</button>
+                            <button
+                                class="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 !rounded-button">3</button>
+                            <button
+                                class="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 !rounded-button">次へ</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- レポートプレビューモーダル -->
+    <div id="report-preview-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-medium">レポートタイトルプレースホルダー</h2>
+                <button id="close-preview-modal" class="text-gray-400 hover:text-gray-500">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-close-line"></i>
+                    </div>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6">
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="flex items-center mb-2">
+                                <div class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">カテゴリ
+                                </div>
+                                <div
+                                    class="ml-2 px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                    期間</div>
+                            </div>
+                            <h3 class="text-lg font-medium">レポート概要プレースホルダー</h3>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            <div>作成者: 作成者名</div>
+                            <div>最終更新: YYYY/MM/DD HH:MM</div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded mb-6">
+                        <h4 class="text-sm font-medium mb-2">概要</h4>
+                        <p class="text-sm text-gray-600">
+                            レポート詳細説明プレースホルダー。
+                        </p>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium mb-3">チャートタイトル1</h4>
+                        <div id="preview-chart-dummy-1" class="h-64 mb-4"></div>
+                        <p class="text-xs text-gray-400 text-center">チャート表示エリア1</p>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium mb-3">テーブルタイトル</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col"
+                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            列1</th>
+                                        <th scope="col"
+                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            列2</th>
+                                        <!-- 他の列ヘッダーはそのまま -->
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">データ1</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">データ2</td>
+                                        <!-- 他のデータはそのまま -->
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium mb-3">チャートタイトル2</h4>
+                        <div id="preview-chart-dummy-2" class="h-64 mb-4"></div>
+                        <p class="text-xs text-gray-400 text-center">チャート表示エリア2</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium mb-3">結論と推奨事項</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <p>結論と推奨事項のプレースホルダー。</p>
+                            <ol class="list-decimal pl-5 space-y-1">
+                                <li>推奨事項1</li>
+                                <li>推奨事項2</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                <div class="flex space-x-2">
+                    <button
+                        class="flex items-center px-3 py-2 border border-gray-300 rounded-button text-sm text-gray-700 bg-white hover:bg-gray-50">
+                        <div class="w-4 h-4 flex items-center justify-center mr-2">
+                            <i class="ri-printer-line"></i>
+                        </div>
+                        印刷
+                    </button>
+                    <button
+                        class="flex items-center px-3 py-2 border border-gray-300 rounded-button text-sm text-gray-700 bg-white hover:bg-gray-50">
+                        <div class="w-4 h-4 flex items-center justify-center mr-2">
+                            <i class="ri-share-line"></i>
+                        </div>
+                        共有
+                    </button>
+                </div>
+                <div class="flex space-x-2">
+                    <button
+                        class="flex items-center px-3 py-2 border border-gray-300 rounded-button text-sm text-gray-700 bg-white hover:bg-gray-50">
+                        <div class="w-4 h-4 flex items-center justify-center mr-2">
+                            <i class="ri-file-pdf-line"></i>
+                        </div>
+                        PDF
+                    </button>
+                    <button
+                        class="flex items-center px-3 py-2 border border-gray-300 rounded-button text-sm text-gray-700 bg-white hover:bg-gray-50">
+                        <div class="w-4 h-4 flex items-center justify-center mr-2">
+                            <i class="ri-file-excel-line"></i>
+                        </div>
+                        Excel
+                    </button>
+                    <button
+                        class="flex items-center px-3 py-2 bg-primary text-white rounded-button text-sm hover:bg-blue-600">
+                        <div class="w-4 h-4 flex items-center justify-center mr-2">
+                            <i class="ri-download-line"></i>
+                        </div>
+                        ダウンロード
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 現在時刻の更新
+            function updateTime() {
+                const now = new Date();
+                const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                const timeElem = document.getElementById('current-time');
+                if (timeElem) {
+                    timeElem.textContent = now.toLocaleTimeString('ja-JP', options);
+                }
+            }
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            // 現在の日付を設定
+            const nowDate = new Date();
+            const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
+            const dateElem = document.getElementById('current-date');
+            if (dateElem) {
+                dateElem.textContent = nowDate.toLocaleDateString('ja-JP', dateOptions).replace(/\//g, '年').replace(/\//g, '月') + '日';
+            }
+
+            // ドロップダウンの表示・非表示
+            const dropdownButtons = [
+                { btn: 'category-dropdown-btn', menu: 'category-dropdown' },
+                { btn: 'status-dropdown-btn', menu: 'status-dropdown' },
+                { btn: 'sort-dropdown-btn', menu: 'sort-dropdown' }
+            ];
+
+            dropdownButtons.forEach(item => {
+                const btn = document.getElementById(item.btn);
+                const menu = document.getElementById(item.menu);
+                if (btn && menu) {
+                    btn.addEventListener('click', function () {
+                        menu.classList.toggle('hidden');
+                    });
+                }
+            });
+
+
+            // 期間選択タブの切り替え
+            const tabs = ['daily-tab', 'weekly-tab', 'monthly-tab'];
+            tabs.forEach(tabId => {
+                const tabElement = document.getElementById(tabId);
+                if (tabElement) {
+                    tabElement.addEventListener('click', function () {
+                        tabs.forEach(t => {
+                            const el = document.getElementById(t);
+                            if (el) {
+                                el.classList.remove('bg-primary', 'text-white');
+                                el.classList.add('text-gray-600', 'hover:bg-gray-200');
+                            }
+                        });
+                        this.classList.add('bg-primary', 'text-white');
+                        this.classList.remove('text-gray-600', 'hover:bg-gray-200');
+                    });
+                }
+            });
+
+            // オプションメニューの表示・非表示
+            document.querySelectorAll('.report-options-btn').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const menu = this.nextElementSibling;
+                    if (menu && menu.classList.contains('report-options-menu')) {
+                        menu.classList.toggle('hidden');
+                        // 他のメニューを閉じる
+                        document.querySelectorAll('.report-options-menu').forEach(otherMenu => {
+                            if (otherMenu !== menu) {
+                                otherMenu.classList.add('hidden');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // ドキュメント全体をクリックしたときにドロップダウンを閉じる
+            document.addEventListener('click', function (e) {
+                dropdownButtons.forEach(item => {
+                    const btn = document.getElementById(item.btn);
+                    const menu = document.getElementById(item.menu);
+                    if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                });
+                document.querySelectorAll('.report-options-menu').forEach(menu => {
+                    const btn = menu.previousElementSibling;
+                    if (btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                });
+            });
+
+            // プレビューモーダルの表示・非表示
+            const previewModal = document.getElementById('report-preview-modal');
+            const closePreviewModal = document.getElementById('close-preview-modal');
+
+            document.querySelectorAll('.report-preview-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    if (previewModal) {
+                        previewModal.classList.remove('hidden');
+                        document.body.style.overflow = 'hidden';
+                        // プレビューチャートの初期化 (ダミー)
+                        initDummyPreviewCharts();
+                    }
+                });
+            });
+
+            if (closePreviewModal && previewModal) {
+                closePreviewModal.addEventListener('click', function () {
+                    previewModal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                });
+            }
+
+            if (previewModal) {
+                previewModal.addEventListener('click', function (e) {
+                    if (e.target === previewModal) {
+                        previewModal.classList.add('hidden');
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            }
+
+            // ダミーチャートの初期化関数
+            function initDummyChart(chartId, type = 'bar') {
+                const chartDom = document.getElementById(chartId);
+                if (chartDom && typeof echarts !== 'undefined') {
+                    const chart = echarts.init(chartDom);
+                    let option = {
+                        animation: false,
+                        tooltip: { trigger: 'axis' },
+                        grid: { top: 10, right: 10, bottom: 10, left: 10, containLabel: false },
+                        xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E'], show: false },
+                        yAxis: { type: 'value', show: false },
+                        series: [{
+                            data: [10, 20, 15, 25, 30].sort(() => Math.random() - 0.5), // ランダムデータ
+                            type: type,
+                            color: '#3b82f6',
+                            ...(type === 'bar' ? { barWidth: '60%', itemStyle: { borderRadius: 4 } } : {}),
+                            ...(type === 'line' ? { smooth: true, symbol: 'none', areaStyle: { opacity: 0.1 } } : {})
+                        }]
+                    };
+                    if (type === 'pie') {
+                        option = {
+                            animation: false,
+                            tooltip: { trigger: 'item' },
+                            series: [{
+                                type: 'pie',
+                                radius: ['40%', '70%'],
+                                avoidLabelOverlap: false,
+                                label: { show: false },
+                                labelLine: { show: false },
+                                data: [
+                                    { value: Math.floor(Math.random() * 50) + 10, name: 'Data1' },
+                                    { value: Math.floor(Math.random() * 50) + 10, name: 'Data2' },
+                                    { value: Math.floor(Math.random() * 50) + 10, name: 'Data3' },
+                                ],
+                                color: ['#3b82f6', '#10b981', '#f59e0b']
+                            }]
+                        };
+                    }
+                    chart.setOption(option);
+                    return chart;
+                }
+                return null;
+            }
+
+            // レポートカードのダミーチャート初期化
+            initDummyChart('report-chart-dummy-1', 'bar');
+            // 他のレポートカード用のダミーチャートも同様に初期化できます。
+            // 例: initDummyChart('report-chart-dummy-2', 'line');
+            // 例: initDummyChart('report-chart-dummy-3', 'pie');
+
+
+            function initDummyPreviewCharts() {
+                initDummyChart('preview-chart-dummy-1', 'bar');
+                initDummyChart('preview-chart-dummy-2', 'line');
+            }
+
+            // ウィンドウリサイズ時にチャートをリサイズ
+            window.addEventListener('resize', function () {
+                if (typeof echarts !== 'undefined') {
+                    document.querySelectorAll('[id^="report-chart-dummy-"], [id^="preview-chart-dummy-"]').forEach(el => {
+                        const chartInstance = echarts.getInstanceByDom(el);
+                        if (chartInstance) {
+                            chartInstance.resize();
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

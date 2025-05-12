@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>キャパシティ管理 - ITSM運用管理システム - テンプレート</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#3b82f6', secondary: '#64748b' }, borderRadius: { 'none': '0px', 'sm': '4px', DEFAULT: '8px', 'md': '12px', 'lg': '16px', 'xl': '20px', '2xl': '24px', '3xl': '32px', 'full': '9999px', 'button': '8px' } } } }</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <style>
+        :where([class^="ri-"])::before {
+            content: "\f3c2";
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f9fafb;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e2e8f0;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.switch-slider {
+            background-color: #3b82f6;
+        }
+
+        input:checked+.switch-slider:before {
+            transform: translateX(20px);
+        }
+
+        .custom-range {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+        }
+
+        .custom-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-range::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-radio {
+            display: inline-block;
+            position: relative;
+            padding-left: 28px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .custom-radio input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .radio-checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 18px;
+            width: 18px;
+            background-color: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+        }
+
+        .custom-radio:hover input~.radio-checkmark {
+            border-color: #d1d5db;
+        }
+
+        .custom-radio input:checked~.radio-checkmark {
+            border-color: #3b82f6;
+        }
+
+        .radio-checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .custom-radio input:checked~.radio-checkmark:after {
+            display: block;
+        }
+
+        .custom-radio .radio-checkmark:after {
+            top: 3px;
+            left: 3px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3b82f6;
+        }
+
+        .custom-checkbox {
+            display: inline-block;
+            position: relative;
+            padding-left: 28px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .checkbox-checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 18px;
+            width: 18px;
+            background-color: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .custom-checkbox:hover input~.checkbox-checkmark {
+            border-color: #d1d5db;
+        }
+
+        .custom-checkbox input:checked~.checkbox-checkmark {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .checkbox-checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .custom-checkbox input:checked~.checkbox-checkmark:after {
+            display: block;
+        }
+
+        .custom-checkbox .checkbox-checkmark:after {
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="flex h-screen overflow-hidden bg-white">
+        <!-- サイドナビゲーション -->
+        <div class="w-64 bg-gray-900 text-white flex flex-col">
+            <div class="p-4 flex items-center border-b border-gray-800">
+                <div class="ml-2 text-sm font-medium">ITSM Platform</div>
+            </div>
+            <div class="flex-1 overflow-y-auto scrollbar-hide">
+                <nav class="mt-4">
+                    <div class="px-4 py-2 text-xs font-medium text-gray-400 uppercase">メインメニュー</div>
+                    <a href="./ITサービス運用プラットフォーム_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-dashboard-line"></i>
+                        </div>
+                        <span>ダッシュボード</span>
+                    </a>
+                    <a href="./インシデント管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-error-warning-line"></i>
+                        </div>
+                        <span>インシデント管理</span>
+                    </a>
+                    <a href="./問題管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-question-line"></i>
+                        </div>
+                        <span>問題管理</span>
+                    </a>
+                    <a href="./変更管理ダッシュボード_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-refresh-line"></i>
+                        </div>
+                        <span>変更管理</span>
+                    </a>
+                    <a href="./リリース管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-rocket-line"></i>
+                        </div>
+                        <span>リリース管理</span>
+                    </a>
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">ISO準拠管理</div>
+                    <a href="./構成管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-settings-3-line"></i>
+                        </div>
+                        <span>構成管理</span>
+                    </a>
+                    <a href="./セキュリティ管理画面_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-shield-check-line"></i>
+                        </div>
+                        <span>セキュリティ管理</span>
+                    </a>
+                    <a href="./可用性管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-timer-line"></i>
+                        </div>
+                        <span>可用性管理</span>
+                    </a>
+                    <a href="./キャパシティ管理ダッシュボード_template.html"
+                        class="flex items-center px-4 py-3 text-gray-100 bg-gray-800">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-database-2-line"></i>
+                        </div>
+                        <span>キャパシティ管理</span>
+                    </a>
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">レポート</div>
+                    <a href="./レポート一覧ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-file-chart-line"></i>
+                        </div>
+                        <span>レポート</span>
+                    </a>
+                    <a href="./設定ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-settings-line"></i>
+                        </div>
+                        <span>設定</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-gray-800">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+                        <i class="ri-user-line"></i>
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-sm font-medium">ユーザー名</div>
+                        <div class="text-xs text-gray-400">役職</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- ヘッダー -->
+            <header class="bg-white border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-3">
+                    <div class="flex items-center">
+                        <div class="text-lg font-medium">ITSM運用管理システム - テンプレート</div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="mr-6 text-sm text-gray-600">
+                            <span id="current-date">YYYY年MM月DD日</span>
+                            <span id="current-time">HH:MM:SS</span>
+                            <span class="ml-1">JST</span>
+                        </div>
+                        <button class="relative p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-notification-3-line"></i>
+                            </div>
+                            <!-- <span class="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">3</span> -->
+                        </button>
+                        <button class="p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-settings-4-line"></i>
+                            </div>
+                        </button>
+                        <button class="p-2 text-gray-600 hover:text-gray-900">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-question-line"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- コンテンツエリア -->
+            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <div class="max-w-7xl mx-auto">
+                    <!-- ページヘッダー -->
+                    <div class="mb-6 flex justify-between items-center">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">キャパシティ管理</h1>
+                            <p class="text-sm text-gray-600 mt-1">リソース使用状況の監視と将来の需要予測 (テンプレート)</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div
+                                class="flex items-center bg-white rounded-lg border border-gray-200 px-3 py-1.5 text-sm">
+                                <div class="w-4 h-4 flex items-center justify-center mr-2 text-gray-500">
+                                    <i class="ri-time-line"></i>
+                                </div>
+                                <span>更新間隔:</span>
+                                <select class="ml-2 border-none text-sm bg-transparent focus:outline-none pr-8">
+                                    <option>5分</option>
+                                    <option>10分</option>
+                                    <option>30分</option>
+                                    <option>1時間</option>
+                                </select>
+                            </div>
+                            <button
+                                class="flex items-center bg-primary text-white px-4 py-2 rounded-button hover:bg-blue-600 transition">
+                                <div class="w-4 h-4 flex items-center justify-center mr-2">
+                                    <i class="ri-refresh-line"></i>
+                                </div>
+                                <span>今すぐ更新</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- リソース概要ダッシュボード -->
+                    <div class="grid grid-cols-4 gap-6 mb-6">
+                        <div class="bg-white rounded shadow p-5 border-t-4 border-blue-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <i class="ri-cpu-line"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-gray-500">CPU使用率</div>
+                                        <div class="text-2xl font-bold">XX%</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">
+                                    状態
+                                </div>
+                            </div>
+                            <div class="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-2 bg-blue-500 rounded-full" style="width: 50%"></div> <!-- ダミーの幅 -->
+                            </div>
+                            <div class="mt-2 text-xs text-gray-500 flex justify-between">
+                                <span>閾値: XX%</span>
+                                <span>前週比: +X%</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded shadow p-5 border-t-4 border-green-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-3">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <i class="ri-hard-drive-2-line"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-gray-500">メモリ使用率</div>
+                                        <div class="text-2xl font-bold">YY%</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                    状態
+                                </div>
+                            </div>
+                            <div class="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-2 bg-green-500 rounded-full" style="width: 50%"></div> <!-- ダミーの幅 -->
+                            </div>
+                            <div class="mt-2 text-xs text-gray-500 flex justify-between">
+                                <span>閾値: YY%</span>
+                                <span>前週比: -Y%</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded shadow p-5 border-t-4 border-purple-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mr-3">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <i class="ri-database-2-line"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-gray-500">ストレージ使用率</div>
+                                        <div class="text-2xl font-bold">ZZ%</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs font-medium px-2 py-1 rounded-full bg-red-100 text-red-800">
+                                    状態
+                                </div>
+                            </div>
+                            <div class="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-2 bg-purple-500 rounded-full" style="width: 80%"></div> <!-- ダミーの幅 -->
+                            </div>
+                            <div class="mt-2 text-xs text-gray-500 flex justify-between">
+                                <span>閾値: ZZ%</span>
+                                <span>前週比: +Z%</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded shadow p-5 border-t-4 border-orange-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 mr-3">
+                                        <div class="w-5 h-5 flex items-center justify-center">
+                                            <i class="ri-wifi-line"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-gray-500">ネットワーク帯域</div>
+                                        <div class="text-2xl font-bold">AA%</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                    状態
+                                </div>
+                            </div>
+                            <div class="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-2 bg-orange-500 rounded-full" style="width: 40%"></div> <!-- ダミーの幅 -->
+                            </div>
+                            <div class="mt-2 text-xs text-gray-500 flex justify-between">
+                                <span>閾値: AA%</span>
+                                <span>前週比: +A%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- タブナビゲーション -->
+                    <div class="bg-white rounded-lg shadow mb-6">
+                        <div class="border-b border-gray-200">
+                            <nav class="flex px-4 -mb-px" aria-label="Tabs">
+                                <button
+                                    class="px-1 py-4 text-sm font-medium text-primary border-b-2 border-primary whitespace-nowrap mr-8">
+                                    リソース使用状況
+                                </button>
+                                <button
+                                    class="px-1 py-4 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 whitespace-nowrap mr-8">
+                                    アラート設定
+                                </button>
+                                <button
+                                    class="px-1 py-4 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 whitespace-nowrap mr-8">
+                                    容量計画分析
+                                </button>
+                                <button
+                                    class="px-1 py-4 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                                    レポート生成
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+
+                    <!-- リソース使用状況グラフ -->
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded shadow">
+                            <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
+                                <h2 class="text-lg font-medium">CPU/メモリ使用率の推移 (テンプレート)</h2>
+                                <div class="flex space-x-2">
+                                    <button
+                                        class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 whitespace-nowrap !rounded-button">
+                                        日次
+                                    </button>
+                                    <button
+                                        class="px-3 py-1 text-xs font-medium rounded-full bg-primary text-white whitespace-nowrap !rounded-button">
+                                        週次
+                                    </button>
+                                    <button
+                                        class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 whitespace-nowrap !rounded-button">
+                                        月次
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <div id="cpu-memory-chart" class="h-72"></div>
+                                <p class="text-xs text-gray-500 text-center mt-2">ここにCPU/メモリ使用率の推移グラフが表示されます。</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded shadow">
+                            <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
+                                <h2 class="text-lg font-medium">ストレージ容量の推移 (テンプレート)</h2>
+                                <div class="flex space-x-2">
+                                    <button
+                                        class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 whitespace-nowrap !rounded-button">
+                                        日次
+                                    </button>
+                                    <button
+                                        class="px-3 py-1 text-xs font-medium rounded-full bg-primary text-white whitespace-nowrap !rounded-button">
+                                        週次
+                                    </button>
+                                    <button
+                                        class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 whitespace-nowrap !rounded-button">
+                                        月次
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <div id="storage-chart" class="h-72"></div>
+                                <p class="text-xs text-gray-500 text-center mt-2">ここにストレージ容量の推移グラフが表示されます。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded shadow">
+                            <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
+                                <h2 class="text-lg font-medium">ネットワークトラフィックの推移 (テンプレート)</h2>
+                                <div class="flex space-x-2">
+                                    <button
+                                        class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 whitespace-nowrap !rounded-button">
+                                        日次
+                                    </button>
+                                    <button
+                                        class="px-3 py-1 text-xs font-medium rounded-full bg-primary text-white whitespace-nowrap !rounded-button">
+                                        週次
+                                    </button>
+                                    <button
+                                        class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 whitespace-nowrap !rounded-button">
+                                        月次
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <div id="network-chart" class="h-72"></div>
+                                <p class="text-xs text-gray-500 text-center mt-2">ここにネットワークトラフィックの推移グラフが表示されます。</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded shadow">
+                            <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
+                                <h2 class="text-lg font-medium">リソース使用率のヒートマップ (テンプレート)</h2>
+                                <div class="flex items-center">
+                                    <span class="text-xs text-gray-600 mr-2">表示対象:</span>
+                                    <select
+                                        class="text-sm border-gray-200 rounded-md focus:ring-primary focus:border-primary pr-8">
+                                        <option>CPU</option>
+                                        <option>メモリ</option>
+                                        <option>ストレージ</option>
+                                        <option>ネットワーク</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <div id="heatmap-chart" class="h-72"></div>
+                                <p class="text-xs text-gray-500 text-center mt-2">ここにリソース使用率のヒートマップが表示されます。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- サーバーリソース詳細 -->
+                    <div class="bg-white rounded shadow mb-6">
+                        <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
+                            <h2 class="text-lg font-medium">サーバーリソース詳細 (テンプレート)</h2>
+                            <div class="flex items-center">
+                                <div class="relative">
+                                    <input type="text" placeholder="サーバー名で検索"
+                                        class="pl-9 pr-4 py-2 border border-gray-200 rounded-md text-sm focus:ring-primary focus:border-primary">
+                                    <div class="absolute left-3 top-2.5 text-gray-400">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-search-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    class="ml-3 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm whitespace-nowrap !rounded-button">
+                                    <div class="flex items-center">
+                                        <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                            <i class="ri-filter-3-line"></i>
+                                        </div>
+                                        フィルター
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            サーバー名</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            種類</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            CPU使用率</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            メモリ使用率</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ディスク使用率</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ステータス</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            アクション</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div
+                                                    class="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full mr-3">
+                                                    <div class="w-4 h-4 flex items-center justify-center">
+                                                        <i class="ri-server-line"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="text-sm font-medium text-gray-900">サーバー名プレースホルダー</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">種類プレースホルダー</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-24 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                                                    <div class="h-2 bg-yellow-500 rounded-full" style="width: 70%">
+                                                    </div>
+                                                </div>
+                                                <span class="text-sm text-gray-900">XX%</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-24 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                                                    <div class="h-2 bg-green-500 rounded-full" style="width: 60%"></div>
+                                                </div>
+                                                <span class="text-sm text-gray-900">YY%</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-24 h-2 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                                                    <div class="h-2 bg-red-500 rounded-full" style="width: 80%"></div>
+                                                </div>
+                                                <span class="text-sm text-gray-900">ZZ%</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">ステータス</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-blue-700 mr-3">詳細</button>
+                                            <button class="text-gray-600 hover:text-gray-900">最適化</button>
+                                        </td>
+                                    </tr>
+                                    <!-- 他のサーバー情報のプレースホルダーも同様に追加 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="px-5 py-4 border-t border-gray-200 flex items-center justify-between">
+                            <div class="text-sm text-gray-600">全 X 件中 Y-Z 件を表示</div>
+                            <div class="flex items-center space-x-2">
+                                <button
+                                    class="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed !rounded-button"
+                                    disabled>
+                                    前へ
+                                </button>
+                                <button
+                                    class="px-3 py-1 bg-primary text-white rounded-md text-sm hover:bg-blue-600 !rounded-button">
+                                    1
+                                </button>
+                                <button
+                                    class="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-600 hover:bg-gray-50 !rounded-button">
+                                    2
+                                </button>
+                                <button
+                                    class="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-600 hover:bg-gray-50 !rounded-button">
+                                    次へ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- アラート設定と最適化提案 -->
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded shadow">
+                            <div class="px-5 py-4 border-b border-gray-200">
+                                <h2 class="text-lg font-medium">リソース閾値アラート設定 (テンプレート)</h2>
+                            </div>
+                            <div class="p-5">
+                                <div class="space-y-5">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="text-sm font-medium text-gray-700">CPU使用率閾値</label>
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-xs text-gray-500">注意: XX%</span>
+                                                <span class="text-xs text-gray-500">警告: YY%</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <input type="range" min="0" max="100" value="70"
+                                                class="custom-range flex-1">
+                                            <input type="number" value="70"
+                                                class="w-16 px-2 py-1 border border-gray-300 rounded-md text-sm text-right">
+                                            <span class="text-sm text-gray-600">%</span>
+                                        </div>
+                                    </div>
+                                    <!-- 他の閾値設定も同様にプレースホルダー化 -->
+                                    <div class="pt-3 border-t border-gray-200">
+                                        <h3 class="text-sm font-medium text-gray-700 mb-3">通知設定</h3>
+                                        <div class="space-y-3">
+                                            <div class="flex items-center">
+                                                <label class="custom-checkbox">
+                                                    <input type="checkbox" checked>
+                                                    <span class="checkbox-checkmark"></span>
+                                                    <span class="ml-2 text-sm text-gray-700">メール通知</span>
+                                                </label>
+                                            </div>
+                                            <!-- 他の通知設定も同様に -->
+                                        </div>
+                                    </div>
+                                    <div class="pt-3">
+                                        <button
+                                            class="w-full py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition !rounded-button">
+                                            設定を保存
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded shadow">
+                            <div class="px-5 py-4 border-b border-gray-200">
+                                <h2 class="text-lg font-medium">リソース最適化提案 (テンプレート)</h2>
+                            </div>
+                            <div class="p-5">
+                                <div class="space-y-4">
+                                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                                        <div class="flex">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-5 h-5 flex items-center justify-center text-red-500">
+                                                    <i class="ri-error-warning-fill"></i>
+                                                </div>
+                                            </div>
+                                            <div class="ml-3">
+                                                <h3 class="text-sm font-medium text-red-800">最適化提案タイトル</h3>
+                                                <div class="mt-1 text-xs text-red-700">
+                                                    <p>最適化提案の詳細説明。</p>
+                                                    <p class="mt-1">推奨アクション: 推奨アクション内容</p>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <button
+                                                        class="text-xs text-red-800 font-medium hover:text-red-900 !rounded-button">
+                                                        対応計画を作成
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 他の提案も同様にプレースホルダー化 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 容量計画と予測 -->
+                    <div class="bg-white rounded shadow mb-6">
+                        <div class="px-5 py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-medium">将来の需要予測と容量計画 (テンプレート)</h2>
+                        </div>
+                        <div class="p-5">
+                            <div id="forecast-chart" class="h-80"></div>
+                            <p class="text-xs text-gray-500 text-center mt-2">ここに将来の需要予測グラフが表示されます。</p>
+                            <div class="grid grid-cols-4 gap-6 mt-6">
+                                <div class="bg-gray-50 rounded p-4">
+                                    <div class="text-sm font-medium text-gray-700 mb-2">CPU予測</div>
+                                    <div class="text-2xl font-bold text-gray-900">+XX%</div>
+                                    <div class="text-xs text-gray-500 mt-1">Xヶ月後の予測増加率</div>
+                                    <div class="mt-3 text-xs text-gray-600">
+                                        <div class="flex items-center">
+                                            <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                                            <span>現在の余裕: XX%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 他の予測も同様にプレースホルダー化 -->
+                            </div>
+                            <div class="mt-6 border-t border-gray-200 pt-5">
+                                <h3 class="text-sm font-medium text-gray-700 mb-3">キャパシティ拡張推奨事項</h3>
+                                <div class="bg-blue-50 p-4 rounded">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <div
+                                                class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-lightbulb-line"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <h4 class="text-sm font-medium text-gray-900">短期的な対応（X-Yヶ月）</h4>
+                                            <ul class="mt-2 text-sm text-gray-600 space-y-1 list-disc list-inside">
+                                                <li>推奨事項1</li>
+                                                <li>推奨事項2</li>
+                                            </ul>
+                                            <h4 class="text-sm font-medium text-gray-900 mt-4">中長期的な対応（Y-Zヶ月）</h4>
+                                            <ul class="mt-2 text-sm text-gray-600 space-y-1 list-disc list-inside">
+                                                <li>推奨事項3</li>
+                                                <li>推奨事項4</li>
+                                            </ul>
+                                            <div class="mt-4">
+                                                <button
+                                                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm !rounded-button">
+                                                    詳細な容量計画レポートを生成
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- レポート生成セクション -->
+                    <div class="bg-white rounded shadow mb-6">
+                        <div class="px-5 py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-medium">キャパシティレポート生成 (テンプレート)</h2>
+                        </div>
+                        <div class="p-5">
+                            <div class="grid grid-cols-3 gap-6">
+                                <div class="col-span-2">
+                                    <div class="space-y-5">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">レポートタイプ</label>
+                                            <div class="flex space-x-4">
+                                                <label class="custom-radio">
+                                                    <input type="radio" name="report-type" checked>
+                                                    <span class="radio-checkmark"></span>
+                                                    <span class="ml-2 text-sm text-gray-700">サマリーレポート</span>
+                                                </label>
+                                                <!-- 他のレポートタイプも同様に -->
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">期間</label>
+                                                <div class="flex space-x-2">
+                                                    <div class="relative flex-1">
+                                                        <input type="date"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                                    </div>
+                                                    <span class="flex items-center text-gray-500">～</span>
+                                                    <div class="relative flex-1">
+                                                        <input type="date"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">出力形式</label>
+                                                <select
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm pr-8">
+                                                    <option>PDF</option>
+                                                    <option>Excel</option>
+                                                    <option>CSV</option>
+                                                    <option>HTML</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">含めるリソース</label>
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <label class="custom-checkbox">
+                                                    <input type="checkbox" checked>
+                                                    <span class="checkbox-checkmark"></span>
+                                                    <span class="ml-2 text-sm text-gray-700">CPU使用率</span>
+                                                </label>
+                                                <!-- 他のリソースも同様に -->
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 mb-1">レポートスケジュール</label>
+                                            <div class="flex items-center mb-3">
+                                                <label class="custom-switch mr-3">
+                                                    <input type="checkbox">
+                                                    <span class="switch-slider"></span>
+                                                </label>
+                                                <span class="text-sm text-gray-700">定期的にレポートを生成する</span>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">頻度</label>
+                                                    <select
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm pr-8"
+                                                        disabled>
+                                                        <option>毎日</option>
+                                                        <option>毎週</option>
+                                                        <option selected>毎月</option>
+                                                        <option>四半期</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-gray-500 mb-1">送信先メールアドレス</label>
+                                                    <input type="email" placeholder="例: admin@example.com"
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                                        disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="pt-3">
+                                            <button
+                                                class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition !rounded-button">
+                                                レポート生成
+                                            </button>
+                                            <button
+                                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition ml-3 !rounded-button">
+                                                プレビュー
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded">
+                                    <h3 class="text-sm font-medium text-gray-700 mb-3">最近のレポート</h3>
+                                    <div class="space-y-3">
+                                        <div class="bg-white p-3 rounded border border-gray-200">
+                                            <div class="flex items-center">
+                                                <div
+                                                    class="w-8 h-8 flex items-center justify-center bg-red-100 text-red-600 rounded-full mr-3">
+                                                    <div class="w-4 h-4 flex items-center justify-center">
+                                                        <i class="ri-file-pdf-line"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <div class="text-sm font-medium text-gray-900">レポート名プレースホルダー</div>
+                                                    <div class="text-xs text-gray-500">YYYY/MM/DD 生成</div>
+                                                </div>
+                                                <button class="text-gray-400 hover:text-gray-600">
+                                                    <div class="w-5 h-5 flex items-center justify-center">
+                                                        <i class="ri-download-line"></i>
+                                                    </div>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <!-- 他のレポートも同様にプレースホルダー化 -->
+                                    </div>
+                                    <div class="mt-4 text-center">
+                                        <button class="text-sm text-primary hover:text-blue-700 !rounded-button">
+                                            すべてのレポートを表示
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 現在時刻の更新
+            function updateTime() {
+                const now = new Date();
+                const optionsDate = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                document.getElementById('current-date').textContent = now.toLocaleDateString('ja-JP', optionsDate).replace(/\//g, '年') + '日';
+                const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                document.getElementById('current-time').textContent = now.toLocaleTimeString('ja-JP', optionsTime);
+            }
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            // Chart.jsの初期化スクリプトは構造として残すが、データはダミーまたは説明に置き換える
+            // このテンプレートでは、EChartsの初期化コードは元のまま残し、
+            // 実際のデータ部分はコメントアウトするか、汎用的な説明に置き換えています。
+            // 実際の運用では、適切なデータソースから動的にデータを取得・描画する必要があります。
+
+            const चार्टを初期化する関数 = (elementId, optionGenerator) => {
+                const chartDom = document.getElementById(elementId);
+                if (chartDom) {
+                    const myChart = echarts.init(chartDom);
+                    const option = optionGenerator();
+                    myChart.setOption(option);
+                    window.addEventListener('resize', () => myChart.resize());
+                    return myChart;
+                }
+                return null;
+            };
+
+            // CPU/メモリ使用率チャート (ダミーデータ)
+            const cpuMemoryOption = () => ({
+                animation: false,
+                tooltip: { trigger: 'axis' },
+                legend: { data: ['CPU使用率', 'メモリ使用率'] },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', boundaryGap: false, data: ['月', '火', '水', '木', '金', '土', '日'] },
+                yAxis: { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%' } },
+                series: [
+                    { name: 'CPU使用率', type: 'line', smooth: true, data: [60, 65, 70, 68, 72, 75, 70] },
+                    { name: 'メモリ使用率', type: 'line', smooth: true, data: [50, 55, 52, 60, 58, 62, 55] }
+                ]
+            });
+            chartを初期化する関数('cpu-memory-chart', cpuMemoryOption);
+
+            // ストレージ容量チャート (ダミーデータ)
+            const storageOption = () => ({
+                animation: false,
+                tooltip: { trigger: 'axis' },
+                legend: { data: ['使用容量', '空き容量'] },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', boundaryGap: false, data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'] },
+                yAxis: { type: 'value', axisLabel: { formatter: '{value} TB' } },
+                series: [
+                    { name: '使用容量', type: 'line', stack: 'Total', smooth: true, areaStyle: {}, data: [8, 8.5, 9, 9.2, 9.5, 10, 10.2] },
+                    { name: '空き容量', type: 'line', stack: 'Total', smooth: true, areaStyle: {}, data: [4, 3.5, 3, 2.8, 2.5, 2, 1.8] }
+                ]
+            });
+            chartを初期化する関数('storage-chart', storageOption);
+
+            // ネットワークトラフィックチャート (ダミーデータ)
+            const networkOption = () => ({
+                animation: false,
+                tooltip: { trigger: 'axis' },
+                legend: { data: ['受信', '送信'] },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', boundaryGap: false, data: ['0時', '4時', '8時', '12時', '16時', '20時', '24時'] },
+                yAxis: { type: 'value', axisLabel: { formatter: '{value} Mbps' } },
+                series: [
+                    { name: '受信', type: 'line', smooth: true, data: [100, 120, 150, 180, 160, 140, 110] },
+                    { name: '送信', type: 'line', smooth: true, data: [80, 90, 100, 110, 100, 90, 80] }
+                ]
+            });
+            chartを初期化する関数('network-chart', networkOption);
+
+            // ヒートマップチャート (ダミーデータ)
+            const heatmapOption = () => {
+                const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}`);
+                const days = ['月', '火', '水', '木', '金', '土', '日'];
+                const data = [];
+                for (let i = 0; i < 7; i++) {
+                    for (let j = 0; j < 24; j++) {
+                        data.push([j, i, Math.round(Math.random() * 100)]);
+                    }
+                }
+                return {
+                    animation: false,
+                    tooltip: { position: 'top' },
+                    grid: { height: '50%', top: '10%' },
+                    xAxis: { type: 'category', data: hours, splitArea: { show: true } },
+                    yAxis: { type: 'category', data: days, splitArea: { show: true } },
+                    visualMap: { min: 0, max: 100, calculable: true, orient: 'horizontal', left: 'center', bottom: '15%' },
+                    series: [{ type: 'heatmap', data: data, label: { show: false }, emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0, 0, 0, 0.5)' } } }]
+                };
+            };
+            chartを初期化する関数('heatmap-chart', heatmapOption);
+
+            // 予測チャート (ダミーデータ)
+            const forecastOption = () => ({
+                animation: false,
+                tooltip: { trigger: 'axis' },
+                legend: { data: ['CPU予測', 'ストレージ予測'] },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', boundaryGap: false, data: ['現在', '1ヶ月後', '3ヶ月後', '6ヶ月後'] },
+                yAxis: { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%' } },
+                series: [
+                    { name: 'CPU予測', type: 'line', smooth: true, data: [70, 75, 80, 85] },
+                    { name: 'ストレージ予測', type: 'line', smooth: true, data: [60, 68, 75, 82] }
+                ]
+            });
+            chartを初期化する関数('forecast-chart', forecastOption);
+
+
+            // カスタムレンジスライダーの動作
+            const rangeInputs = document.querySelectorAll('input[type="range"]');
+            const numberInputs = document.querySelectorAll('input[type="number"]:not([disabled])'); // 無効でないものだけを選択
+
+            rangeInputs.forEach((range) => {
+                const correspondingNumberInput = Array.from(numberInputs).find(numInput => numInput.closest('.flex.items-center.space-x-4') === range.closest('.flex.items-center.space-x-4'));
+                if (correspondingNumberInput) {
+                    range.addEventListener('input', () => {
+                        correspondingNumberInput.value = range.value;
+                    });
+                    correspondingNumberInput.addEventListener('input', () => {
+                        range.value = correspondingNumberInput.value;
+                    });
+                }
+            });
+
+            // レポートスケジュールのトグル動作
+            const scheduleToggle = document.querySelector('.custom-switch input[type="checkbox"]'); // より具体的に選択
+            const scheduleRelatedElements = document.querySelectorAll('select[disabled], input[type="email"][disabled]'); // 初期状態で無効な要素
+
+            if (scheduleToggle) {
+                scheduleToggle.addEventListener('change', () => {
+                    scheduleRelatedElements.forEach(input => {
+                        input.disabled = !scheduleToggle.checked;
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

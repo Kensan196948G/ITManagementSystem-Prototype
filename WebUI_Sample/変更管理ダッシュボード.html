@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>変更管理 - ITSM運用管理システム</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#3b82f6',secondary:'#64748b'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background-color: #f9fafb;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+.custom-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.custom-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #e2e8f0;
+  transition: .4s;
+  border-radius: 24px;
+}
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .switch-slider {
+  background-color: #3b82f6;
+}
+input:checked + .switch-slider:before {
+  transform: translateX(20px);
+}
+.custom-radio {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+}
+.custom-radio input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.radio-mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 50%;
+}
+.custom-radio input:checked ~ .radio-mark {
+  border-color: #3b82f6;
+}
+.radio-mark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3b82f6;
+}
+.custom-radio input:checked ~ .radio-mark:after {
+  display: block;
+}
+.custom-checkbox {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+}
+.custom-checkbox input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.checkbox-mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 4px;
+}
+.custom-checkbox input:checked ~ .checkbox-mark {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+.checkbox-mark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.custom-checkbox input:checked ~ .checkbox-mark:after {
+  display: block;
+}
+</style>
+</head>
+<body>
+<div class="flex h-screen overflow-hidden bg-white">
+  <!-- サイドナビゲーション -->
+  <div class="w-64 bg-gray-900 text-white flex flex-col">
+    <div class="p-4 flex items-center border-b border-gray-800">
+      <div class="text-2xl font-['Pacifico'] text-white">logo</div>
+      <div class="ml-2 text-sm font-medium">ITSM Platform</div>
+    </div>
+    <div class="flex-1 overflow-y-auto scrollbar-hide">
+      <nav class="mt-4">
+        <div class="px-4 py-2 text-xs font-medium text-gray-400 uppercase">メインメニュー</div>
+        <a href="https://readdy.ai/home/5b2c5163-c322-43ed-a857-f31f575af0a6/898ede5d-9cf7-4e0f-9b26-a9796511b7d4" data-readdy="true" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-dashboard-line"></i>
+          </div>
+          <span>ダッシュボード</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-error-warning-line"></i>
+          </div>
+          <span>インシデント管理</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-question-line"></i>
+          </div>
+          <span>問題管理</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-100 bg-gray-800">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-refresh-line"></i>
+          </div>
+          <span>変更管理</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-rocket-line"></i>
+          </div>
+          <span>リリース管理</span>
+        </a>
+        <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">ISO準拠管理</div>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-settings-3-line"></i>
+          </div>
+          <span>構成管理</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-shield-check-line"></i>
+          </div>
+          <span>セキュリティ管理</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-timer-line"></i>
+          </div>
+          <span>可用性管理</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-database-2-line"></i>
+          </div>
+          <span>キャパシティ管理</span>
+        </a>
+        <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">レポート</div>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-file-chart-line"></i>
+          </div>
+          <span>レポート</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-settings-line"></i>
+          </div>
+          <span>設定</span>
+        </a>
+      </nav>
+    </div>
+    <div class="p-4 border-t border-gray-800">
+      <div class="flex items-center">
+        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+          <i class="ri-user-line"></i>
+        </div>
+        <div class="ml-3">
+          <div class="text-sm font-medium">佐藤 健太</div>
+          <div class="text-xs text-gray-400">システム管理者</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- メインコンテンツ -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- ヘッダー -->
+    <header class="bg-white border-b border-gray-200">
+      <div class="flex items-center justify-between px-6 py-3">
+        <div class="flex items-center">
+          <div class="text-lg font-medium">変更管理</div>
+        </div>
+        <div class="flex items-center">
+          <div class="mr-6 text-sm text-gray-600">
+            <span id="current-date">2025年05月10日</span>
+            <span id="current-time">12:30:45</span>
+            <span class="ml-1">JST</span>
+          </div>
+          <button class="relative p-2 text-gray-600 hover:text-gray-900 mr-4">
+            <div class="w-6 h-6 flex items-center justify-center">
+              <i class="ri-notification-3-line"></i>
+            </div>
+            <span class="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">3</span>
+          </button>
+          <button class="p-2 text-gray-600 hover:text-gray-900 mr-4">
+            <div class="w-6 h-6 flex items-center justify-center">
+              <i class="ri-settings-4-line"></i>
+            </div>
+          </button>
+          <button class="p-2 text-gray-600 hover:text-gray-900">
+            <div class="w-6 h-6 flex items-center justify-center">
+              <i class="ri-question-line"></i>
+            </div>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- コンテンツエリア -->
+    <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+      <div class="max-w-7xl mx-auto">
+        <!-- 変更管理ステータスセクション -->
+        <div class="grid grid-cols-4 gap-6 mb-6">
+          <div class="bg-white rounded shadow p-5">
+            <div class="flex items-center">
+              <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-time-line ri-lg"></i>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-sm text-gray-500">承認待ち</div>
+                <div class="text-2xl font-bold">8</div>
+              </div>
+            </div>
+            <div class="mt-3 flex items-center">
+              <div class="text-xs text-gray-500">前週比</div>
+              <div class="ml-2 text-xs text-green-600 flex items-center">
+                <i class="ri-arrow-down-s-line"></i>
+                <span>12%</span>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded shadow p-5">
+            <div class="flex items-center">
+              <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-calendar-check-line ri-lg"></i>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-sm text-gray-500">実装予定</div>
+                <div class="text-2xl font-bold">12</div>
+              </div>
+            </div>
+            <div class="mt-3 flex items-center">
+              <div class="text-xs text-gray-500">前週比</div>
+              <div class="ml-2 text-xs text-red-600 flex items-center">
+                <i class="ri-arrow-up-s-line"></i>
+                <span>8%</span>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded shadow p-5">
+            <div class="flex items-center">
+              <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-check-double-line ri-lg"></i>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-sm text-gray-500">完了</div>
+                <div class="text-2xl font-bold">35</div>
+              </div>
+            </div>
+            <div class="mt-3 flex items-center">
+              <div class="text-xs text-gray-500">前月比</div>
+              <div class="ml-2 text-xs text-green-600 flex items-center">
+                <i class="ri-arrow-up-s-line"></i>
+                <span>15%</span>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded shadow p-5">
+            <div class="flex items-center">
+              <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-500">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-alert-line ri-lg"></i>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-sm text-gray-500">高リスク変更</div>
+                <div class="text-2xl font-bold">3</div>
+              </div>
+            </div>
+            <div class="mt-3 flex items-center">
+              <div class="text-xs text-gray-500">前週比</div>
+              <div class="ml-2 text-xs text-green-600 flex items-center">
+                <i class="ri-arrow-down-s-line"></i>
+                <span>25%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- アクションボタンと検索フィルター -->
+        <div class="flex flex-wrap items-center justify-between mb-6">
+          <div class="mb-4 md:mb-0">
+            <button class="bg-primary text-white px-4 py-2 rounded-button flex items-center whitespace-nowrap">
+              <div class="w-5 h-5 flex items-center justify-center mr-2">
+                <i class="ri-add-line"></i>
+              </div>
+              新規変更リクエスト作成
+            </button>
+          </div>
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="relative">
+              <input type="text" placeholder="変更リクエストを検索" class="pl-10 pr-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm w-64">
+              <div class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center text-gray-400">
+                <i class="ri-search-line"></i>
+              </div>
+            </div>
+            <div class="relative">
+              <button class="flex items-center px-4 py-2 border border-gray-300 rounded-button text-sm whitespace-nowrap">
+                <div class="w-4 h-4 flex items-center justify-center mr-2 text-gray-500">
+                  <i class="ri-filter-3-line"></i>
+                </div>
+                フィルター
+              </button>
+            </div>
+            <div class="relative">
+              <button class="flex items-center px-4 py-2 border border-gray-300 rounded-button text-sm whitespace-nowrap">
+                <div class="w-4 h-4 flex items-center justify-center mr-2 text-gray-500">
+                  <i class="ri-download-line"></i>
+                </div>
+                エクスポート
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- タブ切り替え -->
+        <div class="bg-white rounded-t shadow mb-0">
+          <div class="flex border-b">
+            <button class="px-6 py-3 font-medium text-primary border-b-2 border-primary">変更リクエスト一覧</button>
+            <button class="px-6 py-3 text-gray-500 hover:text-gray-700">変更カレンダー</button>
+            <button class="px-6 py-3 text-gray-500 hover:text-gray-700">承認ワークフロー</button>
+            <button class="px-6 py-3 text-gray-500 hover:text-gray-700">リスク評価</button>
+          </div>
+        </div>
+
+        <!-- 変更リクエスト一覧テーブル -->
+        <div class="bg-white rounded-b shadow mb-6">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div class="flex items-center">
+                      <span>ID</span>
+                      <div class="ml-1 w-4 h-4 flex items-center justify-center text-gray-400">
+                        <i class="ri-arrow-up-s-line"></i>
+                      </div>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div class="flex items-center">
+                      <span>タイトル</span>
+                      <div class="ml-1 w-4 h-4 flex items-center justify-center text-gray-400">
+                        <i class="ri-arrow-up-down-line"></i>
+                      </div>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div class="flex items-center">
+                      <span>ステータス</span>
+                      <div class="ml-1 w-4 h-4 flex items-center justify-center text-gray-400">
+                        <i class="ri-arrow-up-down-line"></i>
+                      </div>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div class="flex items-center">
+                      <span>優先度</span>
+                      <div class="ml-1 w-4 h-4 flex items-center justify-center text-gray-400">
+                        <i class="ri-arrow-up-down-line"></i>
+                      </div>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div class="flex items-center">
+                      <span>影響範囲</span>
+                      <div class="ml-1 w-4 h-4 flex items-center justify-center text-gray-400">
+                        <i class="ri-arrow-up-down-line"></i>
+                      </div>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div class="flex items-center">
+                      <span>承認者</span>
+                      <div class="ml-1 w-4 h-4 flex items-center justify-center text-gray-400">
+                        <i class="ri-arrow-up-down-line"></i>
+                      </div>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div class="flex items-center">
+                      <span>期限</span>
+                      <div class="ml-1 w-4 h-4 flex items-center justify-center text-gray-400">
+                        <i class="ri-arrow-up-down-line"></i>
+                      </div>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    アクション
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr class="hover:bg-gray-50 cursor-pointer">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CHG-2025051001</td>
+                  <td class="px-6 py-4 text-sm text-gray-900">Microsoft Exchange Online 更新パッチ適用</td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">承認待ち</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">高</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">全社メールシステム</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex items-center">
+                      <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white text-xs mr-2">IT</div>
+                      伊藤 大輔
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/15</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                    <button class="text-primary hover:text-primary-dark mr-3 !rounded-button">詳細</button>
+                    <button class="text-gray-600 hover:text-gray-900 !rounded-button">承認</button>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50 cursor-pointer">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CHG-2025051002</td>
+                  <td class="px-6 py-4 text-sm text-gray-900">Active Directory セキュリティポリシー更新</td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">計画中</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">中</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">認証システム</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex items-center">
+                      <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white text-xs mr-2">SE</div>
+                      山田 健太郎
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/20</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                    <button class="text-primary hover:text-primary-dark mr-3 !rounded-button">詳細</button>
+                    <button class="text-gray-600 hover:text-gray-900 !rounded-button">編集</button>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50 cursor-pointer">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CHG-2025050901</td>
+                  <td class="px-6 py-4 text-sm text-gray-900">ファイアウォールルール更新</td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">実装中</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">高</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ネットワークインフラ</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex items-center">
+                      <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white text-xs mr-2">NW</div>
+                      鈴木 美咲
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/12</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                    <button class="text-primary hover:text-primary-dark mr-3 !rounded-button">詳細</button>
+                    <button class="text-gray-600 hover:text-gray-900 !rounded-button">更新</button>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50 cursor-pointer">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CHG-2025050801</td>
+                  <td class="px-6 py-4 text-sm text-gray-900">Microsoft Teams 機能拡張</td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">承認待ち</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">低</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">コラボレーションツール</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex items-center">
+                      <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white text-xs mr-2">IT</div>
+                      田中 直樹
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/25</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                    <button class="text-primary hover:text-primary-dark mr-3 !rounded-button">詳細</button>
+                    <button class="text-gray-600 hover:text-gray-900 !rounded-button">承認</button>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50 cursor-pointer">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CHG-2025050701</td>
+                  <td class="px-6 py-4 text-sm text-gray-900">DeskNet'sNeo バージョンアップ</td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">完了</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">中</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">グループウェア</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex items-center">
+                      <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white text-xs mr-2">IT</div>
+                      佐藤 健太
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/07</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                    <button class="text-primary hover:text-primary-dark mr-3 !rounded-button">詳細</button>
+                    <button class="text-gray-600 hover:text-gray-900 !rounded-button">レビュー</button>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50 cursor-pointer">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CHG-2025050601</td>
+                  <td class="px-6 py-4 text-sm text-gray-900">OneDrive ストレージ容量増強</td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">承認待ち</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">中</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">クラウドストレージ</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex items-center">
+                      <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white text-xs mr-2">IT</div>
+                      高橋 誠
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/30</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                    <button class="text-primary hover:text-primary-dark mr-3 !rounded-button">詳細</button>
+                    <button class="text-gray-600 hover:text-gray-900 !rounded-button">承認</button>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50 cursor-pointer">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CHG-2025050501</td>
+                  <td class="px-6 py-4 text-sm text-gray-900">社内Wi-Fiアクセスポイント増設</td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">計画中</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">低</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">オフィスネットワーク</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex items-center">
+                      <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white text-xs mr-2">NW</div>
+                      小林 拓也
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/06/15</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                    <button class="text-primary hover:text-primary-dark mr-3 !rounded-button">詳細</button>
+                    <button class="text-gray-600 hover:text-gray-900 !rounded-button">編集</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="px-5 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div class="text-sm text-gray-500">全 35 件中 1-7 件を表示</div>
+            <div class="flex items-center space-x-2">
+              <button class="px-3 py-1 border border-gray-300 rounded-button text-sm text-gray-500 hover:bg-gray-50 whitespace-nowrap">前へ</button>
+              <button class="px-3 py-1 bg-primary text-white rounded-button text-sm whitespace-nowrap">1</button>
+              <button class="px-3 py-1 border border-gray-300 rounded-button text-sm text-gray-500 hover:bg-gray-50 whitespace-nowrap">2</button>
+              <button class="px-3 py-1 border border-gray-300 rounded-button text-sm text-gray-500 hover:bg-gray-50 whitespace-nowrap">3</button>
+              <button class="px-3 py-1 border border-gray-300 rounded-button text-sm text-gray-500 hover:bg-gray-50 whitespace-nowrap">4</button>
+              <button class="px-3 py-1 border border-gray-300 rounded-button text-sm text-gray-500 hover:bg-gray-50 whitespace-nowrap">5</button>
+              <button class="px-3 py-1 border border-gray-300 rounded-button text-sm text-gray-500 hover:bg-gray-50 whitespace-nowrap">次へ</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 変更カレンダーとリスク評価 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <!-- 変更カレンダー -->
+          <div class="bg-white rounded shadow">
+            <div class="px-5 py-4 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg font-medium">変更カレンダー</h2>
+                <div class="flex items-center">
+                  <button class="text-sm text-gray-500 hover:text-gray-900 flex items-center mr-3 !rounded-button">
+                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                      <i class="ri-arrow-left-s-line"></i>
+                    </div>
+                    前月
+                  </button>
+                  <span class="text-sm font-medium">2025年5月</span>
+                  <button class="text-sm text-gray-500 hover:text-gray-900 flex items-center ml-3 !rounded-button">
+                    次月
+                    <div class="w-4 h-4 flex items-center justify-center ml-1">
+                      <i class="ri-arrow-right-s-line"></i>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="grid grid-cols-7 gap-1 text-center text-sm font-medium text-gray-500 mb-2">
+                <div>日</div>
+                <div>月</div>
+                <div>火</div>
+                <div>水</div>
+                <div>木</div>
+                <div>金</div>
+                <div>土</div>
+              </div>
+              <div class="grid grid-cols-7 gap-1">
+                <div class="h-24 border border-gray-200 p-1 text-gray-400 text-xs">
+                  <div class="text-right mb-1">28</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-gray-400 text-xs">
+                  <div class="text-right mb-1">29</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-gray-400 text-xs">
+                  <div class="text-right mb-1">30</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">1</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">2</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">3</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">4</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">5</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">6</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">7</div>
+                  <div class="bg-green-100 text-green-800 rounded p-1 mb-1 truncate">DeskNet'sNeo 更新</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">8</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">9</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">10</div>
+                  <div class="bg-yellow-100 text-yellow-800 rounded p-1 mb-1 truncate">現在</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">11</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">12</div>
+                  <div class="bg-purple-100 text-purple-800 rounded p-1 mb-1 truncate">FW ルール更新</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">13</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">14</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">15</div>
+                  <div class="bg-red-100 text-red-800 rounded p-1 mb-1 truncate">Exchange 更新</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">16</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">17</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">18</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">19</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">20</div>
+                  <div class="bg-blue-100 text-blue-800 rounded p-1 mb-1 truncate">AD ポリシー更新</div>
+                </div>
+                <div class="h-24 border border-gray-200 p-1 text-xs">
+                  <div class="text-right mb-1">21</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- リスク評価 -->
+          <div class="bg-white rounded shadow">
+            <div class="px-5 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-medium">リスク評価マトリクス</h2>
+            </div>
+            <div class="p-5">
+              <div class="mb-4">
+                <div class="text-sm font-medium mb-2">リスク分布</div>
+                <div class="grid grid-cols-4 gap-4 border border-gray-200 p-4 rounded">
+                  <div class="col-span-1">
+                    <div class="text-xs text-gray-500 mb-1">影響度</div>
+                    <div class="h-32 flex flex-col justify-between">
+                      <div class="text-xs">高</div>
+                      <div class="text-xs">中</div>
+                      <div class="text-xs">低</div>
+                    </div>
+                  </div>
+                  <div class="col-span-3">
+                    <div class="text-xs text-gray-500 mb-1">発生確率</div>
+                    <div class="grid grid-cols-3 gap-2 h-32">
+                      <div class="bg-red-50 border border-red-100 rounded flex items-center justify-center relative">
+                        <div class="absolute top-1 left-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">1</div>
+                      </div>
+                      <div class="bg-red-50 border border-red-100 rounded flex items-center justify-center relative">
+                        <div class="absolute top-1 left-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">1</div>
+                      </div>
+                      <div class="bg-red-50 border border-red-100 rounded flex items-center justify-center relative">
+                        <div class="absolute top-1 left-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">1</div>
+                      </div>
+                      <div class="bg-yellow-50 border border-yellow-100 rounded flex items-center justify-center relative">
+                        <div class="absolute top-1 left-1 w-5 h-5 rounded-full bg-yellow-500 text-white text-xs flex items-center justify-center">3</div>
+                      </div>
+                      <div class="bg-yellow-50 border border-yellow-100 rounded flex items-center justify-center relative">
+                        <div class="absolute top-1 left-1 w-5 h-5 rounded-full bg-yellow-500 text-white text-xs flex items-center justify-center">2</div>
+                      </div>
+                      <div class="bg-yellow-50 border border-yellow-100 rounded flex items-center justify-center"></div>
+                      <div class="bg-green-50 border border-green-100 rounded flex items-center justify-center relative">
+                        <div class="absolute top-1 left-1 w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center">2</div>
+                      </div>
+                      <div class="bg-green-50 border border-green-100 rounded flex items-center justify-center"></div>
+                      <div class="bg-green-50 border border-green-100 rounded flex items-center justify-center"></div>
+                    </div>
+                    <div class="flex justify-between mt-1">
+                      <div class="text-xs">低</div>
+                      <div class="text-xs">中</div>
+                      <div class="text-xs">高</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-4">
+                <div class="text-sm font-medium mb-2">高リスク変更リクエスト</div>
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between p-3 bg-red-50 rounded">
+                    <div class="flex items-center">
+                      <div class="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center mr-3">
+                        <div class="w-4 h-4 flex items-center justify-center">
+                          <i class="ri-alert-line"></i>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-sm font-medium">Exchange Online 更新パッチ適用</div>
+                        <div class="text-xs text-gray-500">2025/05/15</div>
+                      </div>
+                    </div>
+                    <div class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">高リスク</div>
+                  </div>
+                  <div class="flex items-center justify-between p-3 bg-red-50 rounded">
+                    <div class="flex items-center">
+                      <div class="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center mr-3">
+                        <div class="w-4 h-4 flex items-center justify-center">
+                          <i class="ri-alert-line"></i>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-sm font-medium">ファイアウォールルール更新</div>
+                        <div class="text-xs text-gray-500">2025/05/12</div>
+                      </div>
+                    </div>
+                    <div class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">高リスク</div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="text-sm font-medium mb-2">リスク軽減策</div>
+                <div class="border border-gray-200 rounded p-3">
+                  <div class="flex items-center mb-3">
+                    <label class="custom-checkbox mr-2">
+                      <input type="checkbox" checked>
+                      <span class="checkbox-mark"></span>
+                    </label>
+                    <span class="text-sm">バックアップ実施</span>
+                  </div>
+                  <div class="flex items-center mb-3">
+                    <label class="custom-checkbox mr-2">
+                      <input type="checkbox" checked>
+                      <span class="checkbox-mark"></span>
+                    </label>
+                    <span class="text-sm">ロールバック計画策定</span>
+                  </div>
+                  <div class="flex items-center mb-3">
+                    <label class="custom-checkbox mr-2">
+                      <input type="checkbox">
+                      <span class="checkbox-mark"></span>
+                    </label>
+                    <span class="text-sm">影響範囲の事前テスト</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox mr-2">
+                      <input type="checkbox">
+                      <span class="checkbox-mark"></span>
+                    </label>
+                    <span class="text-sm">段階的実装計画</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 承認ワークフロー -->
+        <div class="bg-white rounded shadow mb-6">
+          <div class="px-5 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium">承認ワークフロー</h2>
+          </div>
+          <div class="p-5">
+            <div class="mb-6">
+              <div class="text-sm font-medium mb-3">承認待ち変更リクエスト</div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">タイトル</th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">申請者</th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">申請日</th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">期限</th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">承認ステータス</th>
+                      <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">アクション</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <tr>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CHG-2025051001</td>
+                      <td class="px-6 py-4 text-sm text-gray-900">Microsoft Exchange Online 更新パッチ適用</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">山田 健太郎</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/08</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/15</td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                          <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                          <span class="text-sm">2/3 承認済</span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                        <button class="text-white bg-primary hover:bg-primary-dark px-3 py-1 rounded-button mr-2 whitespace-nowrap">承認</button>
+                        <button class="text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-button whitespace-nowrap">却下</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CHG-2025050801</td>
+                      <td class="px-6 py-4 text-sm text-gray-900">Microsoft Teams 機能拡張</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">田中 直樹</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/06</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/25</td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                          <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                          <span class="text-sm">3/3 承認済</span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                        <button class="text-white bg-green-500 hover:bg-green-600 px-3 py-1 rounded-button whitespace-nowrap">実装開始</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CHG-2025050601</td>
+                      <td class="px-6 py-4 text-sm text-gray-900">OneDrive ストレージ容量増強</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">高橋 誠</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/04</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/30</td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                          <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                          <span class="text-sm">0/3 承認済</span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                        <button class="text-white bg-primary hover:bg-primary-dark px-3 py-1 rounded-button mr-2 whitespace-nowrap">承認</button>
+                        <button class="text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-button whitespace-nowrap">却下</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <div class="text-sm font-medium mb-3">承認フロー詳細 - CHG-2025051001</div>
+              <div class="relative">
+                <div class="absolute h-full w-0.5 bg-gray-200 left-6 top-0"></div>
+                <div class="relative z-10">
+                  <div class="flex mb-6">
+                    <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-4">
+                      <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-user-line"></i>
+                      </div>
+                    </div>
+                    <div class="bg-gray-50 rounded p-4 flex-1">
+                      <div class="flex items-center justify-between mb-2">
+                        <div class="font-medium">申請者: 山田 健太郎</div>
+                        <div class="text-sm text-gray-500">2025/05/08 10:15</div>
+                      </div>
+                      <div class="text-sm text-gray-600 mb-2">
+                        Microsoft Exchange Online の重要なセキュリティパッチを適用する変更リクエストを申請しました。
+                      </div>
+                      <div class="flex items-center text-xs text-green-600">
+                        <div class="w-4 h-4 flex items-center justify-center mr-1">
+                          <i class="ri-check-line"></i>
+                        </div>
+                        申請完了
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex mb-6">
+                    <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-4">
+                      <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-user-line"></i>
+                      </div>
+                    </div>
+                    <div class="bg-gray-50 rounded p-4 flex-1">
+                      <div class="flex items-center justify-between mb-2">
+                        <div class="font-medium">IT部門マネージャー: 佐藤 健太</div>
+                        <div class="text-sm text-gray-500">2025/05/08 14:30</div>
+                      </div>
+                      <div class="text-sm text-gray-600 mb-2">
+                        セキュリティパッチの適用は重要です。事前テストの結果も問題なく、承認します。
+                      </div>
+                      <div class="flex items-center text-xs text-green-600">
+                        <div class="w-4 h-4 flex items-center justify-center mr-1">
+                          <i class="ri-check-line"></i>
+                        </div>
+                        承認済
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex mb-6">
+                    <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-4">
+                      <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-user-line"></i>
+                      </div>
+                    </div>
+                    <div class="bg-gray-50 rounded p-4 flex-1">
+                      <div class="flex items-center justify-between mb-2">
+                        <div class="font-medium">セキュリティ責任者: 鈴木 美咲</div>
+                        <div class="text-sm text-gray-500">2025/05/09 09:45</div>
+                      </div>
+                      <div class="text-sm text-gray-600 mb-2">
+                        セキュリティ観点から確認しました。CVE-2025-1234の脆弱性に対応する重要なパッチであり、早急な適用が必要です。承認します。
+                      </div>
+                      <div class="flex items-center text-xs text-green-600">
+                        <div class="w-4 h-4 flex items-center justify-center mr-1">
+                          <i class="ri-check-line"></i>
+                        </div>
+                        承認済
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex">
+                    <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mr-4">
+                      <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-user-line"></i>
+                      </div>
+                    </div>
+                    <div class="bg-gray-50 rounded p-4 flex-1">
+                      <div class="flex items-center justify-between mb-2">
+                        <div class="font-medium">CIO: 伊藤 大輔</div>
+                        <div class="text-sm text-gray-500">-</div>
+                      </div>
+                      <div class="text-sm text-gray-600 mb-2">
+                        最終承認者として確認中です。
+                      </div>
+                      <div class="flex items-center text-xs text-yellow-600">
+                        <div class="w-4 h-4 flex items-center justify-center mr-1">
+                          <i class="ri-time-line"></i>
+                        </div>
+                        承認待ち
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 現在時刻の更新
+  function updateTime() {
+    const now = new Date();
+    const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    document.getElementById('current-time').textContent = now.toLocaleTimeString('ja-JP', options);
+  }
+  
+  updateTime();
+  setInterval(updateTime, 1000);
+  
+  // 現在の日付を表示
+  const today = new Date();
+  const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
+  document.getElementById('current-date').textContent = today.toLocaleDateString('ja-JP', dateOptions).replace(/\//g, '年').replace(/\//g, '月') + '日';
+});
+</script>
+</body>
+</html>

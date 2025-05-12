@@ -1,22 +1,26 @@
+from backend.database import Base
 from datetime import datetime
-from . import db
+# from backend.database import Base as db # 循環インポートを避けるために修正 # この行は削除またはコメントアウト
+from sqlalchemy import Column, Integer, String, DateTime, Float, Text, ForeignKey, Boolean
+from sqlalchemy.orm import relationship, backref
+# from backend.database import Base # Base は既に1行目でインポートされている
 
-class SystemMonitor(db.Model):
+class SystemMonitor(Base):
     """システム監視モデル - サービス稼働状況、パフォーマンスメトリクス管理"""
     __tablename__ = 'system_monitors'
 
-    id = db.Column(db.Integer, primary_key=True)
-    system_name = db.Column(db.String(100), nullable=False)  # AD, Entra ID, Exchange Online, etc.
-    component = db.Column(db.String(100))  # サブコンポーネント名
-    status = db.Column(db.String(20), nullable=False)  # running, warning, error, stopped
-    uptime = db.Column(db.Float)  # 稼働時間（時間）
-    cpu_usage = db.Column(db.Float)  # CPU使用率（%）
-    memory_usage = db.Column(db.Float)  # メモリ使用率（%）
-    disk_usage = db.Column(db.Float)  # ディスク使用率（%）
-    network_latency = db.Column(db.Float)  # ネットワークレイテンシ（ms）
-    last_check = db.Column(db.DateTime, default=datetime.utcnow)
-    checked_by = db.Column(db.String(50))  # 確認者（自動/手動）
-    notes = db.Column(db.Text)  # 追加メモ
+    id = Column(Integer, primary_key=True)
+    system_name = Column(String(100), nullable=False)  # AD, Entra ID, Exchange Online, etc.
+    component = Column(String(100))  # サブコンポーネント名
+    status = Column(String(20), nullable=False)  # running, warning, error, stopped
+    uptime = Column(Float)  # 稼働時間（時間）
+    cpu_usage = Column(Float)  # CPU使用率（%）
+    memory_usage = Column(Float)  # メモリ使用率（%）
+    disk_usage = Column(Float)  # ディスク使用率（%）
+    network_latency = Column(Float)  # ネットワークレイテンシ（ms）
+    last_check = Column(DateTime, default=datetime.utcnow)
+    checked_by = Column(String(50))  # 確認者（自動/手動）
+    notes = Column(Text)  # 追加メモ
     
     def __repr__(self):
         return f'<SystemMonitor {self.system_name}: {self.status}>'
@@ -39,29 +43,29 @@ class SystemMonitor(db.Model):
         }
 
 
-class ServiceIncident(db.Model):
+class ServiceIncident(Base):
     """サービスインシデントモデル - ISO 20000対応のインシデント管理"""
     __tablename__ = 'service_incidents'
 
-    id = db.Column(db.Integer, primary_key=True)
-    incident_id = db.Column(db.String(20), unique=True, nullable=False)  # INC-YYYY-MMDD-NNNN
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text)
-    system_name = db.Column(db.String(100), nullable=False)
-    severity = db.Column(db.String(20), nullable=False)  # critical, high, medium, low
-    status = db.Column(db.String(20), nullable=False)  # open, in_progress, resolved, closed
-    reported_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    assigned_to = db.Column(db.Integer, db.ForeignKey('users.id'))
-    reported_at = db.Column(db.DateTime, default=datetime.utcnow)
-    resolved_at = db.Column(db.DateTime)
-    resolution = db.Column(db.Text)
-    root_cause = db.Column(db.Text)
-    impact = db.Column(db.Text)  # 影響範囲
-    affected_users = db.Column(db.Integer)  # 影響を受けたユーザー数
+    id = Column(Integer, primary_key=True)
+    incident_id = Column(String(20), unique=True, nullable=False)  # INC-YYYY-MMDD-NNNN
+    title = Column(String(200), nullable=False)
+    description = Column(Text)
+    system_name = Column(String(100), nullable=False)
+    severity = Column(String(20), nullable=False)  # critical, high, medium, low
+    status = Column(String(20), nullable=False)  # open, in_progress, resolved, closed
+    reported_by = Column(Integer, ForeignKey('users.id'))
+    assigned_to = Column(Integer, ForeignKey('users.id'))
+    reported_at = Column(DateTime, default=datetime.utcnow)
+    resolved_at = Column(DateTime)
+    resolution = Column(Text)
+    root_cause = Column(Text)
+    impact = Column(Text)  # 影響範囲
+    affected_users = Column(Integer)  # 影響を受けたユーザー数
     
     # リレーションシップ
-    reporter = db.relationship('User', foreign_keys=[reported_by], backref=db.backref('reported_incidents', lazy=True))
-    assignee = db.relationship('User', foreign_keys=[assigned_to], backref=db.backref('assigned_incidents', lazy=True))
+    reporter = relationship('User', foreign_keys=[reported_by], backref=backref('reported_incidents', lazy=True))
+    assignee = relationship('User', foreign_keys=[assigned_to], backref=backref('assigned_incidents', lazy=True))
     
     def __repr__(self):
         return f'<ServiceIncident {self.incident_id}: {self.status}>'
@@ -87,41 +91,41 @@ class ServiceIncident(db.Model):
         }
 
 
-class SecurityEvent(db.Model):
+class SecurityEvent(Base):
     """セキュリティイベントモデル - ISO 27001対応のセキュリティ監視"""
     __tablename__ = 'security_events'
 
-    id = db.Column(db.Integer, primary_key=True)
-    event_id = db.Column(db.String(20), unique=True, nullable=False)  # SEC-YYYY-MMDD-NNNN
-    event_type = db.Column(db.String(50), nullable=False)  # unauthorized_access, data_breach, malware_detected
-    source_system = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    description_encrypted = db.Column(db.Boolean, default=False)
-    severity = db.Column(db.String(20), nullable=False)  # critical, high, medium, low
-    status = db.Column(db.String(20), nullable=False)  # new, investigating, mitigated, resolved
-    detected_at = db.Column(db.DateTime, default=datetime.utcnow)
-    mitigated_at = db.Column(db.DateTime)
-    reported_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    assigned_to = db.Column(db.Integer, db.ForeignKey('users.id'))
-    ip_address = db.Column(db.String(50))
-    ip_address_encrypted = db.Column(db.Boolean, default=False)
-    location = db.Column(db.String(100))
-    location_encrypted = db.Column(db.Boolean, default=False)
-    action_taken = db.Column(db.Text)
-    action_taken_encrypted = db.Column(db.Boolean, default=False)
-    encryption_iv = db.Column(db.String(24))  # AES-GCM用のIV (Base64エンコード)
-    encryption_tag = db.Column(db.String(24))  # AES-GCM用の認証タグ (Base64エンコード)
-    blockchain_tx_hash = db.Column(db.String(66))  # Hyperledgerトランザクションハッシュ
-    blockchain_timestamp = db.Column(db.DateTime)  # ブロックチェーン記録時刻
-
+    id = Column(Integer, primary_key=True)
+    event_id = Column(String(20), unique=True, nullable=False)  # SEC-YYYY-MMDD-NNNN
+    event_type = Column(String(50), nullable=False)  # unauthorized_access, data_breach, malware_detected
+    source_system = Column(String(100), nullable=False)
+    description = Column(Text)
+    description_encrypted = Column(Boolean, default=False)
+    severity = Column(String(20), nullable=False)  # critical, high, medium, low
+    status = Column(String(20), nullable=False)  # new, investigating, mitigated, resolved
+    detected_at = Column(DateTime, default=datetime.utcnow)
+    mitigated_at = Column(DateTime)
+    reported_by = Column(Integer, ForeignKey('users.id'))
+    assigned_to = Column(Integer, ForeignKey('users.id'))
+    ip_address = Column(String(50))
+    ip_address_encrypted = Column(Boolean, default=False)
+    location = Column(String(100))
+    location_encrypted = Column(Boolean, default=False)
+    action_taken = Column(Text)
+    action_taken_encrypted = Column(Boolean, default=False)
+    encryption_iv = Column(String(24))  # AES-GCM用のIV (Base64エンコード)
+    encryption_tag = Column(String(24))  # AES-GCM用の認証タグ (Base64エンコード)
+    blockchain_tx_hash = Column(String(66))  # Hyperledgerトランザクションハッシュ
+    blockchain_timestamp = Column(DateTime)  # ブロックチェーン記録時刻
+    
     # 暗号化キーキャッシュ (クラス変数)
     _encryption_key = None
     _key_vault_client = None
     _key_last_fetched = None  # 最終取得時刻
     
     # リレーションシップ
-    reporter = db.relationship('User', foreign_keys=[reported_by], backref=db.backref('reported_security_events', lazy=True))
-    assignee = db.relationship('User', foreign_keys=[assigned_to], backref=db.backref('assigned_security_events', lazy=True))
+    reporter = relationship('User', foreign_keys=[reported_by], backref=backref('reported_security_events', lazy=True))
+    assignee = relationship('User', foreign_keys=[assigned_to], backref=backref('assigned_security_events', lazy=True))
     
     def __repr__(self):
         return f'<SecurityEvent {self.event_id}: {self.status}>'
@@ -356,24 +360,25 @@ class SecurityEvent(db.Model):
                 key_source='TPM' if cls._tpm else 'software'
             )
 
-    @classmethod
-    def _measure_performance(cls, func):
+    def _measure_performance(func):  # @classmethod を削除、引数から cls を削除
         """非同期暗号化処理のパフォーマンス計測デコレータ (スレッドセーフ版)"""
         from functools import wraps
         import asyncio
         
         @wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(self, *args, **kwargs): # wrapper に self を追加
             from datetime import datetime
             import logging
             from threading import Lock
             
-            if not hasattr(cls, '_metrics_lock'):
-                cls._metrics_lock = Lock()
+            # インスタンスのロックを使用するように変更 (またはクラスレベルのロックを維持する場合は cls を self.__class__ に)
+            if not hasattr(self.__class__, '_metrics_lock'):
+                self.__class__._metrics_lock = Lock()
             
             start_time = datetime.utcnow()
             try:
-                result = await func(*args, **kwargs)
+                # self を渡して元のメソッドを呼び出す
+                result = await func(self, *args, **kwargs)
                 elapsed = (datetime.utcnow() - start_time).total_seconds() * 1000
                 
                 # 閾値超過警告 (非同期対応)
@@ -381,12 +386,12 @@ class SecurityEvent(db.Model):
                     logging.warning(
                         f"Encryption latency {elapsed:.2f}ms exceeds 200ms threshold | "
                         f"Method: {func.__name__} | "
-                        f"Using HSM: {getattr(cls, '_using_hsm', False)}"
+                        f"Using HSM: {getattr(self.__class__, '_using_hsm', False)}"
                     )
                 
-                # スレッドセーフなメトリクス記録
-                with cls._metrics_lock:
-                    cls._record_encryption_metrics(elapsed)
+                # スレッドセーフなメトリクス記録 (インスタンスメソッド経由またはクラスメソッドとして)
+                with self.__class__._metrics_lock:
+                    self.__class__._record_encryption_metrics(elapsed) # クラスメソッドとして呼び出す
                 return result
                 
             except Exception as e:
@@ -399,6 +404,8 @@ class SecurityEvent(db.Model):
                 
         return wrapper
 
+    # このメソッドは _measure_performance から呼び出されるため、クラスメソッドのままにするか、
+    # _measure_performance 内部で self.__class__._record_encryption_metrics のように呼び出す
     @classmethod
     def _record_encryption_metrics(cls, elapsed_time):
         """暗号化メトリクスを監査ログに記録"""
@@ -423,6 +430,7 @@ class SecurityEvent(db.Model):
         else:
             cls._encryption_metrics['fallback_usage_count'] += 1
 
+    # _measure_performance を通常のインスタンスメソッドデコレータとして呼び出す
     @_measure_performance
     async def encrypt_sensitive_fields(self):
         """機密フィールドをHSMバッチ暗号化"""

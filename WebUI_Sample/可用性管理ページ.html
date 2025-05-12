@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可用性管理 - ITSM運用管理システム</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#3b82f6',secondary:'#64748b'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background-color: #f9fafb;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+.custom-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.custom-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #e2e8f0;
+  transition: .4s;
+  border-radius: 24px;
+}
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .switch-slider {
+  background-color: #3b82f6;
+}
+input:checked + .switch-slider:before {
+  transform: translateX(20px);
+}
+.custom-radio {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.custom-radio-input {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  margin-right: 8px;
+  position: relative;
+  cursor: pointer;
+}
+.custom-radio-input:checked {
+  border-color: #3b82f6;
+}
+.custom-radio-input:checked::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+}
+.custom-range {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e2e8f0;
+  outline: none;
+}
+.custom-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.custom-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+</style>
+</head>
+<body>
+<div class="flex h-screen overflow-hidden bg-white">
+  <!-- サイドナビゲーション -->
+  <div class="w-64 bg-gray-900 text-white flex flex-col">
+    <div class="p-4 flex items-center border-b border-gray-800">
+      <div class="text-2xl font-['Pacifico'] text-white">logo</div>
+      <div class="ml-2 text-sm font-medium">ITSM Platform</div>
+    </div>
+    <div class="flex-1 overflow-y-auto scrollbar-hide">
+      <nav class="mt-4">
+        <div class="px-4 py-2 text-xs font-medium text-gray-400 uppercase">メインメニュー</div>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-dashboard-line"></i>
+          </div>
+          <span>ダッシュボード</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-error-warning-line"></i>
+          </div>
+          <span>インシデント管理</span>
+        </a>
+        <a href="https://readdy.ai/home/5b2c5163-c322-43ed-a857-f31f575af0a6/25139cf0-30eb-428b-92ea-099cae0fde2c" data-readdy="true" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-question-line"></i>
+          </div>
+          <span>問題管理</span>
+        </a>
+        <a href="https://readdy.ai/home/5b2c5163-c322-43ed-a857-f31f575af0a6/7395461b-37c4-4e85-b7d5-698bd30f4277" data-readdy="true" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-refresh-line"></i>
+          </div>
+          <span>変更管理</span>
+        </a>
+        <a href="https://readdy.ai/home/5b2c5163-c322-43ed-a857-f31f575af0a6/3155705b-703e-47f0-a1a3-3bc8f63a983c" data-readdy="true" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-rocket-line"></i>
+          </div>
+          <span>リリース管理</span>
+        </a>
+        <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">ISO準拠管理</div>
+        <a href="https://readdy.ai/home/5b2c5163-c322-43ed-a857-f31f575af0a6/517c8651-7812-4c5c-bfe0-39c5c9f2979d" data-readdy="true" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-settings-3-line"></i>
+          </div>
+          <span>構成管理</span>
+        </a>
+        <a href="https://readdy.ai/home/5b2c5163-c322-43ed-a857-f31f575af0a6/a3bb0d6e-c5c6-4b0e-8495-19f4845a7e5f" data-readdy="true" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-shield-check-line"></i>
+          </div>
+          <span>セキュリティ管理</span>
+        </a>
+        <a href="https://readdy.ai/home/5b2c5163-c322-43ed-a857-f31f575af0a6/898ede5d-9cf7-4e0f-9b26-a9796511b7d4" data-readdy="true" class="flex items-center px-4 py-3 text-gray-100 bg-gray-800">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-timer-line"></i>
+          </div>
+          <span>可用性管理</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-database-2-line"></i>
+          </div>
+          <span>キャパシティ管理</span>
+        </a>
+        <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">レポート</div>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-file-chart-line"></i>
+          </div>
+          <span>レポート</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+          <div class="w-6 h-6 flex items-center justify-center mr-3">
+            <i class="ri-settings-line"></i>
+          </div>
+          <span>設定</span>
+        </a>
+      </nav>
+    </div>
+    <div class="p-4 border-t border-gray-800">
+      <div class="flex items-center">
+        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+          <i class="ri-user-line"></i>
+        </div>
+        <div class="ml-3">
+          <div class="text-sm font-medium">佐藤 健太</div>
+          <div class="text-xs text-gray-400">システム管理者</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- メインコンテンツ -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- ヘッダー -->
+    <header class="bg-white border-b border-gray-200">
+      <div class="flex items-center justify-between px-6 py-3">
+        <div class="flex items-center">
+          <div class="text-lg font-medium">可用性管理</div>
+        </div>
+        <div class="flex items-center">
+          <div class="mr-6 text-sm text-gray-600">
+            <span id="current-date">2025年05月10日</span>
+            <span id="current-time">12:30:45</span>
+            <span class="ml-1">JST</span>
+          </div>
+          <button class="relative p-2 text-gray-600 hover:text-gray-900 mr-4">
+            <div class="w-6 h-6 flex items-center justify-center">
+              <i class="ri-notification-3-line"></i>
+            </div>
+            <span class="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">3</span>
+          </button>
+          <button class="p-2 text-gray-600 hover:text-gray-900 mr-4">
+            <div class="w-6 h-6 flex items-center justify-center">
+              <i class="ri-settings-4-line"></i>
+            </div>
+          </button>
+          <button class="p-2 text-gray-600 hover:text-gray-900">
+            <div class="w-6 h-6 flex items-center justify-center">
+              <i class="ri-question-line"></i>
+            </div>
+          </button>
+        </div>
+      </div>
+    </header>
+    <!-- コンテンツエリア -->
+    <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+      <div class="max-w-7xl mx-auto">
+        <!-- 可用性概要セクション -->
+        <div class="grid grid-cols-4 gap-6 mb-6">
+          <div class="bg-white rounded shadow p-5">
+            <div class="flex items-center">
+              <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-timer-line ri-lg"></i>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-sm text-gray-500">総合可用性</div>
+                <div class="text-2xl font-bold">99.8%</div>
+              </div>
+            </div>
+            <div class="mt-3 h-2 bg-gray-200 rounded-full">
+              <div class="h-2 bg-primary rounded-full" style="width: 99.8%"></div>
+            </div>
+          </div>
+          <div class="bg-white rounded shadow p-5">
+            <div class="flex items-center">
+              <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-error-warning-line ri-lg"></i>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-sm text-gray-500">アクティブインシデント</div>
+                <div class="text-2xl font-bold">2</div>
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-3 gap-1">
+              <div class="h-2 bg-red-500 rounded-full"></div>
+              <div class="h-2 bg-yellow-500 rounded-full"></div>
+              <div class="h-2 bg-green-500 rounded-full"></div>
+            </div>
+          </div>
+          <div class="bg-white rounded shadow p-5">
+            <div class="flex items-center">
+              <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-check-double-line ri-lg"></i>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-sm text-gray-500">SLA達成率</div>
+                <div class="text-2xl font-bold">98.5%</div>
+              </div>
+            </div>
+            <div class="mt-3 h-2 bg-gray-200 rounded-full">
+              <div class="h-2 bg-green-500 rounded-full" style="width: 98.5%"></div>
+            </div>
+          </div>
+          <div class="bg-white rounded shadow p-5">
+            <div class="flex items-center">
+              <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-500">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-time-line ri-lg"></i>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="text-sm text-gray-500">平均復旧時間</div>
+                <div class="text-2xl font-bold">45分</div>
+              </div>
+            </div>
+            <div class="mt-3 flex items-center">
+              <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+              <div class="text-xs text-gray-500">目標：60分以内</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 期間選択タブ -->
+        <div class="bg-white rounded shadow mb-6">
+          <div class="px-5 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-medium">可用性データ</h2>
+              <div class="flex space-x-2">
+                <div class="bg-gray-100 rounded-full p-1 flex">
+                  <button class="px-4 py-1 text-sm rounded-full bg-primary text-white">日次</button>
+                  <button class="px-4 py-1 text-sm rounded-full text-gray-700">週次</button>
+                  <button class="px-4 py-1 text-sm rounded-full text-gray-700">月次</button>
+                  <button class="px-4 py-1 text-sm rounded-full text-gray-700">四半期</button>
+                </div>
+                <div class="relative">
+                  <button class="flex items-center px-3 py-2 text-sm border border-gray-300 rounded !rounded-button">
+                    <span>2025/05/01 - 2025/05/10</span>
+                    <div class="w-4 h-4 flex items-center justify-center ml-2">
+                      <i class="ri-calendar-line"></i>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-5">
+            <div id="availability-trend-chart" class="h-80"></div>
+          </div>
+        </div>
+
+        <!-- サービスステータスセクション -->
+        <div class="grid grid-cols-3 gap-6 mb-6">
+          <div class="bg-white rounded shadow col-span-2">
+            <div class="px-5 py-4 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg font-medium">サービスステータス</h2>
+                <div class="flex space-x-2">
+                  <div class="relative">
+                    <button class="flex items-center px-3 py-2 text-sm border border-gray-300 rounded !rounded-button">
+                      <span>すべてのサービス</span>
+                      <div class="w-4 h-4 flex items-center justify-center ml-2">
+                        <i class="ri-arrow-down-s-line"></i>
+                      </div>
+                    </button>
+                  </div>
+                  <button class="flex items-center px-3 py-2 text-sm text-primary border border-primary rounded !rounded-button">
+                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                      <i class="ri-refresh-line"></i>
+                    </div>
+                    <span>更新</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">サービス名</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">稼働時間</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">可用性（30日）</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最終障害</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">アクション</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 flex items-center justify-center mr-3 text-blue-500">
+                          <i class="ri-microsoft-line ri-lg"></i>
+                        </div>
+                        <div>
+                          <div class="text-sm font-medium text-gray-900">Microsoft 365</div>
+                          <div class="text-xs text-gray-500">E3ライセンス</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                        <span class="text-sm text-gray-600">正常稼働中</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div>42日間</div>
+                      <div class="text-xs">最終停止: 2025/03/29</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <span class="text-sm font-medium text-gray-900 mr-2">99.9%</span>
+                        <div class="w-24 h-2 bg-gray-200 rounded-full">
+                          <div class="h-2 bg-green-500 rounded-full" style="width: 99.9%"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/03/29 02:15</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button class="text-primary hover:text-primary-dark !rounded-button">詳細</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 flex items-center justify-center mr-3 text-blue-500">
+                          <i class="ri-team-line ri-lg"></i>
+                        </div>
+                        <div>
+                          <div class="text-sm font-medium text-gray-900">Microsoft Teams</div>
+                          <div class="text-xs text-gray-500">ビデオ会議機能</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                        <span class="text-sm text-gray-600">パフォーマンス低下</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div>15日間</div>
+                      <div class="text-xs">最終停止: 2025/04/25</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <span class="text-sm font-medium text-gray-900 mr-2">98.5%</span>
+                        <div class="w-24 h-2 bg-gray-200 rounded-full">
+                          <div class="h-2 bg-yellow-500 rounded-full" style="width: 98.5%"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/04/25 14:30</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button class="text-primary hover:text-primary-dark !rounded-button">詳細</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 flex items-center justify-center mr-3 text-blue-500">
+                          <i class="ri-mail-line ri-lg"></i>
+                        </div>
+                        <div>
+                          <div class="text-sm font-medium text-gray-900">Exchange Online</div>
+                          <div class="text-xs text-gray-500">メールサービス</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                        <span class="text-sm text-gray-600">障害発生中</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div>0日間</div>
+                      <div class="text-xs">最終停止: 2025/05/10</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <span class="text-sm font-medium text-gray-900 mr-2">97.2%</span>
+                        <div class="w-24 h-2 bg-gray-200 rounded-full">
+                          <div class="h-2 bg-red-500 rounded-full" style="width: 97.2%"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/10 11:45</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button class="text-primary hover:text-primary-dark !rounded-button">詳細</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 flex items-center justify-center mr-3 text-blue-500">
+                          <i class="ri-folder-user-line ri-lg"></i>
+                        </div>
+                        <div>
+                          <div class="text-sm font-medium text-gray-900">Active Directory</div>
+                          <div class="text-xs text-gray-500">認証サービス</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                        <span class="text-sm text-gray-600">正常稼働中</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div>90日間</div>
+                      <div class="text-xs">最終停止: 2025/02/10</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <span class="text-sm font-medium text-gray-900 mr-2">99.99%</span>
+                        <div class="w-24 h-2 bg-gray-200 rounded-full">
+                          <div class="h-2 bg-green-500 rounded-full" style="width: 99.99%"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/02/10 03:20</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button class="text-primary hover:text-primary-dark !rounded-button">詳細</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 flex items-center justify-center mr-3 text-blue-500">
+                          <i class="ri-calendar-line ri-lg"></i>
+                        </div>
+                        <div>
+                          <div class="text-sm font-medium text-gray-900">DeskNet's Neo</div>
+                          <div class="text-xs text-gray-500">グループウェア</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                        <span class="text-sm text-gray-600">正常稼働中</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div>60日間</div>
+                      <div class="text-xs">最終停止: 2025/03/11</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <span class="text-sm font-medium text-gray-900 mr-2">99.8%</span>
+                        <div class="w-24 h-2 bg-gray-200 rounded-full">
+                          <div class="h-2 bg-green-500 rounded-full" style="width: 99.8%"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/03/11 08:45</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button class="text-primary hover:text-primary-dark !rounded-button">詳細</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="bg-white rounded shadow">
+            <div class="px-5 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-medium">可用性アラート</h2>
+            </div>
+            <div class="p-5">
+              <div class="space-y-4">
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                  <div class="flex">
+                    <div class="flex-shrink-0">
+                      <div class="w-5 h-5 flex items-center justify-center text-red-500">
+                        <i class="ri-error-warning-fill"></i>
+                      </div>
+                    </div>
+                    <div class="ml-3">
+                      <h3 class="text-sm font-medium text-red-800">Exchange Online 障害</h3>
+                      <div class="mt-1 text-xs text-red-700">
+                        <p>メール配信に遅延が発生しています。Microsoft側で対応中。</p>
+                        <p class="mt-1">2025/05/10 11:45 JST</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
+                  <div class="flex">
+                    <div class="flex-shrink-0">
+                      <div class="w-5 h-5 flex items-center justify-center text-yellow-500">
+                        <i class="ri-alert-line"></i>
+                      </div>
+                    </div>
+                    <div class="ml-3">
+                      <h3 class="text-sm font-medium text-yellow-800">Teams パフォーマンス低下</h3>
+                      <div class="mt-1 text-xs text-yellow-700">
+                        <p>ビデオ会議機能に遅延が発生しています。</p>
+                        <p class="mt-1">2025/05/10 10:30 JST</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                  <div class="flex">
+                    <div class="flex-shrink-0">
+                      <div class="w-5 h-5 flex items-center justify-center text-blue-500">
+                        <i class="ri-information-line"></i>
+                      </div>
+                    </div>
+                    <div class="ml-3">
+                      <h3 class="text-sm font-medium text-blue-800">SLA閾値アラート</h3>
+                      <div class="mt-1 text-xs text-blue-700">
+                        <p>Exchange Online の月間SLA達成率が目標値を下回っています。</p>
+                        <p class="mt-1">2025/05/10 12:00 JST</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-4">
+                <button class="w-full py-2 text-sm text-primary border border-primary rounded hover:bg-blue-50 transition !rounded-button">
+                  すべてのアラートを表示
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 可用性分析セクション -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <div class="bg-white rounded shadow">
+            <div class="px-5 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-medium">ダウンタイム分析</h2>
+            </div>
+            <div class="p-5">
+              <div id="downtime-chart" class="h-72"></div>
+            </div>
+          </div>
+          <div class="bg-white rounded shadow">
+            <div class="px-5 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-medium">SLA達成率推移</h2>
+            </div>
+            <div class="p-5">
+              <div id="sla-chart" class="h-72"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 計画メンテナンスセクション -->
+        <div class="grid grid-cols-1 gap-6 mb-6">
+          <div class="bg-white rounded shadow">
+            <div class="px-5 py-4 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg font-medium">計画メンテナンス</h2>
+                <button class="flex items-center px-3 py-2 text-sm bg-primary text-white rounded !rounded-button">
+                  <div class="w-4 h-4 flex items-center justify-center mr-1">
+                    <i class="ri-add-line"></i>
+                  </div>
+                  <span>メンテナンス登録</span>
+                </button>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">タイトル</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">対象サービス</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">開始日時</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">終了日時</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">影響</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">アクション</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">MNT-2025051501</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">ファイルサーバーメンテナンス</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ファイルサーバー</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/15 01:00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/15 05:00</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">中</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">予定</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button class="text-primary hover:text-primary-dark mr-2 !rounded-button">詳細</button>
+                      <button class="text-gray-600 hover:text-gray-900 !rounded-button">編集</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">MNT-2025052001</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">DeskNet's Neo アップデート</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">DeskNet's Neo</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/20 22:00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/21 02:00</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">高</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">予定</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button class="text-primary hover:text-primary-dark mr-2 !rounded-button">詳細</button>
+                      <button class="text-gray-600 hover:text-gray-900 !rounded-button">編集</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">MNT-2025050501</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Active Directory メンテナンス</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Active Directory</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/05 00:00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/05 03:00</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">低</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">完了</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button class="text-primary hover:text-primary-dark mr-2 !rounded-button">詳細</button>
+                      <button class="text-gray-600 hover:text-gray-900 !rounded-button">レポート</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 可用性レポートとアラート設定 -->
+        <div class="grid grid-cols-2 gap-6">
+          <div class="bg-white rounded shadow">
+            <div class="px-5 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-medium">可用性レポート生成</h2>
+            </div>
+            <div class="p-5">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">レポートタイプ</label>
+                  <div class="flex space-x-4">
+                    <label class="custom-radio">
+                      <input type="radio" name="report-type" class="custom-radio-input" checked>
+                      <span class="text-sm">サービス別レポート</span>
+                    </label>
+                    <label class="custom-radio">
+                      <input type="radio" name="report-type" class="custom-radio-input">
+                      <span class="text-sm">総合レポート</span>
+                    </label>
+                    <label class="custom-radio">
+                      <input type="radio" name="report-type" class="custom-radio-input">
+                      <span class="text-sm">SLA達成レポート</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">対象サービス</label>
+                  <div class="relative">
+                    <button class="w-full flex items-center justify-between px-3 py-2 text-sm border border-gray-300 rounded !rounded-button">
+                      <span>すべてのサービス</span>
+                      <div class="w-4 h-4 flex items-center justify-center">
+                        <i class="ri-arrow-down-s-line"></i>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">期間</label>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="relative">
+                      <button class="w-full flex items-center justify-between px-3 py-2 text-sm border border-gray-300 rounded !rounded-button">
+                        <span>2025/04/01</span>
+                        <div class="w-4 h-4 flex items-center justify-center">
+                          <i class="ri-calendar-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                    <div class="relative">
+                      <button class="w-full flex items-center justify-between px-3 py-2 text-sm border border-gray-300 rounded !rounded-button">
+                        <span>2025/05/10</span>
+                        <div class="w-4 h-4 flex items-center justify-center">
+                          <i class="ri-calendar-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">レポート形式</label>
+                  <div class="grid grid-cols-3 gap-2">
+                    <label class="flex items-center p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                      <input type="radio" name="report-format" class="mr-2" checked>
+                      <div class="w-5 h-5 flex items-center justify-center mr-2 text-gray-500">
+                        <i class="ri-file-pdf-line"></i>
+                      </div>
+                      <span class="text-sm">PDF</span>
+                    </label>
+                    <label class="flex items-center p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                      <input type="radio" name="report-format" class="mr-2">
+                      <div class="w-5 h-5 flex items-center justify-center mr-2 text-gray-500">
+                        <i class="ri-file-excel-line"></i>
+                      </div>
+                      <span class="text-sm">Excel</span>
+                    </label>
+                    <label class="flex items-center p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                      <input type="radio" name="report-format" class="mr-2">
+                      <div class="w-5 h-5 flex items-center justify-center mr-2 text-gray-500">
+                        <i class="ri-file-text-line"></i>
+                      </div>
+                      <span class="text-sm">CSV</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="flex-1 py-2 text-sm bg-primary text-white rounded hover:bg-blue-600 transition !rounded-button">
+                    レポート生成
+                  </button>
+                  <button class="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition !rounded-button">
+                    <div class="w-5 h-5 flex items-center justify-center">
+                      <i class="ri-settings-line"></i>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded shadow">
+            <div class="px-5 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-medium">アラート設定</h2>
+            </div>
+            <div class="p-5">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">可用性閾値アラート</label>
+                  <div class="flex items-center">
+                    <span class="text-sm mr-2">90%</span>
+                    <input type="range" class="custom-range flex-1" min="90" max="100" step="0.1" value="99.5">
+                    <span class="text-sm ml-2">100%</span>
+                  </div>
+                  <div class="text-right text-sm mt-1">
+                    <span class="font-medium">99.5%</span> 未満でアラート
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">ダウンタイムアラート</label>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm">連続ダウンタイム</span>
+                    <div class="relative w-32">
+                      <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded appearance-none pr-8">
+                        <option>5分</option>
+                        <option selected>10分</option>
+                        <option>15分</option>
+                        <option>30分</option>
+                        <option>1時間</option>
+                      </select>
+                      <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                        <div class="w-4 h-4 flex items-center justify-center text-gray-500">
+                          <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">通知方法</label>
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                      <label class="flex items-center">
+                        <input type="checkbox" class="mr-2" checked>
+                        <span class="text-sm">メール通知</span>
+                      </label>
+                      <button class="text-sm text-primary">設定</button>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <label class="flex items-center">
+                        <input type="checkbox" class="mr-2" checked>
+                        <span class="text-sm">システム内通知</span>
+                      </label>
+                      <button class="text-sm text-primary">設定</button>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <label class="flex items-center">
+                        <input type="checkbox" class="mr-2">
+                        <span class="text-sm">SMS通知</span>
+                      </label>
+                      <button class="text-sm text-primary">設定</button>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <label class="flex items-center">
+                        <input type="checkbox" class="mr-2">
+                        <span class="text-sm">Teams通知</span>
+                      </label>
+                      <button class="text-sm text-primary">設定</button>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">通知先ユーザー</label>
+                  <div class="flex flex-wrap gap-2 p-2 border border-gray-300 rounded min-h-10">
+                    <div class="flex items-center bg-gray-100 rounded-full px-3 py-1">
+                      <span class="text-sm">佐藤 健太</span>
+                      <button class="ml-1 text-gray-500 hover:text-gray-700">
+                        <div class="w-4 h-4 flex items-center justify-center">
+                          <i class="ri-close-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                    <div class="flex items-center bg-gray-100 rounded-full px-3 py-1">
+                      <span class="text-sm">田中 直樹</span>
+                      <button class="ml-1 text-gray-500 hover:text-gray-700">
+                        <div class="w-4 h-4 flex items-center justify-center">
+                          <i class="ri-close-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                    <div class="flex items-center bg-gray-100 rounded-full px-3 py-1">
+                      <span class="text-sm">鈴木 美咲</span>
+                      <button class="ml-1 text-gray-500 hover:text-gray-700">
+                        <div class="w-4 h-4 flex items-center justify-center">
+                          <i class="ri-close-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="flex-1 py-2 text-sm bg-primary text-white rounded hover:bg-blue-600 transition !rounded-button">
+                    設定を保存
+                  </button>
+                  <button class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition !rounded-button">
+                    テスト通知送信
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 現在時刻の更新
+  function updateTime() {
+    const now = new Date();
+    const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    document.getElementById('current-time').textContent = now.toLocaleTimeString('ja-JP', options);
+  }
+  updateTime();
+  setInterval(updateTime, 1000);
+
+  // 可用性トレンドチャート
+  const availabilityTrendChart = echarts.init(document.getElementById('availability-trend-chart'));
+  const availabilityTrendOption = {
+    animation: false,
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      textStyle: {
+        color: '#1f2937'
+      }
+    },
+    legend: {
+      data: ['Microsoft 365', 'Exchange Online', 'Teams', 'Active Directory', 'DeskNet\'s Neo'],
+      textStyle: {
+        color: '#1f2937'
+      }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      top: '15%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: ['5/1', '5/2', '5/3', '5/4', '5/5', '5/6', '5/7', '5/8', '5/9', '5/10'],
+      axisLine: {
+        lineStyle: {
+          color: '#d1d5db'
+        }
+      },
+      axisLabel: {
+        color: '#1f2937'
+      }
+    },
+    yAxis: {
+      type: 'value',
+      min: 95,
+      max: 100,
+      axisLine: {
+        lineStyle: {
+          color: '#d1d5db'
+        }
+      },
+      axisLabel: {
+        color: '#1f2937',
+        formatter: '{value}%'
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#e5e7eb'
+        }
+      }
+    },
+    series: [
+      {
+        name: 'Microsoft 365',
+        type: 'line',
+        smooth: true,
+        symbol: 'none',
+        color: 'rgba(87, 181, 231, 1)',
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0, color: 'rgba(87, 181, 231, 0.1)'
+            }, {
+              offset: 1, color: 'rgba(87, 181, 231, 0.01)'
+            }]
+          }
+        },
+        data: [99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9]
+      },
+      {
+        name: 'Exchange Online',
+        type: 'line',
+        smooth: true,
+        symbol: 'none',
+        color: 'rgba(252, 141, 98, 1)',
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0, color: 'rgba(252, 141, 98, 0.1)'
+            }, {
+              offset: 1, color: 'rgba(252, 141, 98, 0.01)'
+            }]
+          }
+        },
+        data: [99.9, 99.8, 99.9, 99.9, 99.9, 99.8, 99.9, 99.9, 99.8, 97.2]
+      },
+      {
+        name: 'Teams',
+        type: 'line',
+        smooth: true,
+        symbol: 'none',
+        color: 'rgba(251, 191, 114, 1)',
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0, color: 'rgba(251, 191, 114, 0.1)'
+            }, {
+              offset: 1, color: 'rgba(251, 191, 114, 0.01)'
+            }]
+          }
+        },
+        data: [99.9, 99.8, 99.9, 99.7, 99.8, 99.9, 99.8, 99.7, 99.6, 98.5]
+      },
+      {
+        name: 'Active Directory',
+        type: 'line',
+        smooth: true,
+        symbol: 'none',
+        color: 'rgba(141, 211, 199, 1)',
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0, color: 'rgba(141, 211, 199, 0.1)'
+            }, {
+              offset: 1, color: 'rgba(141, 211, 199, 0.01)'
+            }]
+          }
+        },
+        data: [100, 100, 100, 99.9, 99.9, 100, 100, 100, 100, 100]
+      },
+      {
+        name: 'DeskNet\'s Neo',
+        type: 'line',
+        smooth: true,
+        symbol: 'none',
+        color: 'rgba(190, 124, 255, 1)',
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0, color: 'rgba(190, 124, 255, 0.1)'
+            }, {
+              offset: 1, color: 'rgba(190, 124, 255, 0.01)'
+            }]
+          }
+        },
+        data: [99.9, 99.8, 99.9, 99.8, 99.9, 99.9, 99.9, 99.8, 99.9, 99.9]
+      }
+    ]
+  };
+  availabilityTrendChart.setOption(availabilityTrendOption);
+
+  // ダウンタイム分析チャート
+  const downtimeChart = echarts.init(document.getElementById('downtime-chart'));
+  const downtimeOption = {
+    animation: false,
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      textStyle: {
+        color: '#1f2937'
+      }
+    },
+    legend: {
+      orient: 'vertical',
+      right: 10,
+      top: 'center',
+      textStyle: {
+        color: '#1f2937'
+      }
+    },
+    series: [
+      {
+        name: 'ダウンタイム要因',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 8,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: {
+          show: false
+        },
+        emphasis: {
+          label: {
+            show: false
+          }
+        },
+        labelLine: {
+          show: false
+        },
+        color: [
+          'rgba(87, 181, 231, 1)',
+          'rgba(141, 211, 199, 1)',
+          'rgba(251, 191, 114, 1)',
+          'rgba(252, 141, 98, 1)'
+        ],
+        data: [
+          { value: 45, name: '外部サービス障害' },
+          { value: 25, name: '計画メンテナンス' },
+          { value: 18, name: 'ネットワーク問題' },
+          { value: 12, name: 'その他' }
+        ]
+      }
+    ]
+  };
+  downtimeChart.setOption(downtimeOption);
+
+  // SLA達成率推移チャート
+  const slaChart = echarts.init(document.getElementById('sla-chart'));
+  const slaOption = {
+    animation: false,
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      textStyle: {
+        color: '#1f2937'
+      }
+    },
+    legend: {
+      data: ['実際のSLA達成率', '目標SLA'],
+      textStyle: {
+        color: '#1f2937'
+      }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      top: '15%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: ['1月', '2月', '3月', '4月', '5月'],
+      axisLine: {
+        lineStyle: {
+          color: '#d1d5db'
+        }
+      },
+      axisLabel: {
+        color: '#1f2937'
+      }
+    },
+    yAxis: {
+      type: 'value',
+      min: 97,
+      max: 100,
+      axisLine: {
+        lineStyle: {
+          color: '#d1d5db'
+        }
+      },
+      axisLabel: {
+        color: '#1f2937',
+        formatter: '{value}%'
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#e5e7eb'
+        }
+      }
+    },
+    series: [
+      {
+        name: '実際のSLA達成率',
+        type: 'bar',
+        barWidth: '40%',
+        color: 'rgba(87, 181, 231, 1)',
+        itemStyle: {
+          borderRadius: 4
+        },
+        data: [99.9, 99.8, 99.7, 99.8, 98.5]
+      },
+      {
+        name: '目標SLA',
+        type: 'line',
+        symbol: 'none',
+        color: 'rgba(252, 141, 98, 1)',
+        lineStyle: {
+          type: 'dashed'
+        },
+        data: [99.5, 99.5, 99.5, 99.5, 99.5]
+      }
+    ]
+  };
+  slaChart.setOption(slaOption);
+
+  // ウィンドウリサイズ時にチャートをリサイズ
+  window.addEventListener('resize', function() {
+    availabilityTrendChart.resize();
+    downtimeChart.resize();
+    slaChart.resize();
+  });
+});
+</script>
+</body>
+</html>

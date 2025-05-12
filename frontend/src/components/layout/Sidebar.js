@@ -12,13 +12,15 @@ import {
   CubeIcon,
   ClipboardDocumentIcon,
   BookOpenIcon,
-  ArrowsRightLeftIcon
+  ArrowsRightLeftIcon,
+  BugAntIcon // 問題管理用のアイコン
 } from '@heroicons/react/24/outline';
 
 const navItems = [
   { name: 'ダッシュボード', path: '/', icon: HomeIcon },
   { name: 'システム監視', path: '/monitoring', icon: ServerIcon },
   { name: 'インシデント管理', path: '/incidents', icon: ExclamationTriangleIcon },
+  { name: '問題管理', path: '/problems', icon: BugAntIcon }, // 問題管理へのリンクを追加
   { name: 'セキュリティイベント', path: '/security', icon: ShieldCheckIcon },
   { name: 'レポート', path: '/reports', icon: DocumentChartBarIcon },
   { name: 'メトリクス分析', path: '/metrics', icon: ChartBarIcon },
@@ -32,10 +34,9 @@ const navItems = [
 
 const Sidebar = ({ isOpen }) => {
   return (
-    <aside 
-      className={`bg-white fixed h-full shadow-sidebar border-r border-gray-200 transition-all duration-300 z-20 ${
-        isOpen ? 'w-sidebar' : 'w-16'
-      }`}
+    <aside
+      className={`bg-white fixed h-full shadow-sidebar border-r border-gray-200 transition-all duration-300 z-20 ${isOpen ? 'w-sidebar' : 'w-16'
+        }`}
     >
       {/* ロゴ */}
       <div className="flex items-center justify-center h-16 border-b border-gray-200">
@@ -53,7 +54,7 @@ const Sidebar = ({ isOpen }) => {
             <li key={item.path}>
               <NavLink
                 to={item.path}
-                className={({ isActive }) => 
+                className={({ isActive }) =>
                   `sidebar-link ${isActive ? 'active' : ''} ${!isOpen && 'justify-center'}`
                 }
               >

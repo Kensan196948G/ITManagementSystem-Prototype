@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>システム設定 - ITSM運用管理システム - テンプレート</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#3b82f6', secondary: '#64748b' }, borderRadius: { 'none': '0px', 'sm': '4px', DEFAULT: '8px', 'md': '12px', 'lg': '16px', 'xl': '20px', '2xl': '24px', '3xl': '32px', 'full': '9999px', 'button': '8px' } } } }</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <style>
+        :where([class^="ri-"])::before {
+            content: "\f3c2";
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f9fafb;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e2e8f0;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.switch-slider {
+            background-color: #3b82f6;
+        }
+
+        input:checked+.switch-slider:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="flex h-screen overflow-hidden bg-white">
+        <!-- サイドナビゲーション -->
+        <div class="w-64 bg-gray-900 text-white flex flex-col">
+            <div class="p-4 flex items-center border-b border-gray-800">
+                <div class="ml-2 text-sm font-medium">ITSM Platform</div>
+            </div>
+            <div class="flex-1 overflow-y-auto scrollbar-hide">
+                <nav class="mt-4">
+                    <div class="px-4 py-2 text-xs font-medium text-gray-400 uppercase">メインメニュー</div>
+                    <a href="./ITサービス運用プラットフォーム_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3"><i class="ri-dashboard-line"></i>
+                        </div>
+                        <span>ダッシュボード</span>
+                    </a>
+                    <a href="./インシデント管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3"><i class="ri-error-warning-line"></i>
+                        </div>
+                        <span>インシデント管理</span>
+                    </a>
+                    <a href="./問題管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3"><i class="ri-question-line"></i>
+                        </div>
+                        <span>問題管理</span>
+                    </a>
+                    <a href="./変更管理ダッシュボード_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3"><i class="ri-refresh-line"></i></div>
+                        <span>変更管理</span>
+                    </a>
+                    <a href="./リリース管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3"><i class="ri-rocket-line"></i></div>
+                        <span>リリース管理</span>
+                    </a>
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">ISO準拠管理</div>
+                    <a href="./構成管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3"><i class="ri-settings-3-line"></i>
+                        </div>
+                        <span>構成管理</span>
+                    </a>
+                    <a href="./セキュリティ管理画面_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3"><i class="ri-shield-check-line"></i>
+                        </div>
+                        <span>セキュリティ管理</span>
+                    </a>
+                    <a href="./可用性管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3"><i class="ri-timer-line"></i></div>
+                        <span>可用性管理</span>
+                    </a>
+                    <a href="./キャパシティ管理ダッシュボード_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3"><i class="ri-database-2-line"></i>
+                        </div>
+                        <span>キャパシティ管理</span>
+                    </a>
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">レポート</div>
+                    <a href="./レポート一覧ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3"><i class="ri-file-chart-line"></i>
+                        </div>
+                        <span>レポート</span>
+                    </a>
+                    <a href="./設定ページ_template.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-800">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3"><i class="ri-settings-line"></i>
+                        </div>
+                        <span>設定</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-gray-800">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+                        <i class="ri-user-line"></i>
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-sm font-medium">ユーザー名</div>
+                        <div class="text-xs text-gray-400">役職</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- ヘッダー -->
+            <header class="bg-white border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-3">
+                    <div class="flex items-center">
+                        <div class="text-lg font-medium">システム設定 - テンプレート</div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="mr-6 text-sm text-gray-600">
+                            <span id="current-date">YYYY年MM月DD日</span>
+                            <span id="current-time">HH:MM:SS</span>
+                            <span class="ml-1">JST</span>
+                        </div>
+                        <button class="relative p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center"><i class="ri-notification-3-line"></i>
+                            </div>
+                            <!-- <span class="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">N</span> -->
+                        </button>
+                        <button class="p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center"><i class="ri-settings-4-line"></i>
+                            </div>
+                        </button>
+                        <button class="p-2 text-gray-600 hover:text-gray-900">
+                            <div class="w-6 h-6 flex items-center justify-center"><i class="ri-question-line"></i></div>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- コンテンツエリア -->
+            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex items-center justify-between mb-6">
+                        <h1 class="text-2xl font-bold text-gray-900">システム設定</h1>
+                        <a href="./ITサービス運用プラットフォーム_template.html"
+                            class="text-sm text-primary hover:text-primary-dark flex items-center !rounded-button px-3 py-2 border border-primary">
+                            <div class="w-4 h-4 flex items-center justify-center mr-1"><i
+                                    class="ri-arrow-left-line"></i></div>
+                            ダッシュボードに戻る
+                        </a>
+                    </div>
+
+                    <!-- 設定カードグリッド -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- システム全般設定 -->
+                        <a href="#"
+                            class="bg-white rounded shadow hover:shadow-md transition-shadow duration-300 overflow-hidden group">
+                            <div class="p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-settings-3-line ri-lg"></i></div>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">ステータス</span>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">システム全般設定</h3>
+                                <p class="text-sm text-gray-600 mb-4">基本設定、言語、タイムゾーン、表示設定などのシステム全般の設定を管理します。</p>
+                                <div class="flex items-center text-primary group-hover:text-primary-dark">
+                                    <span class="text-sm font-medium">設定を変更</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-1"><i
+                                            class="ri-arrow-right-line"></i></div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- ユーザー管理 -->
+                        <a href="#"
+                            class="bg-white rounded shadow hover:shadow-md transition-shadow duration-300 overflow-hidden group">
+                            <div class="p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors duration-300">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-user-settings-line ri-lg"></i></div>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">ステータス</span>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">ユーザー管理</h3>
+                                <p class="text-sm text-gray-600 mb-4">ユーザーアカウントの作成、編集、無効化、およびロール設定を管理します。</p>
+                                <div class="flex items-center text-primary group-hover:text-primary-dark">
+                                    <span class="text-sm font-medium">設定を変更</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-1"><i
+                                            class="ri-arrow-right-line"></i></div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 権限設定 -->
+                        <a href="#"
+                            class="bg-white rounded shadow hover:shadow-md transition-shadow duration-300 overflow-hidden group">
+                            <div class="p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-lock-line ri-lg"></i></div>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">ステータス</span>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">権限設定</h3>
+                                <p class="text-sm text-gray-600 mb-4">ユーザーロールごとのアクセス権限と操作権限を詳細に設定します。</p>
+                                <div class="flex items-center text-primary group-hover:text-primary-dark">
+                                    <span class="text-sm font-medium">設定を変更</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-1"><i
+                                            class="ri-arrow-right-line"></i></div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 通知設定 -->
+                        <a href="#"
+                            class="bg-white rounded shadow hover:shadow-md transition-shadow duration-300 overflow-hidden group">
+                            <div class="p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors duration-300">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-notification-3-line ri-lg"></i></div>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">ステータス</span>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">通知設定</h3>
+                                <p class="text-sm text-gray-600 mb-4">メール通知、システム内通知、アラート設定などの通知関連設定を管理します。</p>
+                                <div class="flex items-center text-primary group-hover:text-primary-dark">
+                                    <span class="text-sm font-medium">設定を変更</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-1"><i
+                                            class="ri-arrow-right-line"></i></div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- SLA設定 -->
+                        <a href="#"
+                            class="bg-white rounded shadow hover:shadow-md transition-shadow duration-300 overflow-hidden group">
+                            <div class="p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-timer-line ri-lg"></i></div>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">ステータス</span>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">SLA設定</h3>
+                                <p class="text-sm text-gray-600 mb-4">サービスレベル目標、応答時間、解決時間などのSLA関連設定を管理します。</p>
+                                <div class="flex items-center text-primary group-hover:text-primary-dark">
+                                    <span class="text-sm font-medium">設定を変更</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-1"><i
+                                            class="ri-arrow-right-line"></i></div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- バックアップ設定 -->
+                        <a href="#"
+                            class="bg-white rounded shadow hover:shadow-md transition-shadow duration-300 overflow-hidden group">
+                            <div class="p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 group-hover:bg-yellow-600 group-hover:text-white transition-colors duration-300">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-database-2-line ri-lg"></i></div>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">ステータス</span>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">バックアップ設定</h3>
+                                <p class="text-sm text-gray-600 mb-4">自動バックアップスケジュール、保存期間、保存場所などのバックアップ設定を管理します。</p>
+                                <div class="flex items-center text-primary group-hover:text-primary-dark">
+                                    <span class="text-sm font-medium">設定を変更</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-1"><i
+                                            class="ri-arrow-right-line"></i></div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- セキュリティ設定 -->
+                        <a href="#"
+                            class="bg-white rounded shadow hover:shadow-md transition-shadow duration-300 overflow-hidden group">
+                            <div class="p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-shield-check-line ri-lg"></i></div>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">ステータス</span>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">セキュリティ設定</h3>
+                                <p class="text-sm text-gray-600 mb-4">パスワードポリシー、2段階認証、セッション管理などのセキュリティ設定を管理します。</p>
+                                <div class="flex items-center text-primary group-hover:text-primary-dark">
+                                    <span class="text-sm font-medium">設定を変更</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-1"><i
+                                            class="ri-arrow-right-line"></i></div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 監査ログ設定 -->
+                        <a href="#"
+                            class="bg-white rounded shadow hover:shadow-md transition-shadow duration-300 overflow-hidden group">
+                            <div class="p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-file-list-3-line ri-lg"></i></div>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">ステータス</span>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">監査ログ設定</h3>
+                                <p class="text-sm text-gray-600 mb-4">ログの保存期間、監査項目、エクスポート設定などの監査ログ関連設定を管理します。</p>
+                                <div class="flex items-center text-primary group-hover:text-primary-dark">
+                                    <span class="text-sm font-medium">設定を変更</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-1"><i
+                                            class="ri-arrow-right-line"></i></div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- インテグレーション設定 -->
+                        <a href="#"
+                            class="bg-white rounded shadow hover:shadow-md transition-shadow duration-300 overflow-hidden group">
+                            <div class="p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition-colors duration-300">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-link-m ri-lg"></i></div>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">ステータス</span>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">インテグレーション設定</h3>
+                                <p class="text-sm text-gray-600 mb-4">外部サービスとの連携設定、API設定、データ同期設定などを管理します。</p>
+                                <div class="flex items-center text-primary group-hover:text-primary-dark">
+                                    <span class="text-sm font-medium">設定を変更</span>
+                                    <div class="w-4 h-4 flex items-center justify-center ml-1"><i
+                                            class="ri-arrow-right-line"></i></div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- 最近の設定変更履歴 -->
+                    <div class="bg-white rounded shadow mb-8">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-medium">最近の設定変更履歴</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            日時</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            変更者</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            カテゴリ</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            変更内容</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            詳細</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <!-- 履歴アイテムのテンプレート -->
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">YYYY/MM/DD HH:MM
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div
+                                                    class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 mr-3">
+                                                    <div class="w-4 h-4 flex items-center justify-center"><i
+                                                            class="ri-user-line"></i></div>
+                                                </div>
+                                                <div class="text-sm font-medium text-gray-900">ユーザー名</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">設定カテゴリ</td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">変更内容の概要プレースホルダー</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button
+                                                class="text-primary hover:text-primary-dark !rounded-button">詳細</button>
+                                        </td>
+                                    </tr>
+                                    <!-- 繰り返しを省略 -->
+                                    <tr>
+                                        <td colspan="5" class="text-center py-10 text-gray-500">最近の変更履歴はありません。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 設定バックアップと復元 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white rounded shadow">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h2 class="text-lg font-medium">設定バックアップ</h2>
+                            </div>
+                            <div class="p-6">
+                                <p class="text-sm text-gray-600 mb-4">現在のシステム設定をエクスポートして保存します。バックアップファイルは暗号化されます。</p>
+                                <div class="space-y-4">
+                                    <div class="flex items-center">
+                                        <div class="w-5 h-5 flex items-center justify-center text-gray-500 mr-2"><i
+                                                class="ri-information-line"></i></div>
+                                        <span class="text-sm text-gray-700">最終バックアップ: N/A</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-5 h-5 flex items-center justify-center text-gray-500 mr-2"><i
+                                                class="ri-information-line"></i></div>
+                                        <span class="text-sm text-gray-700">自動バックアップ: 未設定</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-5 h-5 flex items-center justify-center text-gray-500 mr-2"><i
+                                                class="ri-information-line"></i></div>
+                                        <span class="text-sm text-gray-700">保存場所: 未設定</span>
+                                    </div>
+                                </div>
+                                <div class="mt-6 flex space-x-3">
+                                    <button
+                                        class="px-4 py-2 bg-primary text-white rounded hover:bg-blue-600 transition !rounded-button whitespace-nowrap">
+                                        手動バックアップ
+                                    </button>
+                                    <button
+                                        class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition !rounded-button whitespace-nowrap">
+                                        バックアップ履歴
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded shadow">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h2 class="text-lg font-medium">設定復元</h2>
+                            </div>
+                            <div class="p-6">
+                                <p class="text-sm text-gray-600 mb-4">保存されたバックアップから設定を復元します。復元すると現在の設定は上書きされます。</p>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mb-4">
+                                    <div
+                                        class="w-12 h-12 mx-auto bg-gray-100 rounded-full flex items-center justify-center text-gray-500 mb-3">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-upload-2-line"></i></div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-2">バックアップファイルをドラッグ＆ドロップ</p>
+                                    <p class="text-xs text-gray-500">または</p>
+                                    <button
+                                        class="mt-2 px-4 py-2 text-sm text-primary border border-primary rounded hover:bg-blue-50 transition !rounded-button whitespace-nowrap">
+                                        ファイルを選択
+                                    </button>
+                                </div>
+                                <div class="mt-2">
+                                    <button
+                                        class="w-full px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 transition !rounded-button whitespace-nowrap"
+                                        disabled>
+                                        設定を復元
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- アクションボタン -->
+                    <div class="flex justify-end space-x-4 mb-8">
+                        <button
+                            class="px-6 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition !rounded-button whitespace-nowrap">
+                            キャンセル
+                        </button>
+                        <button
+                            class="px-6 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition !rounded-button whitespace-nowrap">
+                            設定をリセット
+                        </button>
+                        <button
+                            class="px-6 py-2 bg-primary text-white rounded hover:bg-blue-600 transition !rounded-button whitespace-nowrap">
+                            変更を保存
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 現在時刻の更新
+            function updateTime() {
+                const now = new Date();
+                const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                const timeElem = document.getElementById('current-time');
+                if (timeElem) {
+                    timeElem.textContent = now.toLocaleTimeString('ja-JP', options);
+                }
+            }
+
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            // 現在の日付を表示
+            const dateElem = document.getElementById('current-date');
+            if (dateElem) {
+                const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                dateElem.textContent = new Date().toLocaleDateString('ja-JP', dateOptions).replace(/\//g, '年').replace(/\//g, '月') + '日';
+            }
+        });
+    </script>
+</body>
+
+</html>

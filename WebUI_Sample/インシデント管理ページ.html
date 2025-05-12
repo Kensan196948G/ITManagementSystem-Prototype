@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インシデント管理 - ITSM運用管理システム</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#3b82f6',secondary:'#64748b'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f9fafb;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e2e8f0;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .switch-slider {
+            background-color: #3b82f6;
+        }
+        input:checked + .switch-slider:before {
+            transform: translateX(20px);
+        }
+        .custom-checkbox {
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .checkmark {
+            height: 18px;
+            width: 18px;
+            background-color: #fff;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .custom-checkbox input:checked ~ .checkmark {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .checkmark:after {
+            content: "";
+            display: none;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .custom-checkbox input:checked ~ .checkmark:after {
+            display: block;
+        }
+        .custom-radio {
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+        .custom-radio input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .radiomark {
+            height: 18px;
+            width: 18px;
+            background-color: #fff;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .custom-radio input:checked ~ .radiomark {
+            border-color: #3b82f6;
+        }
+        .radiomark:after {
+            content: "";
+            display: none;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3b82f6;
+        }
+        .custom-radio input:checked ~ .radiomark:after {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex h-screen overflow-hidden bg-white">
+        <!-- サイドナビゲーション -->
+        <div class="w-64 bg-gray-900 text-white flex flex-col">
+            <div class="p-4 flex items-center border-b border-gray-800">
+                <div class="text-2xl font-['Pacifico'] text-white">logo</div>
+                <div class="ml-2 text-sm font-medium">ITSM Platform</div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto scrollbar-hide">
+                <nav class="mt-4">
+                    <div class="px-4 py-2 text-xs font-medium text-gray-400 uppercase">メインメニュー</div>
+                    
+                    <a href="https://readdy.ai/home/5b2c5163-c322-43ed-a857-f31f575af0a6/898ede5d-9cf7-4e0f-9b26-a9796511b7d4" data-readdy="true" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-dashboard-line"></i>
+                        </div>
+                        <span>ダッシュボード</span>
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-gray-100 bg-gray-800">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-error-warning-line"></i>
+                        </div>
+                        <span>インシデント管理</span>
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-question-line"></i>
+                        </div>
+                        <span>問題管理</span>
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-refresh-line"></i>
+                        </div>
+                        <span>変更管理</span>
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-rocket-line"></i>
+                        </div>
+                        <span>リリース管理</span>
+                    </a>
+                    
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">ISO準拠管理</div>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-settings-3-line"></i>
+                        </div>
+                        <span>構成管理</span>
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-shield-check-line"></i>
+                        </div>
+                        <span>セキュリティ管理</span>
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-timer-line"></i>
+                        </div>
+                        <span>可用性管理</span>
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-database-2-line"></i>
+                        </div>
+                        <span>キャパシティ管理</span>
+                    </a>
+                    
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">レポート</div>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-file-chart-line"></i>
+                        </div>
+                        <span>レポート</span>
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-settings-line"></i>
+                        </div>
+                        <span>設定</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="p-4 border-t border-gray-800">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+                        <i class="ri-user-line"></i>
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-sm font-medium">佐藤 健太</div>
+                        <div class="text-xs text-gray-400">システム管理者</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- ヘッダー -->
+            <header class="bg-white border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-3">
+                    <div class="flex items-center">
+                        <div class="text-lg font-medium">ITSM・ISO 20000・ISO 27001・ISO 27002 準拠システム</div>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <div class="mr-6 text-sm text-gray-600">
+                            <span id="current-date">2025年05月10日</span>
+                            <span id="current-time">12:30:45</span>
+                            <span class="ml-1">JST</span>
+                        </div>
+                        
+                        <button class="relative p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-notification-3-line"></i>
+                            </div>
+                            <span class="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">3</span>
+                        </button>
+                        
+                        <button class="p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-settings-4-line"></i>
+                            </div>
+                        </button>
+                        
+                        <button class="p-2 text-gray-600 hover:text-gray-900">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-question-line"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- インシデント管理ページ -->
+            <main class="flex-1 overflow-y-auto bg-gray-50">
+                <!-- ページヘッダー -->
+                <div class="bg-white border-b border-gray-200 shadow-sm">
+                    <div class="max-w-7xl mx-auto px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <a href="https://readdy.ai/home/5b2c5163-c322-43ed-a857-f31f575af0a6/898ede5d-9cf7-4e0f-9b26-a9796511b7d4" data-readdy="true" class="mr-4 text-gray-500 hover:text-gray-700">
+                                    <div class="w-6 h-6 flex items-center justify-center">
+                                        <i class="ri-arrow-left-line"></i>
+                                    </div>
+                                </a>
+                                <h1 class="text-xl font-bold">インシデント管理</h1>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="relative mr-4">
+                                    <input type="text" placeholder="インシデントを検索..." class="w-64 pl-10 pr-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-search-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="new-incident-btn" class="flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition whitespace-nowrap !rounded-button">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-2">
+                                        <i class="ri-add-line"></i>
+                                    </div>
+                                    新規インシデント
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- フィルターセクション -->
+                <div class="bg-white border-b border-gray-200">
+                    <div class="max-w-7xl mx-auto px-6 py-3">
+                        <div class="flex flex-wrap items-center gap-4">
+                            <div class="flex items-center">
+                                <label class="text-sm font-medium text-gray-700 mr-2">ステータス:</label>
+                                <div class="relative">
+                                    <select class="appearance-none bg-white border border-gray-300 rounded py-1.5 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="">すべて</option>
+                                        <option value="new">新規</option>
+                                        <option value="in-progress">対応中</option>
+                                        <option value="waiting">対応待ち</option>
+                                        <option value="resolved">解決済み</option>
+                                        <option value="closed">クローズ</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-arrow-down-s-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <label class="text-sm font-medium text-gray-700 mr-2">優先度:</label>
+                                <div class="relative">
+                                    <select class="appearance-none bg-white border border-gray-300 rounded py-1.5 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="">すべて</option>
+                                        <option value="critical">緊急</option>
+                                        <option value="high">高</option>
+                                        <option value="medium">中</option>
+                                        <option value="low">低</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-arrow-down-s-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <label class="text-sm font-medium text-gray-700 mr-2">担当者:</label>
+                                <div class="relative">
+                                    <select class="appearance-none bg-white border border-gray-300 rounded py-1.5 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="">すべて</option>
+                                        <option value="me">自分の担当</option>
+                                        <option value="unassigned">未割り当て</option>
+                                        <option value="tanaka">田中 直樹</option>
+                                        <option value="yamada">山田 健太郎</option>
+                                        <option value="suzuki">鈴木 美咲</option>
+                                        <option value="ito">伊藤 大輔</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-arrow-down-s-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <label class="text-sm font-medium text-gray-700 mr-2">期間:</label>
+                                <div class="relative">
+                                    <select class="appearance-none bg-white border border-gray-300 rounded py-1.5 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="all">すべて</option>
+                                        <option value="today">今日</option>
+                                        <option value="week">今週</option>
+                                        <option value="month">今月</option>
+                                        <option value="custom">カスタム...</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-arrow-down-s-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <label class="text-sm font-medium text-gray-700 mr-2">影響サービス:</label>
+                                <div class="relative">
+                                    <select class="appearance-none bg-white border border-gray-300 rounded py-1.5 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="">すべて</option>
+                                        <option value="exchange">Exchange Online</option>
+                                        <option value="teams">Microsoft Teams</option>
+                                        <option value="onedrive">OneDrive for Business</option>
+                                        <option value="ad">Active Directory</option>
+                                        <option value="entra">Microsoft Entra ID</option>
+                                        <option value="file">ファイルサーバー</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-arrow-down-s-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button class="ml-auto flex items-center px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition whitespace-nowrap !rounded-button">
+                                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                    <i class="ri-refresh-line"></i>
+                                </div>
+                                リセット
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- インシデント一覧 -->
+                <div class="max-w-7xl mx-auto px-6 py-6">
+                    <div class="bg-white rounded shadow overflow-hidden">
+                        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-medium">インシデント一覧</h2>
+                            <div class="flex items-center">
+                                <span class="text-sm text-gray-500 mr-4">合計: 18 件</span>
+                                <div class="relative">
+                                    <select class="appearance-none bg-white border border-gray-300 rounded py-1.5 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="10">10件表示</option>
+                                        <option value="25">25件表示</option>
+                                        <option value="50">50件表示</option>
+                                        <option value="100">100件表示</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-arrow-down-s-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">タイトル</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">優先度</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">担当者</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">報告日時</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最終更新</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">アクション</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50 cursor-pointer incident-row" data-id="INC-2025051001">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">INC-2025051001</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Exchange Online メール配信遅延</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">緊急</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">対応中</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">田中 直樹</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/10 11:45</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/10 12:30</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary/80 mr-3 !rounded-button view-incident" data-id="INC-2025051001">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-eye-line"></i>
+                                                </div>
+                                            </button>
+                                            <button class="text-gray-600 hover:text-gray-900 !rounded-button edit-incident" data-id="INC-2025051001">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-edit-line"></i>
+                                                </div>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 cursor-pointer incident-row" data-id="INC-2025051002">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">INC-2025051002</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Teams ビデオ会議遅延</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">高</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">対応中</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">山田 健太郎</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/10 10:30</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/10 11:15</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary/80 mr-3 !rounded-button view-incident" data-id="INC-2025051002">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-eye-line"></i>
+                                                </div>
+                                            </button>
+                                            <button class="text-gray-600 hover:text-gray-900 !rounded-button edit-incident" data-id="INC-2025051002">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-edit-line"></i>
+                                                </div>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 cursor-pointer incident-row" data-id="INC-2025050901">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">INC-2025050901</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">OneDrive アクセス権限エラー</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">低</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">解決済み</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">鈴木 美咲</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/09 14:20</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/09 16:45</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary/80 mr-3 !rounded-button view-incident" data-id="INC-2025050901">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-eye-line"></i>
+                                                </div>
+                                            </button>
+                                            <button class="text-gray-600 hover:text-gray-900 !rounded-button edit-incident" data-id="INC-2025050901">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-edit-line"></i>
+                                                </div>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 cursor-pointer incident-row" data-id="INC-2025050801">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">INC-2025050801</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">ファイルサーバー接続エラー</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">高</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">解決済み</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">伊藤 大輔</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/08 09:15</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/08 14:30</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary/80 mr-3 !rounded-button view-incident" data-id="INC-2025050801">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-eye-line"></i>
+                                                </div>
+                                            </button>
+                                            <button class="text-gray-600 hover:text-gray-900 !rounded-button edit-incident" data-id="INC-2025050801">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-edit-line"></i>
+                                                </div>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 cursor-pointer incident-row" data-id="INC-2025050701">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">INC-2025050701</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">SharePoint Online 同期エラー</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">中</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">解決済み</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">高橋 誠</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/07 13:40</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/07 17:20</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary/80 mr-3 !rounded-button view-incident" data-id="INC-2025050701">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-eye-line"></i>
+                                                </div>
+                                            </button>
+                                            <button class="text-gray-600 hover:text-gray-900 !rounded-button edit-incident" data-id="INC-2025050701">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-edit-line"></i>
+                                                </div>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 cursor-pointer incident-row" data-id="INC-2025050601">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">INC-2025050601</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Microsoft Entra ID 認証エラー</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">緊急</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">解決済み</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">佐藤 健太</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/06 08:30</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/06 11:15</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary/80 mr-3 !rounded-button view-incident" data-id="INC-2025050601">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-eye-line"></i>
+                                                </div>
+                                            </button>
+                                            <button class="text-gray-600 hover:text-gray-900 !rounded-button edit-incident" data-id="INC-2025050601">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-edit-line"></i>
+                                                </div>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 cursor-pointer incident-row" data-id="INC-2025050501">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">INC-2025050501</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">DeskNet'sNeo カレンダー同期問題</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">中</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">解決済み</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">中村 優子</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/05 10:20</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025/05/05 15:40</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary hover:text-primary/80 mr-3 !rounded-button view-incident" data-id="INC-2025050501">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-eye-line"></i>
+                                                </div>
+                                            </button>
+                                            <button class="text-gray-600 hover:text-gray-900 !rounded-button edit-incident" data-id="INC-2025050501">
+                                                <div class="w-5 h-5 flex items-center justify-center">
+                                                    <i class="ri-edit-line"></i>
+                                                </div>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                            <div class="text-sm text-gray-500">1-7 / 18 件表示</div>
+                            <div class="flex items-center">
+                                <button class="px-3 py-1 border border-gray-300 rounded-l text-sm text-gray-500 bg-gray-50 !rounded-button">前へ</button>
+                                <button class="px-3 py-1 border-t border-b border-gray-300 text-sm text-white bg-primary !rounded-button">1</button>
+                                <button class="px-3 py-1 border-t border-b border-gray-300 text-sm text-gray-700 hover:bg-gray-50 !rounded-button">2</button>
+                                <button class="px-3 py-1 border-t border-b border-gray-300 text-sm text-gray-700 hover:bg-gray-50 !rounded-button">3</button>
+                                <button class="px-3 py-1 border border-gray-300 rounded-r text-sm text-gray-700 hover:bg-gray-50 !rounded-button">次へ</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- インシデント詳細モーダル -->
+    <div id="incident-detail-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium">インシデント詳細</h3>
+                <button id="close-detail-modal" class="text-gray-400 hover:text-gray-500">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-close-line"></i>
+                    </div>
+                </button>
+            </div>
+            <div class="overflow-y-auto p-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-gray-500 mb-1">インシデントID</h4>
+                            <p class="text-base font-medium" id="detail-id">INC-2025051001</p>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-gray-500 mb-1">タイトル</h4>
+                            <p class="text-base" id="detail-title">Exchange Online メール配信遅延</p>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-gray-500 mb-1">説明</h4>
+                            <p class="text-sm text-gray-700" id="detail-description">
+                                複数のユーザーから、Exchange Online のメール配信に大幅な遅延が発生しているとの報告がありました。
+                                社内から社外へのメール送信に30分以上の遅延が発生しています。Microsoft 365管理センターでも障害が確認されており、
+                                Microsoft側で対応中とのステータスが表示されています。
+                            </p>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-gray-500 mb-1">影響サービス</h4>
+                            <p class="text-base" id="detail-service">Exchange Online</p>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-gray-500 mb-1">影響範囲</h4>
+                            <p class="text-sm text-gray-700" id="detail-impact">
+                                全社員（約200名）に影響あり。特に営業部門および顧客サポート部門の業務に大きな支障が出ています。
+                                重要な顧客とのコミュニケーションに遅延が発生しており、ビジネスへの影響が懸念されます。
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center mb-6">
+                            <div class="mr-6">
+                                <h4 class="text-sm font-medium text-gray-500 mb-1">優先度</h4>
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800" id="detail-priority">緊急</span>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500 mb-1">ステータス</h4>
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800" id="detail-status">対応中</span>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-gray-500 mb-1">担当者</h4>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-2">
+                                    <div class="w-4 h-4 flex items-center justify-center">
+                                        <i class="ri-user-line"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium" id="detail-assignee">田中 直樹</p>
+                                    <p class="text-xs text-gray-500" id="detail-assignee-role">インフラストラクチャチーム</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-gray-500 mb-1">報告者</h4>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mr-2">
+                                    <div class="w-4 h-4 flex items-center justify-center">
+                                        <i class="ri-user-line"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium" id="detail-reporter">佐藤 健太</p>
+                                    <p class="text-xs text-gray-500" id="detail-reporter-role">システム管理者</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-gray-500 mb-1">日時情報</h4>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <p class="text-gray-500">報告日時:</p>
+                                    <p id="detail-reported-date">2025/05/10 11:45</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">最終更新:</p>
+                                    <p id="detail-updated-date">2025/05/10 12:30</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">予定解決日時:</p>
+                                    <p id="detail-expected-resolution">2025/05/10 15:00</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">実際の解決日時:</p>
+                                    <p id="detail-actual-resolution">-</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-gray-500 mb-1">添付ファイル</h4>
+                            <div class="flex items-center mt-2">
+                                <div class="flex items-center p-2 bg-gray-50 rounded border border-gray-200 text-sm mr-2">
+                                    <div class="w-4 h-4 flex items-center justify-center text-blue-600 mr-2">
+                                        <i class="ri-file-text-line"></i>
+                                    </div>
+                                    <span>エラーログ.txt</span>
+                                </div>
+                                <div class="flex items-center p-2 bg-gray-50 rounded border border-gray-200 text-sm">
+                                    <div class="w-4 h-4 flex items-center justify-center text-green-600 mr-2">
+                                        <i class="ri-file-excel-line"></i>
+                                    </div>
+                                    <span>影響ユーザーリスト.xlsx</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">対応履歴</h4>
+                    <div class="border-l-2 border-gray-200 pl-4 space-y-6">
+                        <div class="relative">
+                            <div class="absolute -left-6 w-4 h-4 rounded-full bg-blue-500"></div>
+                            <div class="mb-1 flex items-center">
+                                <span class="text-sm font-medium">インシデント登録</span>
+                                <span class="ml-auto text-xs text-gray-500">2025/05/10 11:45</span>
+                            </div>
+                            <p class="text-sm text-gray-600">
+                                複数のユーザーからの報告を受け、インシデントを登録しました。初期調査を開始します。
+                            </p>
+                            <div class="text-xs text-gray-500 mt-1">佐藤 健太</div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-6 w-4 h-4 rounded-full bg-yellow-500"></div>
+                            <div class="mb-1 flex items-center">
+                                <span class="text-sm font-medium">担当者割り当て</span>
+                                <span class="ml-auto text-xs text-gray-500">2025/05/10 11:50</span>
+                            </div>
+                            <p class="text-sm text-gray-600">
+                                インシデントをインフラストラクチャチームの田中に割り当てました。
+                            </p>
+                            <div class="text-xs text-gray-500 mt-1">佐藤 健太</div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-6 w-4 h-4 rounded-full bg-green-500"></div>
+                            <div class="mb-1 flex items-center">
+                                <span class="text-sm font-medium">調査開始</span>
+                                <span class="ml-auto text-xs text-gray-500">2025/05/10 11:55</span>
+                            </div>
+                            <p class="text-sm text-gray-600">
+                                Microsoft 365管理センターで障害を確認。サービス状態ページでは「EX512345」の障害IDが割り当てられており、
+                                メール配信の遅延が発生していることが確認されています。Microsoft側で対応中とのステータスです。
+                            </p>
+                            <div class="text-xs text-gray-500 mt-1">田中 直樹</div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-6 w-4 h-4 rounded-full bg-purple-500"></div>
+                            <div class="mb-1 flex items-center">
+                                <span class="text-sm font-medium">ステータス更新</span>
+                                <span class="ml-auto text-xs text-gray-500">2025/05/10 12:30</span>
+                            </div>
+                            <p class="text-sm text-gray-600">
+                                Microsoft側の対応状況を確認。現在も対応中で、予想復旧時間は15:00頃とのこと。
+                                社内ユーザーに対して障害情報を通知し、重要な連絡は代替手段（Teams等）を使用するよう案内しました。
+                            </p>
+                            <div class="text-xs text-gray-500 mt-1">田中 直樹</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">コメント追加</h4>
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <textarea class="w-full p-3 text-sm border-none focus:outline-none focus:ring-2 focus:ring-primary" rows="3" placeholder="コメントを入力してください..."></textarea>
+                        <div class="bg-gray-50 px-3 py-2 flex items-center justify-between">
+                            <div class="flex items-center">
+                                <button class="p-1.5 text-gray-500 hover:text-gray-700 !rounded-button">
+                                    <div class="w-5 h-5 flex items-center justify-center">
+                                        <i class="ri-attachment-2"></i>
+                                    </div>
+                                </button>
+                                <button class="p-1.5 text-gray-500 hover:text-gray-700 !rounded-button">
+                                    <div class="w-5 h-5 flex items-center justify-center">
+                                        <i class="ri-image-line"></i>
+                                    </div>
+                                </button>
+                                <button class="p-1.5 text-gray-500 hover:text-gray-700 !rounded-button">
+                                    <div class="w-5 h-5 flex items-center justify-center">
+                                        <i class="ri-at-line"></i>
+                                    </div>
+                                </button>
+                            </div>
+                            <button class="px-4 py-1.5 bg-primary text-white text-sm rounded hover:bg-primary/90 transition whitespace-nowrap !rounded-button">
+                                コメント送信
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end space-x-3 bg-gray-50">
+                <button class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 bg-white hover:bg-gray-50 transition whitespace-nowrap !rounded-button" id="cancel-detail">
+                    閉じる
+                </button>
+                <button class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 bg-white hover:bg-gray-50 transition whitespace-nowrap !rounded-button">
+                    <div class="w-4 h-4 flex items-center justify-center mr-1 inline-block">
+                        <i class="ri-printer-line"></i>
+                    </div>
+                    印刷
+                </button>
+                <button class="px-4 py-2 bg-primary text-white text-sm rounded hover:bg-primary/90 transition whitespace-nowrap !rounded-button">
+                    <div class="w-4 h-4 flex items-center justify-center mr-1 inline-block">
+                        <i class="ri-edit-line"></i>
+                    </div>
+                    編集
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新規インシデント登録モーダル -->
+    <div id="new-incident-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium">新規インシデント登録</h3>
+                <button id="close-new-modal" class="text-gray-400 hover:text-gray-500">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-close-line"></i>
+                    </div>
+                </button>
+            </div>
+            <div class="overflow-y-auto p-6">
+                <form id="new-incident-form">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <div class="mb-4">
+                                <label for="incident-title" class="block text-sm font-medium text-gray-700 mb-1">タイトル <span class="text-red-500">*</span></label>
+                                <input type="text" id="incident-title" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="インシデントのタイトルを入力" required>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="incident-service" class="block text-sm font-medium text-gray-700 mb-1">影響サービス <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <select id="incident-service" class="appearance-none w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                        <option value="">選択してください</option>
+                                        <option value="exchange">Exchange Online</option>
+                                        <option value="teams">Microsoft Teams</option>
+                                        <option value="onedrive">OneDrive for Business</option>
+                                        <option value="sharepoint">SharePoint Online</option>
+                                        <option value="ad">Active Directory</option>
+                                        <option value="entra">Microsoft Entra ID</option>
+                                        <option value="file">ファイルサーバー</option>
+                                        <option value="desknet">DeskNet'sNeo</option>
+                                        <option value="other">その他</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-arrow-down-s-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="incident-description" class="block text-sm font-medium text-gray-700 mb-1">説明 <span class="text-red-500">*</span></label>
+                                <textarea id="incident-description" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="インシデントの詳細な説明を入力" required></textarea>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="incident-impact" class="block text-sm font-medium text-gray-700 mb-1">影響範囲 <span class="text-red-500">*</span></label>
+                                <textarea id="incident-impact" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="影響を受けるユーザー、業務、システムなどを記載" required></textarea>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">優先度 <span class="text-red-500">*</span></label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="custom-radio flex items-center p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                                        <input type="radio" name="priority" value="critical" required>
+                                        <span class="radiomark mr-2"></span>
+                                        <div>
+                                            <div class="flex items-center">
+                                                <span class="px-1.5 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded-full mr-2">緊急</span>
+                                                <span class="text-sm font-medium">緊急</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">ビジネスに重大な影響</p>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="custom-radio flex items-center p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                                        <input type="radio" name="priority" value="high" required>
+                                        <span class="radiomark mr-2"></span>
+                                        <div>
+                                            <div class="flex items-center">
+                                                <span class="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full mr-2">高</span>
+                                                <span class="text-sm font-medium">高</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">業務に大きな影響</p>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="custom-radio flex items-center p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                                        <input type="radio" name="priority" value="medium" required>
+                                        <span class="radiomark mr-2"></span>
+                                        <div>
+                                            <div class="flex items-center">
+                                                <span class="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full mr-2">中</span>
+                                                <span class="text-sm font-medium">中</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">業務に部分的な影響</p>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="custom-radio flex items-center p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                                        <input type="radio" name="priority" value="low" required>
+                                        <span class="radiomark mr-2"></span>
+                                        <div>
+                                            <div class="flex items-center">
+                                                <span class="px-1.5 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full mr-2">低</span>
+                                                <span class="text-sm font-medium">低</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">業務への影響は最小限</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="incident-assignee" class="block text-sm font-medium text-gray-700 mb-1">担当者</label>
+                                <div class="relative">
+                                    <select id="incident-assignee" class="appearance-none w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="">未割り当て</option>
+                                        <option value="sato">佐藤 健太</option>
+                                        <option value="tanaka">田中 直樹</option>
+                                        <option value="yamada">山田 健太郎</option>
+                                        <option value="suzuki">鈴木 美咲</option>
+                                        <option value="ito">伊藤 大輔</option>
+                                        <option value="takahashi">高橋 誠</option>
+                                        <option value="nakamura">中村 優子</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-arrow-down-s-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">添付ファイル</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded cursor-pointer bg-gray-50 hover:bg-gray-100">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <div class="w-10 h-10 flex items-center justify-center mb-2 text-gray-400">
+                                                <i class="ri-upload-cloud-line ri-2x"></i>
+                                            </div>
+                                            <p class="mb-1 text-sm text-gray-500">ファイルをドラッグ＆ドロップ</p>
+                                            <p class="text-xs text-gray-500">または</p>
+                                            <p class="mt-1 text-sm text-primary">ファイルを選択</p>
+                                        </div>
+                                        <input id="file-upload" type="file" class="hidden" multiple />
+                                    </label>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">最大ファイルサイズ: 10MB、ファイル形式: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, TXT</p>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="incident-related" class="block text-sm font-medium text-gray-700 mb-1">関連リンク</label>
+                                <input type="text" id="incident-related" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="関連するURLや参照情報">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="flex items-center">
+                                    <label class="custom-checkbox">
+                                        <input type="checkbox" id="notify-stakeholders">
+                                        <span class="checkmark mr-2"></span>
+                                    </label>
+                                    <span class="text-sm text-gray-700">関係者に通知する</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end space-x-3 bg-gray-50">
+                <button class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 bg-white hover:bg-gray-50 transition whitespace-nowrap !rounded-button" id="cancel-new">
+                    キャンセル
+                </button>
+                <button class="px-4 py-2 bg-primary text-white text-sm rounded hover:bg-primary/90 transition whitespace-nowrap !rounded-button" id="save-new">
+                    登録
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- インシデント編集モーダル -->
+    <div id="edit-incident-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium">インシデント編集</h3>
+                <button id="close-edit-modal" class="text-gray-400 hover:text-gray-500">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-close-line"></i>
+                    </div>
+                </button>
+            </div>
+            <div class="overflow-y-auto p-6">
+                <form id="edit-incident-form">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">インシデントID</label>
+                                <input type="text" id="edit-id" class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded text-sm" value="INC-2025051001" readonly>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="edit-title" class="block text-sm font-medium text-gray-700 mb-1">タイトル <span class="text-red-500">*</span></label>
+                                <input type="text" id="edit-title" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" value="Exchange Online メール配信遅延" required>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="edit-service" class="block text-sm font-medium text-gray-700 mb-1">影響サービス <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <select id="edit-service" class="appearance-none w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                        <option value="exchange" selected>Exchange Online</option>
+                                        <option value="teams">Microsoft Teams</option>
+                                        <option value="onedrive">OneDrive for Business</option>
+                                        <option value="sharepoint">SharePoint Online</option>
+                                        <option value="ad">Active Directory</option>
+                                        <option value="entra">Microsoft Entra ID</option>
+                                        <option value="file">ファイルサーバー</option>
+                                        <option value="desknet">DeskNet'sNeo</option>
+                                        <option value="other">その他</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-arrow-down-s-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="edit-description" class="block text-sm font-medium text-gray-700 mb-1">説明 <span class="text-red-500">*</span></label>
+                                <textarea id="edit-description" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>複数のユーザーから、Exchange Online のメール配信に大幅な遅延が発生しているとの報告がありました。社内から社外へのメール送信に30分以上の遅延が発生しています。Microsoft 365管理センターでも障害が確認されており、Microsoft側で対応中とのステータスが表示されています。</textarea>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="edit-impact" class="block text-sm font-medium text-gray-700 mb-1">影響範囲 <span class="text-red-500">*</span></label>
+                                <textarea id="edit-impact" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>全社員（約200名）に影響あり。特に営業部門および顧客サポート部門の業務に大きな支障が出ています。重要な顧客とのコミュニケーションに遅延が発生しており、ビジネスへの影響が懸念されます。</textarea>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">優先度 <span class="text-red-500">*</span></label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="custom-radio flex items-center p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                                        <input type="radio" name="edit-priority" value="critical" checked required>
+                                        <span class="radiomark mr-2"></span>
+                                        <div>
+                                            <div class="flex items-center">
+                                                <span class="px-1.5 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded-full mr-2">緊急</span>
+                                                <span class="text-sm font-medium">緊急</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">ビジネスに重大な影響</p>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="custom-radio flex items-center p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                                        <input type="radio" name="edit-priority" value="high" required>
+                                        <span class="radiomark mr-2"></span>
+                                        <div>
+                                            <div class="flex items-center">
+                                                <span class="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full mr-2">高</span>
+                                                <span class="text-sm font-medium">高</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">業務に大きな影響</p>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="custom-radio flex items-center p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                                        <input type="radio" name="edit-priority" value="medium" required>
+                                        <span class="radiomark mr-2"></span>
+                                        <div>
+                                            <div class="flex items-center">
+                                                <span class="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full mr-2">中</span>
+                                                <span class="text-sm font-medium">中</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">業務に部分的な影響</p>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="custom-radio flex items-center p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                                        <input type="radio" name="edit-priority" value="low" required>
+                                        <span class="radiomark mr-2"></span>
+                                        <div>
+                                            <div class="flex items-center">
+                                                <span class="px-1.5 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full mr-2">低</span>
+                                                <span class="text-sm font-medium">低</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">業務への影響は最小限</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="edit-status" class="block text-sm font-medium text-gray-700 mb-1">ステータス <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <select id="edit-status" class="appearance-none w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                        <option value="new">新規</option>
+                                        <option value="in-progress" selected>対応中</option>
+                                        <option value="waiting">対応待ち</option>
+                                        <option value="resolved">解決済み</option>
+                                        <option value="closed">クローズ</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-arrow-down-s-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="edit-assignee" class="block text-sm font-medium text-gray-700 mb-1">担当者</label>
+                                <div class="relative">
+                                    <select id="edit-assignee" class="appearance-none w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="">未割り当て</option>
+                                        <option value="sato">佐藤 健太</option>
+                                        <option value="tanaka" selected>田中 直樹</option>
+                                        <option value="yamada">山田 健太郎</option>
+                                        <option value="suzuki">鈴木 美咲</option>
+                                        <option value="ito">伊藤 大輔</option>
+                                        <option value="takahashi">高橋 誠</option>
+                                        <option value="nakamura">中村 優子</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-arrow-down-s-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="edit-resolution" class="block text-sm font-medium text-gray-700 mb-1">解決策</label>
+                                <textarea id="edit-resolution" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="解決策や対応内容を記載"></textarea>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="edit-expected-resolution" class="block text-sm font-medium text-gray-700 mb-1">予定解決日時</label>
+                                <input type="datetime-local" id="edit-expected-resolution" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" value="2025-05-10T15:00">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="flex items-center">
+                                    <label class="custom-checkbox">
+                                        <input type="checkbox" id="edit-notify-stakeholders" checked>
+                                        <span class="checkmark mr-2"></span>
+                                    </label>
+                                    <span class="text-sm text-gray-700">更新内容を関係者に通知する</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end space-x-3 bg-gray-50">
+                <button class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 bg-white hover:bg-gray-50 transition whitespace-nowrap !rounded-button" id="cancel-edit">
+                    キャンセル
+                </button>
+                <button class="px-4 py-2 bg-primary text-white text-sm rounded hover:bg-primary/90 transition whitespace-nowrap !rounded-button" id="save-edit">
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 現在時刻の更新
+            function updateTime() {
+                const now = new Date();
+                const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                document.getElementById('current-time').textContent = now.toLocaleTimeString('ja-JP', options);
+            }
+            
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            // インシデント詳細モーダル
+            const detailModal = document.getElementById('incident-detail-modal');
+            const viewButtons = document.querySelectorAll('.view-incident');
+            const closeDetailBtn = document.getElementById('close-detail-modal');
+            const cancelDetailBtn = document.getElementById('cancel-detail');
+            const incidentRows = document.querySelectorAll('.incident-row');
+            
+            function openDetailModal() {
+                detailModal.classList.remove('hidden');
+            }
+            
+            function closeDetailModal() {
+                detailModal.classList.add('hidden');
+            }
+            
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openDetailModal();
+                });
+            });
+            
+            incidentRows.forEach(row => {
+                row.addEventListener('click', openDetailModal);
+            });
+            
+            closeDetailBtn.addEventListener('click', closeDetailModal);
+            cancelDetailBtn.addEventListener('click', closeDetailModal);
+            
+            // 新規インシデント登録モーダル
+            const newModal = document.getElementById('new-incident-modal');
+            const newIncidentBtn = document.getElementById('new-incident-btn');
+            const closeNewBtn = document.getElementById('close-new-modal');
+            const cancelNewBtn = document.getElementById('cancel-new');
+            const saveNewBtn = document.getElementById('save-new');
+            
+            function openNewModal() {
+                newModal.classList.remove('hidden');
+            }
+            
+            function closeNewModal() {
+                newModal.classList.add('hidden');
+            }
+            
+            newIncidentBtn.addEventListener('click', openNewModal);
+            closeNewBtn.addEventListener('click', closeNewModal);
+            cancelNewBtn.addEventListener('click', closeNewModal);
+            
+            saveNewBtn.addEventListener('click', function() {
+                // ここで保存処理を行う
+                alert('新規インシデントが登録されました。');
+                closeNewModal();
+            });
+            
+            // インシデント編集モーダル
+            const editModal = document.getElementById('edit-incident-modal');
+            const editButtons = document.querySelectorAll('.edit-incident');
+            const closeEditBtn = document.getElementById('close-edit-modal');
+            const cancelEditBtn = document.getElementById('cancel-edit');
+            const saveEditBtn = document.getElementById('save-edit');
+            
+            function openEditModal(e) {
+                e.stopPropagation();
+                editModal.classList.remove('hidden');
+            }
+            
+            function closeEditModal() {
+                editModal.classList.add('hidden');
+            }
+            
+            editButtons.forEach(button => {
+                button.addEventListener('click', openEditModal);
+            });
+            
+            closeEditBtn.addEventListener('click', closeEditModal);
+            cancelEditBtn.addEventListener('click', closeEditModal);
+            
+            saveEditBtn.addEventListener('click', function() {
+                // ここで保存処理を行う
+                alert('インシデント情報が更新されました。');
+                closeEditModal();
+            });
+            
+            // モーダル外クリックで閉じる
+            window.addEventListener('click', function(e) {
+                if (e.target === detailModal) {
+                    closeDetailModal();
+                }
+                if (e.target === newModal) {
+                    closeNewModal();
+                }
+                if (e.target === editModal) {
+                    closeEditModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

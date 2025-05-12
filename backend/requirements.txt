@@ -3,15 +3,23 @@ flask==2.3.2
 flask-sqlalchemy==3.0.5
 flask-cors==4.0.0
 flask-jwt-extended==4.5.2
-python-dotenv==1.0.0
+python-dotenv==0.21.1
 gunicorn==21.2.0
+
+# FastAPI and related
+fastapi==0.103.2
+uvicorn[standard]==0.22.0
+pydantic==2.8.0b1  # Debug mode proposal: Addresses TypeError and pydantic-core build issues
+pydantic-settings==2.2.1 # Debug mode proposal: Ensures compatibility with pydantic v2.x
+typing-extensions==4.8.0
+SQLAlchemy==2.0.15
 
 # Testing
 pytest==7.4.0
 
 # Security & Authentication
 pyjwt[crypto]==2.8.0  # 🔒 Security Update: v3.0.0が利用不可のため一時的にダウングレード
-requests==2.31.0
+requests==2.30.0
 pyotp==2.9.0
 azure-identity>=1.13.0
 azure-mgmt-resource==23.0.1

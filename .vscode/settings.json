@@ -1,4 +1,15 @@
 {
-    "cline.preferredLanguage": "Japanese - 日本語",
-    "CodeGPT.apiKey": "CodeGPT Plus Beta"
+  "cline.preferredLanguage": "Japanese - 日本語",
+  "editor.formatOnSave": true,
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true
+  },
+  "python.pythonPath": "backend/.venv/bin/python",
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact"
+  ],
+  "terminal.integrated.defaultProfile.windows": "Command Prompt",
+  "figma.autocompleteBlocks": true
 }

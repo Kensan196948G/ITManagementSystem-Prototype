@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インシデント管理 - ITSM運用管理システム - テンプレート</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#3b82f6', secondary: '#64748b' }, borderRadius: { 'none': '0px', 'sm': '4px', DEFAULT: '8px', 'md': '12px', 'lg': '16px', 'xl': '20px', '2xl': '24px', '3xl': '32px', 'full': '9999px', 'button': '8px' } } } }</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <style>
+        :where([class^="ri-"])::before {
+            content: "\f3c2";
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f9fafb;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e2e8f0;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.switch-slider {
+            background-color: #3b82f6;
+        }
+
+        input:checked+.switch-slider:before {
+            transform: translateX(20px);
+        }
+
+        .custom-checkbox {
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkmark {
+            height: 18px;
+            width: 18px;
+            background-color: #fff;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-checkbox input:checked~.checkmark {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .checkmark:after {
+            content: "";
+            display: none;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .custom-checkbox input:checked~.checkmark:after {
+            display: block;
+        }
+
+        .custom-radio {
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .custom-radio input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .radiomark {
+            height: 18px;
+            width: 18px;
+            background-color: #fff;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-radio input:checked~.radiomark {
+            border-color: #3b82f6;
+        }
+
+        .radiomark:after {
+            content: "";
+            display: none;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3b82f6;
+        }
+
+        .custom-radio input:checked~.radiomark:after {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="flex h-screen overflow-hidden bg-white">
+        <!-- サイドナビゲーション -->
+        <div class="w-64 bg-gray-900 text-white flex flex-col">
+            <div class="p-4 flex items-center border-b border-gray-800">
+                <div class="ml-2 text-sm font-medium">ITSM Platform</div>
+            </div>
+            <div class="flex-1 overflow-y-auto scrollbar-hide">
+                <nav class="mt-4">
+                    <div class="px-4 py-2 text-xs font-medium text-gray-400 uppercase">メインメニュー</div>
+                    <a href="./ITサービス運用プラットフォーム_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-dashboard-line"></i>
+                        </div>
+                        <span>ダッシュボード</span>
+                    </a>
+                    <a href="./インシデント管理ページ_template.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-800">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-error-warning-line"></i>
+                        </div>
+                        <span>インシデント管理</span>
+                    </a>
+                    <a href="./問題管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-question-line"></i>
+                        </div>
+                        <span>問題管理</span>
+                    </a>
+                    <a href="./変更管理ダッシュボード_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-refresh-line"></i>
+                        </div>
+                        <span>変更管理</span>
+                    </a>
+                    <a href="./リリース管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-rocket-line"></i>
+                        </div>
+                        <span>リリース管理</span>
+                    </a>
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">ISO準拠管理</div>
+                    <a href="./構成管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-settings-3-line"></i>
+                        </div>
+                        <span>構成管理</span>
+                    </a>
+                    <a href="./セキュリティ管理画面_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-shield-check-line"></i>
+                        </div>
+                        <span>セキュリティ管理</span>
+                    </a>
+                    <a href="./可用性管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-timer-line"></i>
+                        </div>
+                        <span>可用性管理</span>
+                    </a>
+                    <a href="./キャパシティ管理ダッシュボード_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-database-2-line"></i>
+                        </div>
+                        <span>キャパシティ管理</span>
+                    </a>
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">レポート</div>
+                    <a href="./レポート一覧ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-file-chart-line"></i>
+                        </div>
+                        <span>レポート</span>
+                    </a>
+                    <a href="./設定ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-settings-line"></i>
+                        </div>
+                        <span>設定</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-gray-800">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+                        <i class="ri-user-line"></i>
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-sm font-medium">ユーザー名</div>
+                        <div class="text-xs text-gray-400">役職</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- メインコンテンツ -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- ヘッダー -->
+            <header class="bg-white border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-3">
+                    <div class="flex items-center">
+                        <div class="text-lg font-medium">インシデント管理 - テンプレート</div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="mr-6 text-sm text-gray-600">
+                            <span id="current-date">YYYY年MM月DD日</span>
+                            <span id="current-time">HH:MM:SS</span>
+                            <span class="ml-1">JST</span>
+                        </div>
+                        <button class="relative p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-notification-3-line"></i>
+                            </div>
+                        </button>
+                        <button class="p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-settings-4-line"></i>
+                            </div>
+                        </button>
+                        <button class="p-2 text-gray-600 hover:text-gray-900">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-question-line"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <!-- インシデント管理ページ -->
+            <main class="flex-1 overflow-y-auto bg-gray-50">
+                <!-- ページヘッダー -->
+                <div class="bg-white border-b border-gray-200 shadow-sm">
+                    <div class="max-w-7xl mx-auto px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <a href="./ITサービス運用プラットフォーム_template.html"
+                                    class="mr-4 text-gray-500 hover:text-gray-700">
+                                    <div class="w-6 h-6 flex items-center justify-center">
+                                        <i class="ri-arrow-left-line"></i>
+                                    </div>
+                                </a>
+                                <h1 class="text-xl font-bold">インシデント管理</h1>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="relative mr-4">
+                                    <input type="text" placeholder="インシデントを検索..."
+                                        class="w-64 pl-10 pr-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                        <div class="w-4 h-4 flex items-center justify-center">
+                                            <i class="ri-search-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="new-incident-btn"
+                                    class="flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition whitespace-nowrap !rounded-button">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-2">
+                                        <i class="ri-add-line"></i>
+                                    </div>
+                                    新規インシデント
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- フィルターセクション -->
+                <div class="bg-white border-b border-gray-200">
+                    <div class="max-w-7xl mx-auto px-6 py-3">
+                        <div class="flex flex-wrap items-center gap-4">
+                            <!-- フィルター項目はサンプルと同様に配置 -->
+                            <p class="text-gray-600">ここにフィルターオプションが表示されます。</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- インシデント一覧 -->
+                <div class="max-w-7xl mx-auto px-6 py-6">
+                    <div class="bg-white rounded shadow overflow-hidden">
+                        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-medium">インシデント一覧</h2>
+                            <div class="flex items-center">
+                                <span class="text-sm text-gray-500 mr-4">合計: XX 件</span>
+                                <!-- 表示件数選択ドロップダウンはサンプルと同様に配置 -->
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ID</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            タイトル</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            優先度</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ステータス</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            担当者</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            報告日時</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            最終更新</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            アクション</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <!-- インシデントデータのプレースホルダー -->
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">INC-XXXXXX</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">サンプルインシデントタイトル
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap"><span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">優先度</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap"><span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">ステータス</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">担当者名</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">YYYY/MM/DD HH:MM
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">YYYY/MM/DD HH:MM
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button
+                                                class="text-primary hover:text-primary/80 mr-3 !rounded-button">表示</button>
+                                            <button
+                                                class="text-gray-600 hover:text-gray-900 !rounded-button">編集</button>
+                                        </td>
+                                    </tr>
+                                    <!-- 他のインシデントデータのプレースホルダーも同様に追加 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                            <div class="text-sm text-gray-500">X-Y / Z 件表示</div>
+                            <!-- ページネーションはサンプルと同様に配置 -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <!-- モーダル（インシデント詳細、新規登録、編集）のプレースホルダー -->
+    <!-- インシデント詳細モーダル -->
+    <div id="incident-detail-modal"
+        class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium">インシデント詳細</h3>
+                <button id="close-detail-modal" class="text-gray-400 hover:text-gray-500">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-close-line"></i>
+                    </div>
+                </button>
+            </div>
+            <div class="overflow-y-auto p-6">
+                <p class="text-gray-600">ここにインシデント詳細情報が表示されます。</p>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end space-x-3 bg-gray-50">
+                <button
+                    class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 bg-white hover:bg-gray-50 transition whitespace-nowrap !rounded-button"
+                    id="cancel-detail">閉じる</button>
+                <button
+                    class="px-4 py-2 bg-primary text-white text-sm rounded hover:bg-primary/90 transition whitespace-nowrap !rounded-button">編集</button>
+            </div>
+        </div>
+    </div>
+    <!-- 新規インシデント登録モーダル -->
+    <div id="new-incident-modal"
+        class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium">新規インシデント登録</h3>
+                <button id="close-new-modal" class="text-gray-400 hover:text-gray-500">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-close-line"></i>
+                    </div>
+                </button>
+            </div>
+            <div class="overflow-y-auto p-6">
+                <p class="text-gray-600">ここに新規インシデント登録フォームが表示されます。</p>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end space-x-3 bg-gray-50">
+                <button
+                    class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 bg-white hover:bg-gray-50 transition whitespace-nowrap !rounded-button"
+                    id="cancel-new">キャンセル</button>
+                <button
+                    class="px-4 py-2 bg-primary text-white text-sm rounded hover:bg-primary/90 transition whitespace-nowrap !rounded-button"
+                    id="save-new">登録</button>
+            </div>
+        </div>
+    </div>
+    <!-- インシデント編集モーダル -->
+    <div id="edit-incident-modal"
+        class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium">インシデント編集</h3>
+                <button id="close-edit-modal" class="text-gray-400 hover:text-gray-500">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-close-line"></i>
+                    </div>
+                </button>
+            </div>
+            <div class="overflow-y-auto p-6">
+                <p class="text-gray-600">ここにインシデント編集フォームが表示されます。</p>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end space-x-3 bg-gray-50">
+                <button
+                    class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 bg-white hover:bg-gray-50 transition whitespace-nowrap !rounded-button"
+                    id="cancel-edit">キャンセル</button>
+                <button
+                    class="px-4 py-2 bg-primary text-white text-sm rounded hover:bg-primary/90 transition whitespace-nowrap !rounded-button"
+                    id="save-edit">保存</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 現在時刻の更新
+            function updateTime() {
+                const now = new Date();
+                const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                document.getElementById('current-date').textContent = now.toLocaleDateString('ja-JP', options).replace(/\//g, '年') + '日';
+                const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                document.getElementById('current-time').textContent = now.toLocaleTimeString('ja-JP', timeOptions);
+            }
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            // モーダル関連のスクリプト（プレースホルダー）
+            const detailModal = document.getElementById('incident-detail-modal');
+            const newModal = document.getElementById('new-incident-modal');
+            const editModal = document.getElementById('edit-incident-modal');
+
+            const newIncidentBtn = document.getElementById('new-incident-btn');
+            const closeDetailModalBtn = document.getElementById('close-detail-modal');
+            const cancelDetailBtn = document.getElementById('cancel-detail');
+            const closeNewModalBtn = document.getElementById('close-new-modal');
+            const cancelNewBtn = document.getElementById('cancel-new');
+            const saveNewBtn = document.getElementById('save-new');
+            const closeEditModalBtn = document.getElementById('close-edit-modal');
+            const cancelEditBtn = document.getElementById('cancel-edit');
+            const saveEditBtn = document.getElementById('save-edit');
+
+            // 詳細モーダルを開く (ダミー)
+            document.querySelectorAll('.view-incident').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    detailModal.classList.remove('hidden');
+                });
+            });
+            // テーブル行クリックで詳細モーダルを開く (ダミー)
+            document.querySelectorAll('tbody tr').forEach(row => {
+                row.addEventListener('click', () => {
+                    // 編集ボタンがある行のみ反応するなどの調整が必要な場合がある
+                    if (row.querySelector('.view-incident')) {
+                        detailModal.classList.remove('hidden');
+                    }
+                });
+            });
+
+
+            if (newIncidentBtn) newIncidentBtn.addEventListener('click', () => newModal.classList.remove('hidden'));
+
+            // 各モーダルの閉じるボタン
+            if (closeDetailModalBtn) closeDetailModalBtn.addEventListener('click', () => detailModal.classList.add('hidden'));
+            if (cancelDetailBtn) cancelDetailBtn.addEventListener('click', () => detailModal.classList.add('hidden'));
+            if (closeNewModalBtn) closeNewModalBtn.addEventListener('click', () => newModal.classList.add('hidden'));
+            if (cancelNewBtn) cancelNewBtn.addEventListener('click', () => newModal.classList.add('hidden'));
+            if (closeEditModalBtn) closeEditModalBtn.addEventListener('click', () => editModal.classList.add('hidden'));
+            if (cancelEditBtn) cancelEditBtn.addEventListener('click', () => editModal.classList.add('hidden'));
+
+            // 保存ボタン (ダミー)
+            if (saveNewBtn) saveNewBtn.addEventListener('click', () => {
+                alert('新規インシデントが登録されました。(テンプレート)');
+                newModal.classList.add('hidden');
+            });
+            if (saveEditBtn) saveEditBtn.addEventListener('click', () => {
+                alert('インシデント情報が更新されました。(テンプレート)');
+                editModal.classList.add('hidden');
+            });
+
+            // 編集モーダルを開く (ダミー)
+            document.querySelectorAll('.edit-incident').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editModal.classList.remove('hidden');
+                });
+            });
+
+
+            // モーダル外クリックで閉じる
+            window.addEventListener('click', function (e) {
+                if (e.target === detailModal) detailModal.classList.add('hidden');
+                if (e.target === newModal) newModal.classList.add('hidden');
+                if (e.target === editModal) editModal.classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+
+</html>

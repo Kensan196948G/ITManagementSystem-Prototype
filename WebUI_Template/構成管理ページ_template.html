@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>構成管理 - ITSM運用管理システム - テンプレート</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#3b82f6', secondary: '#64748b' }, borderRadius: { 'none': '0px', 'sm': '4px', DEFAULT: '8px', 'md': '12px', 'lg': '16px', 'xl': '20px', '2xl': '24px', '3xl': '32px', 'full': '9999px', 'button': '8px' } } } }</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <style>
+        :where([class^="ri-"])::before {
+            content: "\f3c2";
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f9fafb;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e2e8f0;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.switch-slider {
+            background-color: #3b82f6;
+        }
+
+        input:checked+.switch-slider:before {
+            transform: translateX(20px);
+        }
+
+        .relationship-line {
+            stroke: #e2e8f0;
+            stroke-width: 2;
+        }
+
+        .relationship-line.critical {
+            stroke: #ef4444;
+        }
+
+        .relationship-line.important {
+            stroke: #f59e0b;
+        }
+
+        .relationship-line.normal {
+            stroke: #3b82f6;
+        }
+
+        .custom-checkbox {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .custom-checkbox:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .custom-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 6px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .custom-radio {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            background-color: white;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .custom-radio:checked {
+            border-color: #3b82f6;
+        }
+
+        .custom-radio:checked::after {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #3b82f6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="flex h-screen overflow-hidden bg-white">
+        <!-- サイドナビゲーション -->
+        <div class="w-64 bg-gray-900 text-white flex flex-col">
+            <div class="p-4 flex items-center border-b border-gray-800">
+                <div class="ml-2 text-sm font-medium">ITSM Platform</div>
+            </div>
+            <div class="flex-1 overflow-y-auto scrollbar-hide">
+                <nav class="mt-4">
+                    <div class="px-4 py-2 text-xs font-medium text-gray-400 uppercase">メインメニュー</div>
+                    <a href="./ITサービス運用プラットフォーム_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-dashboard-line"></i>
+                        </div>
+                        <span>ダッシュボード</span>
+                    </a>
+                    <a href="./インシデント管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-error-warning-line"></i>
+                        </div>
+                        <span>インシデント管理</span>
+                    </a>
+                    <a href="./問題管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-question-line"></i>
+                        </div>
+                        <span>問題管理</span>
+                    </a>
+                    <a href="./変更管理ダッシュボード_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-refresh-line"></i>
+                        </div>
+                        <span>変更管理</span>
+                    </a>
+                    <a href="./リリース管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-rocket-line"></i>
+                        </div>
+                        <span>リリース管理</span>
+                    </a>
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">ISO準拠管理</div>
+                    <a href="./構成管理ページ_template.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-800">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-settings-3-line"></i>
+                        </div>
+                        <span>構成管理</span>
+                    </a>
+                    <a href="./セキュリティ管理画面_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-shield-check-line"></i>
+                        </div>
+                        <span>セキュリティ管理</span>
+                    </a>
+                    <a href="./可用性管理ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-timer-line"></i>
+                        </div>
+                        <span>可用性管理</span>
+                    </a>
+                    <a href="./キャパシティ管理ダッシュボード_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-database-2-line"></i>
+                        </div>
+                        <span>キャパシティ管理</span>
+                    </a>
+                    <div class="px-4 py-2 mt-4 text-xs font-medium text-gray-400 uppercase">レポート</div>
+                    <a href="./レポート一覧ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-file-chart-line"></i>
+                        </div>
+                        <span>レポート</span>
+                    </a>
+                    <a href="./設定ページ_template.html"
+                        class="flex items-center px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-gray-100">
+                        <div class="w-6 h-6 flex items-center justify-center mr-3">
+                            <i class="ri-settings-line"></i>
+                        </div>
+                        <span>設定</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-gray-800">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+                        <i class="ri-user-line"></i>
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-sm font-medium">ユーザー名</div>
+                        <div class="text-xs text-gray-400">役職</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- ヘッダー -->
+            <header class="bg-white border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-3">
+                    <div class="flex items-center">
+                        <div class="text-lg font-medium">構成管理 - テンプレート</div>
+                        <nav class="ml-6 flex">
+                            <ol class="flex items-center space-x-2 text-sm text-gray-500">
+                                <li>
+                                    <a href="#" class="hover:text-gray-900">ホーム</a>
+                                </li>
+                                <li class="flex items-center">
+                                    <span class="mx-1">/</span>
+                                    <a href="#" class="hover:text-gray-900">ISO準拠管理</a>
+                                </li>
+                                <li class="flex items-center">
+                                    <span class="mx-1">/</span>
+                                    <span class="text-gray-900">構成管理</span>
+                                </li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="mr-6 text-sm text-gray-600">
+                            <span id="current-date">YYYY年MM月DD日</span>
+                            <span id="current-time">HH:MM:SS</span>
+                            <span class="ml-1">JST</span>
+                        </div>
+                        <button class="relative p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-notification-3-line"></i>
+                            </div>
+                            <!-- <span class="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">N</span> -->
+                        </button>
+                        <button class="p-2 text-gray-600 hover:text-gray-900 mr-4">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-settings-4-line"></i>
+                            </div>
+                        </button>
+                        <button class="p-2 text-gray-600 hover:text-gray-900">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-question-line"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- タブナビゲーション -->
+                <div class="px-6 border-b border-gray-200">
+                    <div class="flex space-x-8">
+                        <button id="tab-dashboard"
+                            class="px-1 py-4 text-sm font-medium text-primary border-b-2 border-primary">
+                            ダッシュボード
+                        </button>
+                        <button id="tab-assets"
+                            class="px-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300">
+                            IT資産一覧
+                        </button>
+                        <button id="tab-relations"
+                            class="px-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300">
+                            関連図
+                        </button>
+                        <button id="tab-history"
+                            class="px-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300">
+                            変更履歴
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- コンテンツエリア -->
+            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <div class="max-w-7xl mx-auto">
+                    <!-- ダッシュボードタブコンテンツ -->
+                    <div id="content-dashboard" class="space-y-6">
+                        <!-- KPIカード -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="bg-white rounded shadow p-5">
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-database-2-line ri-lg"></i></div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm text-gray-500">総IT資産数</div>
+                                        <div class="text-2xl font-bold">N</div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 flex items-center text-xs text-green-600">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1"><i
+                                            class="ri-arrow-up-s-line"></i></div>
+                                    <span>先月比 +X 件</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded shadow p-5">
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-checkbox-circle-line ri-lg"></i></div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm text-gray-500">アクティブCI数</div>
+                                        <div class="text-2xl font-bold">M</div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 flex items-center text-xs text-gray-500">
+                                    <span>総資産の Y%</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded shadow p-5">
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-alert-line ri-lg"></i></div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm text-gray-500">重要度の高いCI数</div>
+                                        <div class="text-2xl font-bold">K</div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 flex items-center text-xs text-gray-500">
+                                    <span>総資産の Z%</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded shadow p-5">
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                                        <div class="w-6 h-6 flex items-center justify-center"><i
+                                                class="ri-history-line ri-lg"></i></div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm text-gray-500">最近の変更件数</div>
+                                        <div class="text-2xl font-bold">L</div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 flex items-center text-xs text-gray-500">
+                                    <span>過去30日間</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- グラフセクション -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded shadow">
+                                <div class="px-5 py-4 border-b border-gray-200">
+                                    <h2 class="text-lg font-medium">資産タイプ別分布</h2>
+                                </div>
+                                <div class="p-5">
+                                    <div id="asset-type-chart" class="h-72"></div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded shadow">
+                                <div class="px-5 py-4 border-b border-gray-200">
+                                    <h2 class="text-lg font-medium">重要度別分類</h2>
+                                </div>
+                                <div class="p-5">
+                                    <div id="importance-chart" class="h-72"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 最近の変更 -->
+                        <div class="bg-white rounded shadow">
+                            <div class="px-5 py-4 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <h2 class="text-lg font-medium">最近の構成変更</h2>
+                                    <button
+                                        class="text-sm text-primary hover:text-primary-dark whitespace-nowrap !rounded-button">すべて表示</button>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <div class="space-y-4">
+                                    <!-- 変更アイテムのテンプレート -->
+                                    <div class="flex items-start">
+                                        <div
+                                            class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 mt-1">
+                                            <div class="w-5 h-5 flex items-center justify-center"><i
+                                                    class="ri-question-mark"></i></div>
+                                        </div>
+                                        <div class="ml-4 flex-1">
+                                            <div class="flex items-center justify-between">
+                                                <div class="text-sm font-medium">変更タイトル プレースホルダー</div>
+                                                <div class="text-xs text-gray-500">YYYY/MM/DD HH:MM</div>
+                                            </div>
+                                            <div class="mt-1 text-sm text-gray-600">
+                                                変更内容の詳細プレースホルダー。
+                                            </div>
+                                            <div class="mt-2 text-xs text-gray-500">
+                                                変更者: ユーザー名
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 繰り返しを省略 -->
+                                    <div class="text-center text-gray-500">最近の変更はありません。</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- IT資産一覧タブコンテンツ -->
+                    <div id="content-assets" class="space-y-6 hidden">
+                        <!-- 検索・フィルターツールバー -->
+                        <div class="bg-white rounded shadow p-4">
+                            <div class="flex flex-wrap items-center gap-4">
+                                <div class="flex-1 min-w-[200px]">
+                                    <div class="relative">
+                                        <input type="text" placeholder="資産名、ID、タイプで検索..."
+                                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                            <div class="w-4 h-4 flex items-center justify-center"><i
+                                                    class="ri-search-line"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-4 flex-wrap">
+                                    <div class="relative">
+                                        <button
+                                            class="flex items-center px-3 py-2 border border-gray-300 rounded text-sm bg-white !rounded-button">
+                                            <span>資産タイプ</span>
+                                            <div class="w-4 h-4 flex items-center justify-center ml-2"><i
+                                                    class="ri-arrow-down-s-line"></i></div>
+                                        </button>
+                                        <!-- ドロップダウン内容は省略 -->
+                                    </div>
+
+                                    <div class="relative">
+                                        <button
+                                            class="flex items-center px-3 py-2 border border-gray-300 rounded text-sm bg-white !rounded-button">
+                                            <span>ステータス</span>
+                                            <div class="w-4 h-4 flex items-center justify-center ml-2"><i
+                                                    class="ri-arrow-down-s-line"></i></div>
+                                        </button>
+                                        <!-- ドロップダウン内容は省略 -->
+                                    </div>
+
+                                    <div class="relative">
+                                        <button
+                                            class="flex items-center px-3 py-2 border border-gray-300 rounded text-sm bg-white !rounded-button">
+                                            <span>重要度</span>
+                                            <div class="w-4 h-4 flex items-center justify-center ml-2"><i
+                                                    class="ri-arrow-down-s-line"></i></div>
+                                        </button>
+                                        <!-- ドロップダウン内容は省略 -->
+                                    </div>
+
+                                    <button
+                                        class="px-3 py-2 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 !rounded-button">
+                                        <div class="flex items-center">
+                                            <div class="w-4 h-4 mr-1"><i class="ri-refresh-line"></i></div>
+                                            <span>リセット</span>
+                                        </div>
+                                    </button>
+                                </div>
+
+                                <button
+                                    class="px-4 py-2 bg-primary text-white rounded text-sm hover:bg-blue-600 ml-auto !rounded-button">
+                                    <div class="flex items-center">
+                                        <div class="w-4 h-4 mr-1"><i class="ri-add-line"></i></div><span>新規CI登録</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- IT資産一覧テーブル -->
+                        <div class="bg-white rounded shadow overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <div class="flex items-center"><span>CI ID</span><button
+                                                        class="ml-1 text-gray-400 hover:text-gray-600">
+                                                        <div class="w-4 h-4"><i class="ri-arrow-up-s-line"></i></div>
+                                                    </button></div>
+                                            </th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <div class="flex items-center"><span>名称</span><button
+                                                        class="ml-1 text-gray-400 hover:text-gray-600">
+                                                        <div class="w-4 h-4"><i class="ri-arrow-up-s-line"></i></div>
+                                                    </button></div>
+                                            </th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <div class="flex items-center"><span>タイプ</span><button
+                                                        class="ml-1 text-gray-400 hover:text-gray-600">
+                                                        <div class="w-4 h-4"><i class="ri-arrow-up-s-line"></i></div>
+                                                    </button></div>
+                                            </th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <div class="flex items-center"><span>ステータス</span><button
+                                                        class="ml-1 text-gray-400 hover:text-gray-600">
+                                                        <div class="w-4 h-4"><i class="ri-arrow-up-s-line"></i></div>
+                                                    </button></div>
+                                            </th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <div class="flex items-center"><span>重要度</span><button
+                                                        class="ml-1 text-gray-400 hover:text-gray-600">
+                                                        <div class="w-4 h-4"><i class="ri-arrow-up-s-line"></i></div>
+                                                    </button></div>
+                                            </th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <div class="flex items-center"><span>所有者</span><button
+                                                        class="ml-1 text-gray-400 hover:text-gray-600">
+                                                        <div class="w-4 h-4"><i class="ri-arrow-up-s-line"></i></div>
+                                                    </button></div>
+                                            </th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <div class="flex items-center"><span>最終更新日</span><button
+                                                        class="ml-1 text-gray-400 hover:text-gray-600">
+                                                        <div class="w-4 h-4"><i class="ri-arrow-up-s-line"></i></div>
+                                                    </button></div>
+                                            </th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                アクション</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <!-- テーブル行テンプレート -->
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CI-XXX-NNN
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">資産名称プレースホルダー
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">資産タイプ</td>
+                                            <td class="px-6 py-4 whitespace-nowrap"><span
+                                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">ステータス</span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap"><span
+                                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">重要度</span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">所有者チーム</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">YYYY/MM/DD
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button
+                                                    class="text-primary hover:text-primary-dark mr-3 !rounded-button">詳細</button>
+                                                <button
+                                                    class="text-gray-600 hover:text-gray-900 mr-3 !rounded-button">編集</button>
+                                                <button
+                                                    class="text-red-600 hover:text-red-800 !rounded-button">削除</button>
+                                            </td>
+                                        </tr>
+                                        <!-- 繰り返しを省略 -->
+                                        <tr>
+                                            <td colspan="8" class="text-center py-10 text-gray-500">IT資産データがありません。</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- ページネーション -->
+                            <div class="px-6 py-3 flex items-center justify-between border-t border-gray-200">
+                                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-700"><span>全</span><span class="font-medium"> N
+                                            </span><span>件中</span><span class="font-medium"> M
+                                            </span><span>から</span><span class="font-medium"> K </span><span>件を表示</span>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                                            aria-label="Pagination">
+                                            <button
+                                                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 !rounded-button"><span
+                                                    class="sr-only">前へ</span>
+                                                <div class="w-5 h-5"><i class="ri-arrow-left-s-line"></i></div>
+                                            </button>
+                                            <button
+                                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-primary text-sm font-medium text-white !rounded-button">1</button>
+                                            <button
+                                                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 !rounded-button"><span
+                                                    class="sr-only">次へ</span>
+                                                <div class="w-5 h-5"><i class="ri-arrow-right-s-line"></i></div>
+                                            </button>
+                                        </nav>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 関連図タブコンテンツ -->
+                    <div id="content-relations" class="space-y-6 hidden">
+                        <div class="bg-white rounded shadow p-4">
+                            <!-- 関連図フィルターツールバー (内容は省略) -->
+                            <div class="text-center text-gray-500 py-4">関連図のフィルターオプションは省略されています。</div>
+                        </div>
+
+                        <!-- 関連図表示エリア -->
+                        <div class="bg-white rounded shadow overflow-hidden">
+                            <div class="p-4 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <h2 class="text-lg font-medium">構成アイテム関連図</h2>
+                                    <!-- 凡例は省略 -->
+                                </div>
+                            </div>
+
+                            <div class="p-5 h-[600px] relative overflow-hidden" id="relation-diagram">
+                                <svg width="100%" height="100%" id="relation-svg">
+                                    <!-- 汎用的な関連線 -->
+                                    <line x1="50%" y1="10%" x2="30%" y2="30%" class="relationship-line normal"></line>
+                                    <line x1="50%" y1="10%" x2="70%" y2="30%" class="relationship-line normal"></line>
+                                    <line x1="30%" y1="30%" x2="30%" y2="50%" class="relationship-line critical"></line>
+                                    <line x1="70%" y1="30%" x2="70%" y2="50%" class="relationship-line important">
+                                    </line>
+                                </svg>
+                                <!-- 汎用的なノード -->
+                                <div
+                                    class="absolute top-[10%] left-[50%] w-[60px] h-[60px] bg-blue-500 rounded-full flex items-center justify-center text-white text-xs transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10">
+                                    Node A</div>
+                                <div
+                                    class="absolute top-[30%] left-[30%] w-[60px] h-[60px] bg-red-500 rounded-full flex items-center justify-center text-white text-xs transform -translate-x-1/2 -translate-y-1/2 cursor-pointer">
+                                    Node B</div>
+                                <div
+                                    class="absolute top-[30%] left-[70%] w-[60px] h-[60px] bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs transform -translate-x-1/2 -translate-y-1/2 cursor-pointer">
+                                    Node C</div>
+                                <div
+                                    class="absolute top-[50%] left-[30%] w-[60px] h-[60px] bg-gray-400 rounded-full flex items-center justify-center text-white text-xs transform -translate-x-1/2 -translate-y-1/2 cursor-pointer">
+                                    Node D</div>
+                                <div
+                                    class="absolute top-[50%] left-[70%] w-[60px] h-[60px] bg-gray-400 rounded-full flex items-center justify-center text-white text-xs transform -translate-x-1/2 -translate-y-1/2 cursor-pointer">
+                                    Node E</div>
+                                <div class="text-center text-gray-500 py-10">関連図の表示エリア（プレースホルダー）</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 変更履歴タブコンテンツ -->
+                    <div id="content-history" class="space-y-6 hidden">
+                        <div class="bg-white rounded shadow p-4">
+                            <!-- 変更履歴フィルターツールバー (内容は省略) -->
+                            <div class="text-center text-gray-500 py-4">変更履歴のフィルターオプションは省略されています。</div>
+                        </div>
+
+                        <!-- 変更履歴タイムライン -->
+                        <div class="bg-white rounded shadow">
+                            <div class="px-5 py-4 border-b border-gray-200">
+                                <h2 class="text-lg font-medium">変更履歴</h2>
+                            </div>
+                            <div class="p-5">
+                                <div class="space-y-8">
+                                    <!-- 日付グループ テンプレート -->
+                                    <div>
+                                        <h3 class="text-sm font-medium text-gray-500 mb-4">YYYY年MM月DD日</h3>
+                                        <div class="relative pl-8 pb-8 border-l-2 border-gray-200">
+                                            <div
+                                                class="absolute left-[-8px] top-0 w-4 h-4 bg-gray-500 rounded-full border-2 border-white">
+                                            </div>
+                                            <div class="bg-gray-50 rounded p-4">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <div class="flex items-center">
+                                                        <div class="w-5 h-5 mr-2"><i class="ri-question-mark"></i></div>
+                                                        <span class="font-medium">変更イベントタイトル</span>
+                                                    </div>
+                                                    <span class="text-xs text-gray-500">HH:MM</span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mb-3">変更内容の説明プレースホルダー。</p>
+                                                <div class="flex items-center justify-between text-xs">
+                                                    <div class="flex items-center">
+                                                        <div class="w-5 h-5 rounded-full bg-gray-200 mr-2"></div>
+                                                        <span class="text-gray-600">変更者名</span>
+                                                    </div>
+                                                    <button
+                                                        class="text-primary hover:text-primary-dark !rounded-button">詳細を表示</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- 繰り返しを省略 -->
+                                        <div class="text-center text-gray-500 py-10">変更履歴データがありません。</div>
+                                    </div>
+                                    <div class="flex justify-center">
+                                        <button
+                                            class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50 !rounded-button">
+                                            <div class="flex items-center"><span>もっと見る</span>
+                                                <div class="w-4 h-4 ml-1"><i class="ri-arrow-down-s-line"></i></div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 新規CI登録モーダル（構造のみ保持） -->
+    <div id="new-ci-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-medium">新規構成アイテム登録</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                    <div class="w-6 h-6 flex items-center justify-center"><i class="ri-close-line"></i></div>
+                </button>
+            </div>
+            <div class="px-6 py-4">
+                <form>
+                    <!-- フォーム内容は元のHTMLと同様のため省略 -->
+                    <div class="space-y-4">
+                        <p class="text-center text-gray-500 py-4">新規CI登録フォームのプレースホルダー</p>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button"
+                            class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50 !rounded-button">キャンセル</button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-primary text-white rounded text-sm hover:bg-blue-600 !rounded-button">登録</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 現在時刻の更新
+            function updateTime() {
+                const now = new Date();
+                const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                const timeElem = document.getElementById('current-time');
+                if (timeElem) {
+                    timeElem.textContent = now.toLocaleTimeString('ja-JP', options);
+                }
+            }
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            const assetTypeChartEl = document.getElementById('asset-type-chart');
+            const importanceChartEl = document.getElementById('importance-chart');
+            let assetTypeChartInstance, importanceChartInstance;
+
+            if (assetTypeChartEl) {
+                assetTypeChartInstance = echarts.init(assetTypeChartEl);
+                const assetTypeOption = {
+                    animation: false,
+                    tooltip: { trigger: 'item' },
+                    legend: { orient: 'vertical', right: 10, top: 'center' },
+                    series: [{
+                        name: '資産タイプ', type: 'pie', radius: ['40%', '70%'],
+                        data: [
+                            { value: 0, name: 'サーバー (0)' }, // プレースホルダーデータ
+                            { value: 0, name: 'ネットワーク機器 (0)' },
+                            { value: 0, name: 'ストレージ (0)' },
+                            { value: 0, name: 'クライアント端末 (0)' }
+                        ]
+                    }]
+                };
+                assetTypeChartInstance.setOption(assetTypeOption);
+            }
+
+            if (importanceChartEl) {
+                importanceChartInstance = echarts.init(importanceChartEl);
+                const importanceOption = {
+                    animation: false,
+                    tooltip: { trigger: 'axis' },
+                    grid: { left: '3%', right: '4%', bottom: '3%', top: '3%', containLabel: true },
+                    xAxis: { type: 'value' },
+                    yAxis: { type: 'category', data: ['低', '中', '高', '最重要'] },
+                    series: [{
+                        name: '資産数', type: 'bar',
+                        data: [0, 0, 0, 0], // プレースホルダーデータ
+                        itemStyle: { borderRadius: 4 },
+                        label: { show: true, position: 'right', formatter: '{c}' }
+                    }]
+                };
+                importanceChartInstance.setOption(importanceOption);
+            }
+
+            // タブ切り替え
+            const tabs = ['dashboard', 'assets', 'relations', 'history'];
+            tabs.forEach(tabId => {
+                const tabButton = document.getElementById(`tab-${tabId}`);
+                if (tabButton) {
+                    tabButton.addEventListener('click', function () {
+                        tabs.forEach(t => {
+                            const currentTabButton = document.getElementById(`tab-${t}`);
+                            const currentContent = document.getElementById(`content-${t}`);
+                            if (currentTabButton && currentContent) {
+                                if (t === tabId) {
+                                    currentTabButton.classList.remove('text-gray-500', 'hover:text-gray-700', 'border-transparent', 'hover:border-gray-300');
+                                    currentTabButton.classList.add('text-primary', 'border-primary');
+                                    currentContent.classList.remove('hidden');
+                                } else {
+                                    currentTabButton.classList.remove('text-primary', 'border-primary');
+                                    currentTabButton.classList.add('text-gray-500', 'hover:text-gray-700', 'border-transparent', 'hover:border-gray-300');
+                                    currentContent.classList.add('hidden');
+                                }
+                            }
+                        });
+
+                        if (tabId === 'dashboard') {
+                            if (assetTypeChartInstance) assetTypeChartInstance.resize();
+                            if (importanceChartInstance) importanceChartInstance.resize();
+                        }
+                    });
+                }
+            });
+
+            window.addEventListener('resize', function () {
+                if (assetTypeChartInstance) assetTypeChartInstance.resize();
+                if (importanceChartInstance) importanceChartInstance.resize();
+            });
+
+            // モーダル関連の簡単な制御（プレースホルダー）
+            const newCiButton = document.querySelector('button[class*="新規CI登録"]'); // 新規CI登録ボタンを特定する方法に注意
+            const modal = document.getElementById('new-ci-modal');
+            const closeModalButton = document.getElementById('close-modal');
+
+            if (newCiButton && modal && closeModalButton) {
+                newCiButton.addEventListener('click', () => {
+                    modal.classList.remove('hidden');
+                });
+                closeModalButton.addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                });
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal) {
+                        modal.classList.add('hidden');
+                    }
+                });
+            }
+
+        });
+    </script>
+</body>
+
+</html>
