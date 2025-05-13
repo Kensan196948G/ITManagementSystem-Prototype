@@ -1,31 +1,69 @@
-{
-  "default_mode": "orchestrator",
-  "auto_approval": true,
-  "safe_commands": "all_except_dangerous",
-  "dangerous_commands": [
-    "rm",
-    "del",
-    "rmdir",
-    "shutdown",
-    "format",
-    "curl",
-    "wget",
-    "mv /",
-    "dd",
-    "mkfs",
-    "scp",
-    "Invoke-WebRequest",
-    "Start-Process"
-  ],
-  "global_policy": {
-    "max_retry": 3,
-    "on_failure": "mark TODO for user",
-    "retry_loop_enabled": true
-  },
-  "custom_instructions": {
-    "common": "すべてのエラー（構文・実行・依存関係）を検出し、修復後に再試行してください。ループ最大7回。危険なコマンドは 'TODO: ユーザー確認' として保留してください。",
-    "orchestrator": "このスクリプト全体を完全に修復し、エラーがなくなるまで Debug → Architect の順でモード切り替えと修正を繰り返してください。すべてが成功したら『✅ 完了』を表示してください。",
-    "debug": "スクリプトを実行し、1. エラー内容 2. 発生行番号 3. エラー種別（構文／実行／依存）を出力し、必要に応じて修正案テンプレートを生成してください。",
-    "architect": "Debugで報告されたエラーに基づき、構文や論理ミスを修正してください。修正箇所にはコメントで理由を付けてください。ロジックや意図は可能な限り維持してください。"
-  }
-}
+default_mode: orchestrator
+
+auto_approval: true
+# 自動承認対象の追加メッセージ
+auto_approval_messages:
+  - "実行中も続行"
+  - "コマンド実行"
+
+safe_commands:
+  - "*"
+
+dangerous_commands:
+  - rm
+  - del
+  - rmdir
+  - shutdown
+  - format
+  - curl
+  - wget
+  - "mv /"
+  - dd
+  - mkfs
+  - scp
+  - Invoke-WebRequest
+  - Start-Process
+
+global_policy:
+  max_retry: 3
+  on_failure: "mark TODO for user"
+  retry_loop_enabled: true
+
+custom_instructions:
+  common: |
+    すべてのエラー（構文・実行・依存関係）を検出し、修復後に再試行してください。ループ最大7回。危険なコマンドは 'TODO: ユーザー確認' として保留してください。
+  orchestrator: |
+    このスクリプト全体を完全に修復し、エラーがなくなるまで Debug → Architect の順でモード切り替えと修正を繰り返してください。すべてが成功したら『✅ 完了』を表示してください。
+  debug: |
+    スクリプトを実行し、1. エラー内容 2. 発生行番号 3. エラー種別（構文／実行／依存）を出力し、必要に応じて修正案テンプレートを生成してください。
+  architect: |
+    Debugで報告されたエラーに基づき、構文や論理ミスを修正してください。修正箇所にはコメントで理由を付けてください。ロジックや意図は可能な限り維持してください。
+
+modes:
+  debug:
+    enable_auto_repair: true
+    max_repair_attempts: 5
+    repair_on:
+      - SyntaxError
+      - RuntimeError
+
+  architect:
+    # Architect向けは custom_instructions を参照
+
+  orchestrator:
+    # Orchestrator向けは custom_instructions を参照
+
+  auto:
+    enable_full_automation: true
+    cycle_interval: 3600
+    notify_on_complete: true
+    max_consecutive_failures: 3
+
+logging:
+  level: info
+  file: roocode_repair.log
+
+notifications:
+  slack_webhook: https://hooks.slack.com/xxx/yyy/zzz
+  on_success: "完全自動化ループが完了しました🎉"
+  on_failure: "自動化ループでエラー発生。確認してください⚠️"
