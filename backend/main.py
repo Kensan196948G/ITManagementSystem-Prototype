@@ -1,53 +1,30 @@
-import sys
-from pathlib import Path
-from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from fastapi import FastAPI, Depends, APIRouter
+from backend.dependencies import get_current_user
+from backend.self_healing import engine as self_healing_engine
 
-import uvicorn
-from fastapi import FastAPI
+app = FastAPI()
 
-from backend.database import init_db
-from backend.routes import problems as problems_router
+# 既存のルーター設定 (省略)
 
-# プロジェクトルートをシステムパスに追加
-project_root = Path(__file__).resolve().parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
-
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """FastAPIアプリケーションのライフサイクル管理
-    
-    Args:
-        app (FastAPI): FastAPIアプリケーションインスタンス
-    """
-    print("[INFO] Starting application initialization...")
-    print("[INFO] Initializing database...")
-    init_db()
-    print("[INFO] Database initialization completed")
-    yield
-    print("[INFO] Application shutdown complete")
-
-app = FastAPI(
-    title="IT Management System API",
-    description="API for IT Service Management operations",
-    version="1.0.0",
-    lifespan=lifespan,
-    docs_url="/api/docs",
-    redoc_url="/api/redoc"
+# 自律修復モジュール統合
+self_healing_router = APIRouter(
+    prefix="/api/v1/self-healing",
+    tags=["Self Healing"],
+    dependencies=[Depends(get_current_user)]  # JWT認証を継承
 )
 
-app.include_router(
-    problems_router.router,
-    prefix="/api/v1/problems",
-    tags=["Problem Management"]
-)
-
-if __name__ == "__main__":
-    uvicorn.run(
-        "backend.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info"
+@self_healing_router.post("/trigger")
+async def trigger_repair(context: dict):
+    """自律修復プロセスを開始するエンドポイント"""
+    repair_engine = self_healing_engine.AutoRepairEngine(max_retries=5)
+    return await repair_engine.execute_with_repair(
+        target_system="production",
+        context=context
     )
+
+@self_healing_router.get("/history")
+async def get_repair_history(limit: int = 100):
+    """修復履歴を取得するエンドポイント"""
+    return {"history": []}  # TODO: データベース連携
+
+app.include_router(self_healing_router)
