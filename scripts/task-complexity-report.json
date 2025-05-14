@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "generatedAt": "2025-05-14T09:29:56.497Z",
+    "tasksAnalyzed": 10,
+    "thresholdScore": 5,
+    "projectName": "Taskmaster",
+    "usedResearch": true
+  },
+  "complexityAnalysis": [
+    {
+      "taskId": 1,
+      "taskTitle": "Initialize Project Repository",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the repository initialization into specific steps for backend, frontend, database, and CI/CD setup.",
+      "reasoning": "This task involves multiple technologies and configurations, each requiring distinct setup steps, making it moderately complex."
+    },
+    {
+      "taskId": 2,
+      "taskTitle": "Implement PostgreSQL Database Schema",
+      "complexityScore": 7,
+      "recommendedSubtasks": 4,
+      "expansionPrompt": "Detail the schema design, table creation, relationships, and migration steps for each entity (users, roles, permissions, incidents, audit logs).",
+      "reasoning": "Designing and implementing a database schema with multiple interrelated tables and migrations is complex, especially with relationships and constraints."
+    },
+    {
+      "taskId": 3,
+      "taskTitle": "Implement RBAC Authentication with Azure AD",
+      "complexityScore": 8,
+      "recommendedSubtasks": 4,
+      "expansionPrompt": "Outline the steps for Azure AD integration, role/permission definitions, RBAC middleware, and login/logout functionality.",
+      "reasoning": "Integrating external authentication (Azure AD) and implementing RBAC with role-based permissions is highly complex due to security and integration requirements."
+    },
+    {
+      "taskId": 4,
+      "taskTitle": "Develop Backend API with FastAPI",
+      "complexityScore": 7,
+      "recommendedSubtasks": 4,
+      "expansionPrompt": "Specify the API endpoints, data validation, error handling, and business logic for each module (monitoring, incidents, audit).",
+      "reasoning": "Developing a comprehensive backend API with validation, error handling, and business logic is complex, especially with multiple functional modules."
+    },
+    {
+      "taskId": 5,
+      "taskTitle": "Implement OpenAPI Specification Auto-Generation",
+      "complexityScore": 4,
+      "recommendedSubtasks": 3,
+      "expansionPrompt": "Detail the configuration for OpenAPI generation, Swagger/Redoc integration, and pipeline setup for updates.",
+      "reasoning": "Auto-generating OpenAPI specs is less complex but requires careful configuration and integration with documentation tools."
+    },
+    {
+      "taskId": 6,
+      "taskTitle": "Develop UI Components with React and Storybook",
+      "complexityScore": 5,
+      "recommendedSubtasks": 3,
+      "expansionPrompt": "Break down the setup of Storybook and the development of React components for each functional area (monitoring, incidents, audit).",
+      "reasoning": "Creating reusable UI components with Storybook is moderately complex, involving component design and documentation."
+    },
+    {
+      "taskId": 7,
+      "taskTitle": "Implement System Monitoring Dashboard",
+      "complexityScore": 6,
+      "recommendedSubtasks": 3,
+      "expansionPrompt": "Outline the steps for fetching data, displaying metrics, and implementing real-time updates in the dashboard.",
+      "reasoning": "Building a real-time dashboard involves data fetching, visualization, and real-time updates, which adds complexity."
+    },
+    {
+      "taskId": 8,
+      "taskTitle": "Implement Incident Management Module",
+      "complexityScore": 6,
+      "recommendedSubtasks": 3,
+      "expansionPrompt": "Detail the UI implementation, API integration, and notification system for incident management.",
+      "reasoning": "Implementing a full incident management module with UI and notifications is moderately complex due to user interactions and backend integration."
+    },
+    {
+      "taskId": 9,
+      "taskTitle": "Implement Audit Logging Functionality",
+      "complexityScore": 5,
+      "recommendedSubtasks": 3,
+      "expansionPrompt": "Specify the middleware for logging, database storage, and API endpoints for retrieving audit logs.",
+      "reasoning": "Audit logging involves middleware and database operations, which are moderately complex but well-defined."
+    },
+    {
+      "taskId": 10,
+      "taskTitle": "Implement Security Log Review Module",
+      "complexityScore": 5,
+      "recommendedSubtasks": 3,
+      "expansionPrompt": "Break down the UI for log review, filtering/searching functionality, and report generation.",
+      "reasoning": "The security log review module is moderately complex, focusing on UI and data presentation features."
+    }
+  ]
+}

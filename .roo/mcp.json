@@ -8,8 +8,15 @@
         "task-master-ai"
       ],
       "env": {
-        "OPENROUTER_API_KEY": "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"
-      }
+        "OPENROUTER_API_KEY": "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",
+        "OPENAI_API_KEY": "your-api-key-here",
+        "PERPLEXITY_API_KEY": "your-api-key-here"
+      },
+      "alwaysAllow": [
+        "initialize_project",
+        "parse_prd"
+      ],
+      "disabled": false
     }
   }
 }

@@ -1,9 +1,64 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import * as msal from '@azure/msal-browser';
 import axios from 'axios';
+import { ApolloClient, InMemoryCache, createHttpLink, ApolloProvider } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
+
+// 型定義
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  permissions: string[];
+  avatar?: string;
+};
+
+type AuthContextType = {
+  currentUser: User | null;
+  loading: boolean;
+  error: string | null;
+  login: (username: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  hasPermission: (permission: string) => boolean;
+  isAuthenticated: boolean;
+  USER_ROLES: typeof USER_ROLES;
+  subscribeToReports: (reportTypes: string[], frequency: string) => Promise<boolean>;
+  generateReport: (reportType: string, period: string, format: string) => Promise<any>;
+  mfaRequired: boolean;
+  verifyMfa: (code: string) => Promise<{ success: boolean }>;
+  sessions: any[];
+  fetchSessions: () => Promise<any[]>;
+  revokeSession: (sessionId: string) => Promise<boolean>;
+  loginAttempts: number;
+  accountLocked: boolean;
+  lockUntil: Date | null;
+  apolloClient: ApolloClient<any>;
+};
+
+// Apollo Client初期化関数
+const createApolloClient = (token) => {
+  const httpLink = createHttpLink({
+    uri: '/graphql',
+  });
+
+  const authLink = setContext((_, { headers }) => {
+    return {
+      headers: {
+        ...headers,
+        authorization: token ? `Bearer ${token}` : '',
+      }
+    };
+  });
+
+  return new ApolloClient({
+    link: authLink.concat(httpLink),
+    cache: new InMemoryCache(),
+  });
+};
 
 // 認証コンテキストの作成
-const AuthContext = createContext();
+const AuthContext = createContext < AuthContextType | undefined > (undefined);
 
 // 開発用のモックユーザーロール
 const USER_ROLES = {
@@ -85,7 +140,7 @@ export const AuthProvider = ({ children }) => {
   }, [msalInstance]);
 
   const [currentUser, setCurrentUser] = useState(null);
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tokenExpiration, setTokenExpiration] = useState(null);
@@ -106,7 +161,7 @@ export const AuthProvider = ({ children }) => {
             authority: 'https://login.microsoftonline.com/a7232f7a-a9e5-4f71-9372-dc8b1c6645ea' // config.jsonのTenantId
           }
         };
-        
+
         const msalInstance = new msal.PublicClientApplication(msalConfig);
         setMsalInstance(msalInstance);
 
@@ -171,10 +226,10 @@ export const AuthProvider = ({ children }) => {
   const subscribeToReports = async (reportTypes = [], frequency = 'weekly') => {
     try {
       setError(null);
-      
+
       // APIコールをシミュレート
       console.log(`レポート購読設定: タイプ=${reportTypes.join(',')}, 頻度=${frequency}`);
-      
+
       // 成功メッセージをコンソールに表示
       console.log('レポート購読設定が保存されました');
       return true;
@@ -190,13 +245,13 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       setLoading(true);
-      
+
       // APIコールをシミュレート
       console.log(`レポート生成: タイプ=${reportType}, 期間=${period}, 形式=${format}`);
-      
+
       // 非同期操作をシミュレート
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       // レポートデータのモック作成
       const reportData = {
         type: reportType,
@@ -208,7 +263,7 @@ export const AuthProvider = ({ children }) => {
           url: `/reports/${reportType}_${period}.${format}`
         }
       };
-      
+
       console.log('レポート生成完了:', reportData);
       setLoading(false);
       return reportData;
@@ -225,12 +280,12 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       setLoading(true);
-      
+
       // 既存のトークンを全てクリア
       localStorage.removeItem('msal_token');
       localStorage.removeItem('msal_token_expiry');
       localStorage.removeItem('token');
-      
+
       // 最小限のヘッダーでリクエスト
       const response = await axios.post('/api/auth/login', {
         username,
@@ -241,7 +296,7 @@ export const AuthProvider = ({ children }) => {
           'X-Requested-With': 'XMLHttpRequest'
         }
       });
-      
+
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
         setCurrentUser({ username });
@@ -258,12 +313,12 @@ export const AuthProvider = ({ children }) => {
           details: error.response?.data || '詳細情報なし'
         });
       }
-      
+
       // ユーザー向けの統一されたエラーメッセージ
       const errorMessage = error.response?.data?.message ||
-                         error.message ||
-                         'ログインに失敗しました。もう一度お試しください';
-      
+        error.message ||
+        'ログインに失敗しました。もう一度お試しください';
+
       if (error.response?.status === 401) {
         setError(errorMessage);
       } else if (error.response?.status === 403) {
@@ -276,7 +331,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-  
+
   /*
   // 本番用ログイン関数 (コメントアウト)
   const login = async (username, password) => {
@@ -382,7 +437,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error('ログアウトエラー:', err);
     }
-    
+
     // ローカルストレージをクリア
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
@@ -403,7 +458,7 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       setLoading(true);
-      
+
       const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/mfa/verify`, {
         method: 'POST',
         headers: {
@@ -421,11 +476,11 @@ export const AuthProvider = ({ children }) => {
       // トークンを保存
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('refresh_token', data.refresh_token);
-      
+
       // ユーザー情報を取得
       await fetchUserData();
       setMfaRequired(false);
-      
+
       return { success: true };
     } catch (err) {
       setError(err.message);
@@ -505,6 +560,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Apollo Clientインスタンス
+  const [apolloClient, setApolloClient] = useState(() => createApolloClient(null));
+
+  // トークン変更時にApollo Clientを更新
+  useEffect(() => {
+    const token = localStorage.getItem('msal_token');
+    setApolloClient(createApolloClient(token));
+  }, [currentUser]);
+
   // 提供する値
   const value = {
     currentUser,
@@ -524,13 +588,18 @@ export const AuthProvider = ({ children }) => {
     revokeSession,
     loginAttempts,
     accountLocked,
-    lockUntil
+    lockUntil,
+    apolloClient
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // カスタムフック
-export const useAuth = () => {
-  return useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

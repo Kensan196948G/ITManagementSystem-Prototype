@@ -1,0 +1,82 @@
+{
+    "forbidden": [
+        {
+            "name": "no-circular",
+            "severity": "error",
+            "comment": "循環依存を禁止します",
+            "from": {},
+            "to": {
+                "circular": true
+            }
+        },
+        {
+            "name": "no-unsafe-imports",
+            "severity": "error",
+            "comment": "セキュリティ上危険なモジュールのインポートを禁止",
+            "from": {},
+            "to": {
+                "path": "(child_process|fs|path|os|net|dns|vm|eval|exec|execSync)"
+            }
+        },
+        {
+            "name": "no-frontend-to-backend",
+            "severity": "error",
+            "comment": "フロントエンドからバックエンドの直接参照を禁止",
+            "from": {
+                "path": "src"
+            },
+            "to": {
+                "path": "backend"
+            }
+        }
+    ],
+    "options": {
+        "doNotFollow": {
+            "path": "node_modules",
+            "dependencyTypes": [
+                "npm",
+                "npm-dev",
+                "npm-optional",
+                "npm-peer",
+                "npm-bundled",
+                "npm-no-pkg"
+            ]
+        },
+        "tsPreCompilationDeps": true,
+        "tsConfig": {
+            "fileName": "tsconfig.json"
+        },
+        "webpackConfig": {
+            "fileName": "webpack.config.js"
+        },
+        "reporterOptions": {
+            "dot": {
+                "collapsePattern": "node_modules/[^/]+",
+                "theme": {
+                    "graph": {
+                        "splines": "ortho"
+                    }
+                }
+            },
+            "archi": {
+                "collapsePattern": "node_modules/[^/]+"
+            }
+        },
+        "enhancedResolveOptions": {
+            "exportsFields": [
+                "exports"
+            ],
+            "conditionNames": [
+                "import",
+                "require",
+                "node",
+                "default"
+            ]
+        }
+    },
+    "allowedSeverity": {
+        "high": true,
+        "moderate": true,
+        "low": true
+    }
+}

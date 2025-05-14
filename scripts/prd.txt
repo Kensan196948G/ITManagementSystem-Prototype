@@ -1,0 +1,39 @@
+<context>
+# Overview  
+IT管理システムプロトタイプの開発 - システム監視、インシデント管理、認証機能を統合した管理コンソールの構築
+
+# Core Features  
+- OpenAPI仕様書自動生成パイプライン
+- RBAC対応認証フロー
+- StorybookベースUIコンポーネントカタログ
+- 監査ログ機能
+
+# User Experience  
+- 管理者: システム全体の監視と設定
+- オペレーター: インシデント管理とレポート作成
+- 監査担当者: セキュリティログの確認
+</context>
+<PRD>
+# Technical Architecture  
+- バックエンド: Python/FastAPI
+- フロントエンド: React/TypeScript
+- データベース: PostgreSQL
+- 認証: Azure AD連携
+
+# Development Roadmap  
+## Phase 1: コア機能実装
+1. OpenAPI仕様書自動生成パイプライン構築
+2. RBAC対応認証フローの実装
+3. StorybookベースUIコンポーネントカタログ作成
+4. 監査ログ機能の基本設計
+
+# Logical Dependency Chain
+1. 認証基盤の構築 (RBAC)
+2. API仕様の標準化 (OpenAPI)
+3. UIコンポーネントの体系化
+4. 監査機能の追加
+
+# Risks and Mitigations  
+- 認証フローの複雑性 → 段階的な実装
+- API仕様の変更可能性 → 自動生成パイプラインで対応
+</PRD>

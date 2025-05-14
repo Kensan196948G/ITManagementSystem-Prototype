@@ -1,0 +1,62 @@
+{
+    "extends": [
+        "airbnb",
+        "airbnb-typescript",
+        "plugin:react/recommended",
+        "plugin:react-hooks/recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "project": "./tsconfig.json",
+        "ecmaFeatures": {
+            "jsx": true
+        },
+        "ecmaVersion": 2020,
+        "sourceType": "module",
+        "tsconfigRootDir": "./"
+    },
+    "settings": {
+        "import/resolver": {
+            "typescript": {
+                "project": "./tsconfig.json"
+            }
+        }
+    },
+    "plugins": [
+        "react",
+        "@typescript-eslint",
+        "react-hooks"
+    ],
+    "rules": {
+        "react/react-in-jsx-scope": "off",
+        "react/jsx-uses-react": "off",
+        "linebreak-style": [
+            "error",
+            "unix"
+        ],
+        "no-trailing-spaces": "error",
+        "react/function-component-definition": [
+            "error",
+            {
+                "namedComponents": "function-declaration",
+                "unnamedComponents": "arrow-function"
+            }
+        ],
+        "react/prop-types": "off",
+        "@typescript-eslint/comma-dangle": [
+            "error",
+            "always-multiline"
+        ],
+        "import/extensions": [
+            "error",
+            "ignorePackages",
+            {
+                "js": "never",
+                "jsx": "never",
+                "ts": "never",
+                "tsx": "never"
+            }
+        ]
+    }
+}

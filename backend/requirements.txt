@@ -1,47 +1,11 @@
-# Core Web Framework
 flask==2.3.2
-flask-sqlalchemy==3.0.5
-flask-cors==4.0.0
 flask-jwt-extended==4.5.2
-python-dotenv==0.21.1
-gunicorn==21.2.0
-
-# FastAPI and related
-fastapi==0.103.2
-uvicorn[standard]==0.22.0
-pydantic==2.8.0b1  # Debug mode proposal: Addresses TypeError and pydantic-core build issues
-pydantic-settings==2.2.1 # Debug mode proposal: Ensures compatibility with pydantic v2.x
-typing-extensions==4.8.0
-SQLAlchemy==2.0.15
-
-# Testing
-pytest==7.4.0
-
-# Security & Authentication
-pyjwt[crypto]==2.8.0  # 🔒 Security Update: v3.0.0が利用不可のため一時的にダウングレード
-requests==2.30.0
-pyotp==2.9.0
-azure-identity>=1.13.0
-azure-mgmt-resource==23.0.1
-azure-keyvault-secrets>=4.7.0
-cryptography>=42.0.0  # JWTアルゴリズム強制適用用（HSM対応版）
-
-# Database & Connectivity
-# pyodbc==4.0.39  # 一時的に無効化（C++ Build Toolsが必要）
-asyncpg>=0.28.0
-redis>=5.0.0
-
-# Async & Networking
-aiohttp>=3.8.6  # asyncioを含むため個別指定不要
-
-# Microsoft Graph
-msgraph-core>=1.0.0
-msgraph-sdk==1.0.0
-
-# Specialized Components
-# hfc>=1.0.0  # Hyperledger Fabricクライアント用（現在利用不可）
-# tpm2-pytss>=2.0.0; sys_platform == 'linux'  # TPMフォールバック機構用（Linux）（現在利用不可）
-# tpm2-pytss-win>=2.0.0; sys_platform == 'win32'  # TPMフォールバック機構用（Windows）（現在利用不可）
-
-# Timeout Management (aiohttpに統合済み)
-# asyncio-timeout>=4.0.3
+python-owasp-zap-v2.4>=0.0.14
+weasyprint==58.0
+pytest==8.1.1
+pytest-html==4.1.1
+python-dotenv==1.0.0
+requests==2.31.0
+flask-limiter==3.5.0
+flask-talisman==1.0.0
+flask-principal==0.4.0
