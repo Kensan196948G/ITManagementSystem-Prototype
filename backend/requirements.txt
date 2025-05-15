@@ -9,3 +9,9 @@ requests==2.31.0
 flask-limiter==3.5.0
 flask-talisman==1.0.0
 flask-principal==0.4.0
+fastapi
+flask-sqlalchemy
+pydantic-settings
+pydantic[email]
+pydantic[email]
+

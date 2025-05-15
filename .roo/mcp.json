@@ -16,7 +16,7 @@
         "initialize_project",
         "parse_prd"
       ],
-      "disabled": false
+      "disabled": true
     }
   }
 }

@@ -13,7 +13,8 @@ class Settings(BaseSettings):
     アプリケーション設定を管理するクラス。
     環境変数または .env ファイルから値を読み込みます。
     """
-    SECRET_KEY: str = "dev-secret-key"  # デフォルトのシークレットキー
+    # 修正ポイント: SECRET_KEYのデフォルト値を削除し、環境変数からの読み込みを必須とする
+    SECRET_KEY: str
     # データベースURL。デフォルトはプロジェクトルートの instance/app.db を指すSQLiteデータベース
     DATABASE_URL: str = f"sqlite:///{BASE_DIR / 'instance' / 'app.db'}"
     ALGORITHM: str = "HS256"  # JWTトークンの署名アルゴリズム
@@ -30,24 +31,19 @@ settings = Settings()
 # データベースファイルの親ディレクトリが存在しない場合は作成
 # SettingsクラスでDATABASE_URLが初期化された後にパスを評価する必要があるため、
 # ここでPathオブジェクトを作成し、ディレクトリ操作を行う
+# 修正ポイント: データベースファイルのパス構築を os.path.join を使用するように修正
+import os
+
 if settings.DATABASE_URL.startswith("sqlite:///"):
     db_url_path_str = settings.DATABASE_URL.replace("sqlite:///", "")
-    # Windows環境で `///` の後にドライブレターが来る場合を考慮
-    if ":" in db_url_path_str and not db_url_path_str.startswith("/"):
-        # 例: C:\path\to\db -> /C:\path\to\db にならないように先頭のスラッシュを削除
-        db_path = Path(db_url_path_str)
-    else:
-        db_path = Path(f"/{db_url_path_str}")
+    # 相対パスとして扱う
+    db_path = os.path.join(BASE_DIR, db_url_path_str)
 
-    # 絶対パスであることを確認（特にUnix系で先頭に / がつく場合）
-    if not db_path.is_absolute():
-        db_path = BASE_DIR / db_url_path_str
+    # ディレクトリが存在しない場合は作成
+    db_dir = os.path.dirname(db_path)
+    os.makedirs(db_dir, exist_ok=True)
 
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    # Pydanticモデルは不変なので、新しい値でインスタンスを再作成するか、
-    # もしくはsettingsオブジェクトのDATABASE_URLを直接更新する代わりに、
-    # データベースエンジンに渡すURLとしてこの絶対パスを使用します。
-    # ここでは、後のデータベース初期化でこの絶対パスが使われることを想定し、
+    # データベースエンジンに渡すURLとして絶対パスを使用
     # settings.DATABASE_URL 自体の書き換えは行いません。
     # 必要であれば、settingsインスタンスをここで再生成することも可能です。
-    # settings = Settings(DATABASE_URL=f"sqlite:///{db_path.resolve()}")
+    # settings = Settings(DATABASE_URL=f"sqlite:///{os.path.abspath(db_path)}")

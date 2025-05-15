@@ -9,6 +9,10 @@ from dataclasses import dataclass
 from functools import wraps
 import logging
 import json
+import os
+from dotenv import load_dotenv # 修正ポイント: 環境変数を読み込むためのライブラリをインポート
+
+load_dotenv() # 修正ポイント: .envファイルを読み込む
 
 # ロギング設定
 logging.basicConfig(
@@ -16,7 +20,8 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('feature_engine.log')
+        # 修正ポイント: ログファイルパスを環境変数から読み込むように変更
+        logging.FileHandler(os.getenv('LOG_FILE_PATH', 'FixLogs/feature_engine.log'))
     ]
 )
 
@@ -164,7 +169,8 @@ class HybridWindowFunction(WindowProcessor):
 class FeatureEngine:
     """特徴量計算エンジン (ハイブリッドアーキテクチャ版)"""
     
-    def __init__(self, redis_url: str = "redis://localhost:6379", config: Optional[WindowConfig] = None):
+    # 修正ポイント: Redis接続URLを環境変数から読み込むように変更
+    def __init__(self, redis_url: str = os.getenv('REDIS_URL', "redis://localhost:6379"), config: Optional[WindowConfig] = None):
         """エンジン初期化
         
         Args:

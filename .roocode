@@ -1,5 +1,10 @@
 default_mode: orchestrator
 
+shell_integration:
+  enabled: true
+  terminal_type: "vscode"
+
+
 auto_approval: true
 # 自動承認対象の追加メッセージ
 auto_approval_messages:

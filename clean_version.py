@@ -7,7 +7,8 @@ env_path = Path(__file__).resolve().parent / '.env'
 load_dotenv(env_path)
 
 class Config:
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
+    # 修正ポイント: SECRET_KEYのデフォルト値を削除し、環境変数からの読み込みを必須とする
+    SECRET_KEY = os.environ['SECRET_KEY']
     # 絶対パスを使用してデータベースファイルを指定
     db_path = Path(__file__).parent.parent / 'instance' / 'app.db'
     db_path.parent.mkdir(parents=True, exist_ok=True)

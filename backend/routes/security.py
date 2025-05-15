@@ -6,6 +6,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
 from flask_principal import Principal, Permission, RoleNeed
+import os # 修正ポイント: 環境変数を読み込むためにosモジュールをインポート
 
 # ブループリント設定
 security_bp = Blueprint('security', __name__)
@@ -30,7 +31,8 @@ user_permission = Permission(RoleNeed('user'))
 def init_security(app):
     """セキュリティ関連の初期化処理"""
     # JWT設定
-    app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # 本番環境では環境変数から取得
+    # 修正ポイント: SECRET_KEYを環境変数から読み込むように変更
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-fallback-secret-key') # 環境変数から読み込み、デフォルト値は開発用
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 3600  # 1時間
     jwt.init_app(app)
     
