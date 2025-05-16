@@ -1,8 +1,9 @@
+// # 修正ポイント: APIからデータを取得するロジックを追加
 import { useState, useEffect, useContext } from "react";
-import { useAuth } from "../../contexts/AuthContext";
-import { useSubscription } from "@apollo/client";
-import { AuthContext } from "../../contexts/AuthContext";
-import { INCIDENT_SUBSCRIPTION } from "../../graphql/subscriptions";
+// import { useAuth } from "../../contexts/AuthContext"; // # 修正ポイント: 未使用のためコメントアウト
+// import { useSubscription } from "@apollo/client"; // # 修正ポイント: 未使用のためコメントアウト
+// import { AuthContext } from "../../contexts/AuthContext"; // # 修正ポイント: 未使用のためコメントアウト
+// import { INCIDENT_SUBSCRIPTION } from "../../graphql/subscriptions"; // # 修正ポイント: 未使用のためコメントアウト
 import { MoreHorizontal, Filter, Plus } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Badge } from "../ui/badge";
@@ -12,8 +13,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "../ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
@@ -41,80 +40,6 @@ interface Incident {
   impact?: string;
 }
 
-// インシデントのサンプルデータ
-const initialIncidents: Incident[] = [
-  {
-    id: "INC-001",
-    title: "東データセンターのネットワーク障害",
-    priority: "緊急",
-    status: "未対応",
-    assignee: { name: "山田太郎", initials: "山田" },
-    createdAt: "2025-05-09T15:30:00",
-    updatedAt: "2025-05-10T08:15:00",
-    sla: "残り2時間",
-  },
-  {
-    id: "INC-002",
-    title: "メールサーバーのパフォーマンス低下",
-    priority: "高",
-    status: "対応中",
-    assignee: { name: "田中次郎", initials: "田中" },
-    createdAt: "2025-05-09T12:45:00",
-    updatedAt: "2025-05-10T07:30:00",
-    sla: "残り4時間",
-  },
-  {
-    id: "INC-003",
-    title: "CRMアプリケーションの読み込み遅延",
-    priority: "中",
-    status: "対応中",
-    assignee: { name: "佐藤三郎", initials: "佐藤" },
-    createdAt: "2025-05-09T10:15:00",
-    updatedAt: "2025-05-09T14:30:00",
-    sla: "残り8時間",
-  },
-  {
-    id: "INC-004",
-    title: "リモートユーザー向けVPN接続問題",
-    priority: "低",
-    status: "未対応",
-    assignee: { name: "鈴木花子", initials: "鈴木" },
-    createdAt: "2025-05-09T09:00:00",
-    updatedAt: "2025-05-09T11:45:00",
-    sla: "残り16時間",
-  },
-  {
-    id: "INC-005",
-    title: "共有ドライブのアクセス権限エラー",
-    priority: "中",
-    status: "未対応",
-    assignee: { name: "高橋一郎", initials: "高橋" },
-    createdAt: "2025-05-08T16:30:00",
-    updatedAt: "2025-05-09T10:15:00",
-    sla: "残り6時間",
-  },
-  {
-    id: "INC-006",
-    title: "プリンターネットワーク設定の障害",
-    priority: "低",
-    status: "解決済",
-    assignee: { name: "伊藤めぐみ", initials: "伊藤" },
-    createdAt: "2025-05-08T14:15:00",
-    updatedAt: "2025-05-09T09:30:00",
-    sla: "完了",
-  },
-  {
-    id: "INC-007",
-    title: "会計システムのデータベース接続タイムアウト",
-    priority: "高",
-    status: "解決済",
-    assignee: { name: "渡辺健太", initials: "渡辺" },
-    createdAt: "2025-05-08T11:00:00",
-    updatedAt: "2025-05-08T16:45:00",
-    sla: "完了",
-  },
-];
-
 // 日付フォーマット用ユーティリティ関数
 function formatDate(dateString: string) {
   const date = new Date(dateString);
@@ -130,12 +55,36 @@ function formatDate(dateString: string) {
 export function IncidentsTable() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [incidents, setIncidents] = useState<Incident[]>(initialIncidents);
+  const [incidents, setIncidents] = useState<Incident[]>([]); // 初期データを空配列に変更
   const [isNewIncidentDialogOpen, setIsNewIncidentDialogOpen] = useState(false);
+
+  // // # 修正ポイント: APIからインシデントデータを取得する非同期関数
+  const fetchIncidents = async () => {
+    try {
+      const response = await fetch('/api/incidents');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: Incident[] = await response.json();
+      setIncidents(data);
+    } catch (error) {
+      console.error("Failed to fetch incidents:", error);
+      // エラー発生時は空の配列を表示
+      setIncidents([]);
+      toast.error("インシデントデータの取得に失敗しました");
+    }
+  };
+
+  // // # 修正ポイント: コンポーネントマウント時にデータを取得
+  useEffect(() => {
+    fetchIncidents();
+  }, []); // 空の依存配列でマウント時のみ実行
 
   // 新規インシデント追加処理
   const handleAddIncident = (newIncident: Incident) => {
-    setIncidents([newIncident, ...incidents]);
+    // // # 修正ポイント: 新規追加後、APIから最新データを再取得
+    // setIncidents([newIncident, ...incidents]); // 直接追加ではなく再取得
+    fetchIncidents();
     toast.success(`インシデント ${newIncident.id} が登録されました`);
   };
 
@@ -158,6 +107,21 @@ export function IncidentsTable() {
 
   // ステータス変更処理
   const handleStatusChange = (incidentId: string, newStatus: string) => {
+    // // # 修正ポイント: ステータス変更後、APIから最新データを再取得
+    // setIncidents(incidents.map(incident =>
+    //   incident.id === incidentId
+    //     ? {
+    //       ...incident,
+    //       status: newStatus,
+    //       updatedAt: new Date().toISOString(),
+    //       sla: newStatus === "解決済" || newStatus === "完了" ? "完了" : incident.sla
+    //     }
+    //     : incident
+    // )); // 直接更新ではなく再取得
+    // TODO: API経由でのステータス更新処理を実装する必要がある
+    console.warn(`インシデント ${incidentId} のステータスを ${newStatus} に変更するAPI処理は未実装です。`);
+    toast.info(`インシデントのステータス変更APIは未実装です。`);
+    // 一時的にローカルで更新（開発用）
     setIncidents(incidents.map(incident =>
       incident.id === incidentId
         ? {
@@ -168,20 +132,22 @@ export function IncidentsTable() {
         }
         : incident
     ));
-    toast.success(`インシデントのステータスが ${newStatus} に更新されました`);
+    // fetchIncidents(); // API実装後に有効化
+    toast.success(`インシデントのステータスが ${newStatus} に更新されました (ローカル更新)`);
   };
 
   // GraphQL Subscription
-  const { apolloClient } = useContext(AuthContext);
-  useSubscription(INCIDENT_SUBSCRIPTION, {
-    client: apolloClient,
-    onSubscriptionData: ({ subscriptionData }) => {
-      const { incidentUpdated } = subscriptionData.data;
-      setIncidents(prev =>
-        prev.map(inc => inc.id === incidentUpdated.id ? incidentUpdated : inc)
-      );
-    }
-  });
+  // // # 修正ポイント: SubscriptionのクライアントをAuthContextから取得
+  // const { apolloClient } = useContext(AuthContext); // # 修正ポイント: 未使用のためコメントアウト
+  // useSubscription(INCIDENT_SUBSCRIPTION, { // # 修正ポイント: 未使用のためコメントアウト
+  //   client: apolloClient, // # 修正ポイント: 未使用のためコメントアウト
+  //   onSubscriptionData: ({ subscriptionData }) => { // # 修正ポイント: 未使用のためコメントアウト
+  //     const { incidentUpdated } = subscriptionData.data; // # 修正ポイント: 未使用のためコメントアウト
+  //     setIncidents(prev => // # 修正ポイント: 未使用のためコメントアウト
+  //       prev.map(inc => inc.id === incidentUpdated.id ? incidentUpdated : inc) // # 修正ポイント: 未使用のためコメントアウト
+  //     ); // # 修正ポイント: 未使用のためコメントアウト
+  //   } // # 修正ポイント: 未使用のためコメントアウト
+  // }); // # 修正ポイント: 未使用のためコメントアウト
 
   return (
     <div className="space-y-4">
@@ -193,7 +159,7 @@ export function IncidentsTable() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full sm:w-[300px]"
           />
-          <Button variant="outline" size="icon">
+          <Button variant="outline"> {/* # 修正ポイント: size="icon" を削除 */}
             <Filter className="h-4 w-4" />
             <span className="sr-only">フィルター</span>
           </Button>
@@ -275,18 +241,21 @@ export function IncidentsTable() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost"> {/* # 修正ポイント: size="icon" を削除 */}
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">操作</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>操作</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
+                        {/* # 修正ポイント: DropdownMenuLabel を div に置き換え */}
+                        <div className="px-2 py-1.5 text-sm font-semibold">操作</div>
+                        {/* # 修正ポイント: DropdownMenuSeparator を div に置き換え */}
+                        <div className="my-1 h-px bg-muted"></div>
                         <DropdownMenuItem>詳細を表示</DropdownMenuItem>
                         <DropdownMenuItem>編集</DropdownMenuItem>
                         <DropdownMenuItem>担当者変更</DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                        {/* # 修正ポイント: DropdownMenuSeparator を div に置き換え */}
+                        <div className="my-1 h-px bg-muted"></div>
                         <DropdownMenuItem onClick={() => handleStatusChange(incident.id, "対応中")}>
                           対応中にする
                         </DropdownMenuItem>

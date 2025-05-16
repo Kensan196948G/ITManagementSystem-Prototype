@@ -10,25 +10,13 @@
 - システム可用性の向上
 - データ分析に基づく意思決定の支援
 
-## 対象システム・サービス
-- Microsoft 365（E3ライセンス）
-- Active Directory（AD）
-- Exchange Online
-- DeskNet'sNeo（Appsuit含む）
-- DirectCloud
-- 外部データセンター内ファイルサーバ
-- HENGEOINE（エンドポイントセキュリティ）
-
 ## システム構成
-### フロントエンド
-- React.js
-- Tailwind CSS
-- Axios（API通信）
+このプロジェクトはモノレポ構成を採用しており、npm ワークスペースを使用して複数のパッケージを管理しています。各パッケージは `packages/` ディレクトリ配下に配置されています。
 
-### バックエンド
-- Python（Flask API）
-- PowerShell（システム管理スクリプト）
-- SQLite（データベース）
+### パッケージ
+- `packages/frontend`: フロントエンドアプリケーション (React.js, Tailwind CSS, Axios)
+- `packages/backend`: バックエンドAPI (Python/Flask, PowerShell, SQLite)
+- `packages/eslint-config`: 共有 ESLint 設定
 
 ## 主要機能
 1. システム運用管理自動化（監視・アラート・基本的トラブルシューティング）
@@ -74,15 +62,22 @@
 # クローン
 git clone https://github.com/yourusername/ITManagementSystem.git
 
-# フロントエンド
-cd frontend
+# プロジェクトルートに移動
+cd ITManagementSystem
+
+# 依存関係のインストール (npm ワークスペースが使用されます)
 npm install
+
+# プロジェクトの実行
+# フロントエンドとバックエンドを同時に起動します
 npm start
 
+# または各パッケージを個別に実行
+# フロントエンド
+npm start --workspace=frontend
+
 # バックエンド
-cd ../backend
-pip install -r requirements.txt
-python main.py
+npm start --workspace=backend
 ```
 
 ## 開発者向け情報
@@ -91,6 +86,12 @@ python main.py
 - CI/CD：GitHub Actions
 
 ## 変更履歴
+### 2025/05/17
+- プロジェクトをモノレポ構成に移行し、npm ワークスペースを導入
+- `frontend/` および `backend/` ディレクトリを `packages/` ディレクトリ配下に移動
+- 共通依存関係をルートの `package.json` に集約
+- `eslint-plugin-owasp-recommended` の依存関係を削除
+
 ### 2025/03/17
 - Microsoft認証（Azure AD認証）を廃止し、標準的なユーザー名/パスワード認証に統一
 - 新しいレポート機能を追加（日次/週次/月次レポート、メール配信）

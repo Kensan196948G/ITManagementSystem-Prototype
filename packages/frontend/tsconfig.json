@@ -1,0 +1,41 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "esnext"
+        ],
+        "allowJs": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "noEmit": true,
+        "esModuleInterop": true,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "jsx": "react-jsx",
+        "incremental": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "src/*" // srcディレクトリ全体へのエイリアス
+            ],
+            "@/lib/*": [
+                "src/lib/*" // src/libディレクトリへのエイリアスを追加
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.js",
+        "src/**/*.jsx",
+        "src/lib/**/*.ts" // 修正ポイント: src/lib ディレクトリ内のtsファイルを含める
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

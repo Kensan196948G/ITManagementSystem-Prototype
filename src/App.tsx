@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { Dashboard } from "./components/dashboard/Dashboard";
-import { IncidentsPage } from "./components/incidents/IncidentsPage";
+import IncidentsPage from "../frontend/src/pages/IncidentsPage"; {/* # 修正ポイント: デフォルトインポートに修正 */ }
 import { ProblemsPage } from "./components/problems/ProblemsPage";
 import { ChangesPage } from "./components/changes/ChangesPage";
 import { ConfigurationPage } from "./components/configuration/ConfigurationPage";

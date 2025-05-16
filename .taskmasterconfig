@@ -2,25 +2,25 @@
   "models": {
     "main": {
       "provider": "openrouter",
-      "modelId": "google/gemini-2.0-flash-001",
+      "modelId": "google/gemini-2.5-flash-preview",
       "maxTokens": 120000,
       "temperature": 0.2
     },
     "research": {
       "provider": "openrouter",
-      "modelId": "deepseek/deepseek-chat-v3-0324:free",
+      "modelId": "google/gemini-2.5-flash-preview",
       "maxTokens": 8700,
       "temperature": 0.1
     },
     "fallback": {
       "provider": "openrouter",
-      "modelId": "deepseek/deepseek-chat-v3-0324:free",
+      "modelId": "google/gemini-2.5-flash-preview",
       "maxTokens": 120000,
       "temperature": 0.1
     }
   },
   "global": {
-    "logLevel": "info",
+    "logLevel": "debug",
     "debug": false,
     "defaultSubtasks": 5,
     "defaultPriority": "medium",

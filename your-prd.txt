@@ -1,0 +1,77 @@
+# 📌 プロジェクト名:
+ITサービス管理システム（ITSM）自動化プラットフォーム
+
+# 🎯 目的（Goal）:
+建設土木企業のIT部門向けに、ISO 20000 / 27001 / 27002 に準拠した  
+**ITサービスの標準化・自動化・レポート可視化**を提供するプラットフォームを構築する。
+
+# 🛠 対象環境（Environment）:
+- クライアントOS: Windows 10 / 11 Pro
+- フロントエンド: React.js + Tailwind CSS + Axios
+- バックエンド: Python 3.11（Flask API）+ PowerShell 7
+- データベース: SQLite（運用情報・ユーザーデータ管理）
+- クラウド連携: Microsoft 365（E3）+ Graph API
+- 認証方式: ユーザー名/パスワード認証（Entra ID認証は廃止）
+
+# 📂 対象システム・サービス:
+- Microsoft 365（E3ライセンス）  
+- Active Directory（AD）  
+- Exchange Online  
+- DeskNet'sNeo（Appsuite）  
+- DirectCloud  
+- 外部データセンターのファイルサーバ  
+- HENGEOINE（セキュリティ）  
+
+# 🧩 機能要件（Features）:
+1. **IT運用管理の自動化**
+   - システム監視、アラート検知、トラブル自動修復（PowerShellベース）
+
+2. **レポート自動生成機能**
+   - システム状態（システム概要・インシデント概要・ユーザー活動ログ）
+   - セキュリティイベント／パフォーマンス分析
+   - PDF / HTML / CSV形式で出力、スケジュール実行
+
+3. **ワークフロー・チケット管理**
+   - DeskNet'sNeoと連携したチケット承認フロー
+   - タスク、障害対応、ユーザー申請の管理
+
+4. **API権限管理（Microsoft 365）**
+   - Graph APIでのユーザー・グループ情報取得／更新
+
+5. **ユーザー認証・セッション管理**
+   - 標準ログイン（ユーザー名／パスワード）
+   - ロール管理（admin / user / guest）
+
+# ✅ 完了基準（Done Criteria）:
+- WEB UIでリアルタイム表示、メール配信、PDF出力が可能であること
+- 日次／週次／月次の自動レポートが正確に出力される
+- 管理画面でインシデントやログイン履歴が閲覧可能
+- APIパーミッション制御が可能で、Graph連携が成功する
+
+# 🗂 タスク分解（Task Breakdown）:
+- TASK001: Graph API 認証・非対話型構成（ClientSecret）
+- TASK002: PowerShell による AD / M365 情報収集
+- TASK003: HTML/PDF レポートテンプレートの整備
+- TASK004: レポート自動生成（cron/Task Scheduler連携）
+- TASK005: Flask API による情報提供エンドポイント作成
+- TASK006: フロントエンドでのリアルタイムレポート表示
+- TASK007: DeskNet'sNeo連携：承認フロー → 実行タスク連動
+- TASK008: 認証機能（ログイン画面・セッション管理）
+- TASK009: UIにおけるレポートフィルター・エクスポート機能
+- TASK010: CI/CD + GitHub Actions によるデプロイ自動化
+
+# 🔐 認証仕様:
+- ユーザー名／パスワード形式（開発用：admin/admin など）
+- Entra ID認証は廃止済、セキュリティ強化のためログ監視付き
+
+# 📄 サンプルユーザー:
+| ユーザー名 | パスワード | 権限             |
+|------------|------------|------------------|
+| admin      | admin      | グローバル管理者 |
+| user       | user       | 一般ユーザー     |
+| guest      | guest      | ゲスト           |
+
+# 💡 コメント（備考）:
+- ログインログやレポート履歴は `./logs/` に保存
+- レポートは `./Report/YYYYMMDD/` に日付別フォルダで保存
+- Graph API利用時は権限：`User.Read.All`, `Directory.Read.All`

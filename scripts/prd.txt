@@ -18,7 +18,7 @@ IT管理システムプロトタイプの開発 - システム監視、インシ
 - バックエンド: Python/FastAPI
 - フロントエンド: React/TypeScript
 - データベース: PostgreSQL
-- 認証: Azure AD連携
+- 認証: Microsoft Graph API （非対話型認証） を通じた情報取得
 
 # Development Roadmap  
 ## Phase 1: コア機能実装

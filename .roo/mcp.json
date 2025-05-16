@@ -3,20 +3,33 @@
     "taskmaster-ai": {
       "command": "npx",
       "args": [
-        "-y",
+        "--yes",
         "--package=task-master-ai",
         "task-master-ai"
       ],
       "env": {
-        "OPENROUTER_API_KEY": "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",
-        "OPENAI_API_KEY": "your-api-key-here",
-        "PERPLEXITY_API_KEY": "your-api-key-here"
+        "OPENROUTER_API_KEY": "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"
       },
       "alwaysAllow": [
         "initialize_project",
-        "parse_prd"
+        "parse_prd",
+        "generate",
+        "get_tasks",
+        "add_task",
+        "update_task",
+        "remove_task",
+        "fix_dependencies",
+        "models",
+        "get_task",
+        "next_task",
+        "complexity_report",
+        "set_task_status",
+        "update",
+        "update_subtask",
+        "expand_task",
+        "analyze_project_complexity"
       ],
-      "disabled": true
+      "disabled": false
     }
   }
 }

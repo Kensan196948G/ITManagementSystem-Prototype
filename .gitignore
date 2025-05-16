@@ -44,3 +44,6 @@ dev-debug.log
 # Task files
 tasks.json
 tasks/ 
+
+# .gitignore
+mcp_setting.json
