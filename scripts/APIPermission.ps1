@@ -1,6 +1,9 @@
 # Microsoft 365 APIパーミッション管理システム
 # ISO 27001/27002準拠のアクセス管理とログ記録を実装
 
+# グローバル変数初期化 # 修正ポイント: 未定義変数の初期化を追加
+$globalIndex = 0
+
 # スクリプトタイトル表示
 Write-Host "----------------------------------------" -ForegroundColor Cyan
 Write-Host " Microsoft 365 APIパーミッション管理ツール " -ForegroundColor Cyan
