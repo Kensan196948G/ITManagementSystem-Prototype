@@ -1,47 +1,27 @@
-import * as React from 'react';
-import ImageWithFallback from './ImageWithFallback';
+import React, { FC, ReactEventHandler } from 'react';
 
 interface FigmaViewerProps {
-    figmaUrl: string;
-    fallbackImage: string;
-    altText: string;
-    className?: string;
-    width?: number | string;
-    height?: number | string;
+    url: string;
+    className?: string | null;
+    onError?: ReactEventHandler<HTMLIFrameElement>;
 }
 
-const FigmaViewer: React.FC<FigmaViewerProps> = ({
-    figmaUrl,
-    fallbackImage,
-    altText,
-    className = '',
-    width = '100%',
-    height = 'auto',
-}: FigmaViewerProps) => {
-    // Figmaの埋め込みURLを生成
-    const embedUrl = figmaUrl.includes('embed')
-        ? figmaUrl
-        : `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(figmaUrl)}`;
-
+/**
+ * FigmaViewerコンポーネント
+ * 指定されたFigmaのURLをiframeで表示します。
+ * classNameはnullish coalescing演算子で安全に扱い、onErrorイベントには型注釈を付与しています。
+ */
+const FigmaViewer: FC<FigmaViewerProps> = ({ url, className = null, onError }) => {
     return (
-        <div className={`figma-viewer ${className}`}>
-            <iframe
-                src={embedUrl}
-                width={width}
-                height={height}
-                allowFullScreen
-                title={altText}
-                style={{ border: 'none' }}
-            />
-            <ImageWithFallback
-                src={fallbackImage}
-                fallbackSrc={fallbackImage}
-                alt={altText}
-                className="figma-fallback"
-                width={width}
-                height={height}
-            />
-        </div>
+        <iframe
+            src={url}
+            className={className ?? undefined} // 修正ポイント: nullish coalescingでundefinedにして安全にclassNameを扱う
+            onError={onError} // 修正ポイント: ReactEventHandler<HTMLIFrameElement>型を適用
+            title="Figma Viewer"
+            frameBorder="0"
+            allowFullScreen
+            style={{ width: '100%', height: '100%' }}
+        />
     );
 };
 
