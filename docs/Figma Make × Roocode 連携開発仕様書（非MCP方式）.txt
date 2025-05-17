@@ -1,0 +1,127 @@
+## 📘 Figma Make × Roocode 連携開発仕様書（非MCP方式）
+
+### 📌 概要
+
+本仕様書は、Figma Make により自動生成された UI Zip ファイルを活用し、Roocode 上で効率的にフロントエンド開発を行うための非MCPベースの統合開発ワークフローを定義します。
+
+---
+
+### 🧩 背景と目的
+
+* Figma Make による UI 設計・自動生成を継続的に活用したい
+* File ID を要求しない方式で Roocode と連携したい
+* 自動解凍、自動配置、Roocode による即時開発が可能な体制を構築したい
+
+---
+
+### 🧭 開発ワークフローの全体像
+
+```
+[Figma Make で UI 出力]
+        ↓
+[Zip ファイルを Downloads に保存]
+        ↓
+[最新の Zip ファイルをスクリプトが検出・解凍]
+        ↓
+[components, pages, styles を frontend に自動配置]
+        ↓
+[Roocode 上で Orchestrator モードによる実装開始]
+```
+
+---
+
+### 🛠 Zip ファイル検出・解凍・配置スクリプト
+
+#### 📁 動作仕様
+
+* 対象ファイル名: `ITSM IT Operations Platform.zip` または重複時の `ITSM IT Operations Platform(1).zip` 等
+* 対象ディレクトリ: `$env:USERPROFILE\Downloads`
+* 最新ファイルを自動選定し、TEMPディレクトリへ解凍
+* 解凍後 `components`, `pages`, `styles` を所定の `frontend/` 配下へ移動
+
+#### 💻 PowerShell スクリプト
+
+```powershell
+$downloadDir = "$env:USERPROFILE\Downloads"
+$searchPattern = "ITSM IT Operations Platform*.zip"
+$destRoot = "C:\\kitting\\ITManagementSystem-Prototype\\frontend"
+$tempUnzip = "$env:TEMP\\figma_unzip"
+
+$latestZip = Get-ChildItem -Path $downloadDir -Filter $searchPattern |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+
+if (-not $latestZip) {
+    Write-Host "❌ Zipファイルが見つかりません。"
+    exit 1
+}
+
+Write-Host "✅ 発見: $($latestZip.Name)"
+
+if (Test-Path $tempUnzip) {
+    Remove-Item $tempUnzip -Recurse -Force
+}
+New-Item -Path $tempUnzip -ItemType Directory | Out-Null
+
+Expand-Archive -Path $latestZip.FullName -DestinationPath $tempUnzip -Force
+
+foreach ($folder in "components", "pages", "styles") {
+    $source = Join-Path $tempUnzip $folder
+    $dest = Join-Path $destRoot $folder
+    if (Test-Path $source) {
+        Copy-Item -Path "$source\\*" -Destination $dest -Recurse -Force
+        Write-Host "📁 $folder を更新"
+    }
+}
+
+Write-Host "🏁 配置完了！Roocodeで開発スタート"
+```
+
+---
+
+### 🤖 Roocode 開発環境設定
+
+#### `.roocode` 推奨構成
+
+```json
+{
+  "default_mode": "orchestrator",
+  "auto_approval": true,
+  "safe_commands": ["*"],
+  "custom_instructions": {
+    "orchestrator": "frontendディレクトリに取り込まれた新しいcomponentsやpagesを検出し、API統合や状態管理の設計を支援してください。",
+    "code": "新規に取り込まれたFigma UIコードをリファクタリングし、既存コードと整合性を持たせてください。"
+  }
+}
+```
+
+---
+
+### ✅ 最終形のビジョン
+
+```
+[Figma Make で UI を出力]
+        ↓
+[Zip を Downloads に保存]
+        ↓
+[スクリプトが検出・解凍・frontend へ配置]
+        ↓
+[Roocode が変更検出 → Orchestrator モードで補完]
+        ↓
+[API連携・状態管理・テスト設計をAIが支援]
+        ↓
+[実装完了 → Git コミット]
+```
+
+---
+
+### 🎯 今後の拡張アイデア
+
+* 📥 Downloads フォルダを常時監視（リアルタイム統合）
+* 🧠 差分ファイル一覧を Roocode に自動で渡す
+* 🗂 差分比較とマージ提案（Roocode統合）
+* 🔁 自動テストコード生成 → AIレビュー
+
+---
+
+以上が「Figma Make × Roocode 連携開発仕様書」の全容です。

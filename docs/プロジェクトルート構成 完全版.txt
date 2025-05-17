@@ -1,0 +1,92 @@
+## 📁 プロジェクトルート構成 完全版（Roocode × Figma Make 開発向け）
+
+フロントエンド・バックエンド・共通リソース・ログ・テスト・CI/CDなど、すべてを一貫して管理可能な構成を提案します。
+
+---
+
+### 📂 推奨ディレクトリ構成
+
+```
+/ITManagementSystem-Prototype
+├── apps/                         # 実行アプリ群（フロント・バック）
+│   ├── frontend/                # Figma Makeで生成されたUI実装（React, Tailwind 等）
+│   │   ├── components/          # 各UIコンポーネント（Button, Modal など）
+│   │   ├── pages/               # ページ単位の画面構成（LoginPage, DashboardPage など）
+│   │   ├── styles/              # CSS/Tailwind設定、テーマ
+│   │   └── public/              # 静的アセット（画像, アイコン）
+│   └── backend/                 # APIアプリ（Flask, FastAPI, Node.js 等）
+│       ├── routes/              # エンドポイント定義（/login, /user など）
+│       ├── models/              # DBモデル or Pydanticスキーマ
+│       ├── services/            # 業務ロジック層
+│       └── config/              # 環境設定や認証関連
+│
+├── shared/                      # 共通リソース
+│   ├── api-specs/               # OpenAPI/GraphQLなどAPI定義ファイル（YAML/JSON）
+│   ├── types/                   # 共通型定義（TypeScript, Pydanticなど）
+│   ├── constants/               # 定数（例：画面タイトル, メッセージ）
+│   └── utils/                   # 再利用関数（日時変換, バリデータなど）
+│
+├── logs/                        # ログ（時間ごと・アプリごとに分類）
+│   ├── frontend/                # UIエラー、通信ログなど
+│   └── backend/                 # API実行ログ、DBアクセスエラーなど
+│
+├── tests/                       # テストコード群
+│   ├── frontend/                # UIコンポーネントテスト、e2eテスト（Cypressなど）
+│   └── backend/                 # APIのユニット/統合テスト（pytestなど）
+│
+├── scripts/                     # 自動処理スクリプト
+│   ├── figma-unzip.ps1          # Figma MakeのZipをfrontendへ展開する
+│   ├── clean-logs.ps1           # ログ削除スクリプト
+│   └── deploy.ps1               # ビルド＆Git連携などCI/CD用
+│
+├── .roocode/                    # Roocode関連設定（mcp.jsonなど）
+├── .env                         # 実行環境ごとの変数管理
+├── .gitignore                   # Git管理除外ファイル
+├── README.md                    # プロジェクト概要と使い方
+├── package.json                 # Node.js（フロント用）依存管理
+├── Pipfile / requirements.txt   # Python（バックエンド用）依存管理
+└── tailwind.config.ts           # Tailwind CSS設定（UI系）
+```
+
+---
+
+### 📝 各ディレクトリの補足説明
+
+#### 1. `apps/`
+
+* **frontend/**: UI実装（React, Tailwind）を格納。Figma Make の出力先。
+* **backend/**: API処理を担当。Python系またはNode.js系に応じて構成変更。
+
+#### 2. `shared/`
+
+* 全体を横断して使う型定義、定数、共通ロジックを格納。
+* **例**: TS型 `UserProfile.ts`、日時変換 `formatDate.ts`、Pydantic共通モデルなど。
+
+#### 3. `logs/`
+
+* `frontend/`：フォーム入力失敗やコンソールログ
+* `backend/`：APIエラーログ、SQL実行ログなど
+* CIと組み合わせて自動収集も可
+
+#### 4. `tests/`
+
+* `frontend/`：Cypress, Playwright などによる画面動作確認
+* `backend/`：pytestやunittestを活用してルート単位にチェック
+
+#### 5. `scripts/`
+
+* 定常処理（Zip解凍、ログクリア、自動ビルド）などの運用自動化を担当
+
+#### 6. `.roocode/`
+
+* Roocode が参照する MCP 構成やカスタム指示
+* `.roocode`, `.roomodes`, `.taskmasterconfig` などと連携
+
+#### 7. ルートファイル
+
+* `.env`：APIキーや機密パスなど
+* `README.md`：全体概要・導入手順・使い方など
+* `package.json / Pipfile`：各層の依存管理・ビルド設定
+* `tailwind.config.ts`：UI系スタイル構成ファイル
+
+---

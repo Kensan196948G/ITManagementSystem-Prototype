@@ -1,6 +1,6 @@
 import React from 'react';
 // # 修正ポイント: IncidentsTable コンポーネントをインポート
-import { IncidentsTable } from '../../src/components/incidents/IncidentsTable';
+import { IncidentsTable } from '../components/incidents/IncidentsTable'; // 修正ポイント: パスを新ディレクトリ構成に合わせて修正
 
 const IncidentsPage: React.FC = () => (
   <div className="container mx-auto py-10">

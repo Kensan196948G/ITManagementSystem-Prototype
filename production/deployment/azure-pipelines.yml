@@ -40,22 +40,22 @@ stages:
       displayName: 'Node.jsのインストール'
     
     - script: |
-        cd frontend
+        cd packages/frontend
         npm install
       displayName: '依存関係のインストール'
     
     - script: |
-        cd frontend
+        cd packages/frontend
         npm run lint
       displayName: 'Lintチェック'
     
     - script: |
-        cd frontend
+        cd packages/frontend
         npm run test
       displayName: 'ユニットテスト実行'
     
     - script: |
-        cd frontend
+        cd packages/frontend
         npm run build:prod
       displayName: '本番用ビルド'
     
@@ -65,8 +65,8 @@ stages:
         containerRegistry: '$(containerRegistry)'
         repository: '$(frontendImageRepo)'
         command: 'buildAndPush'
-        Dockerfile: 'frontend/Dockerfile'
-        buildContext: 'frontend'
+        Dockerfile: 'packages/frontend/Dockerfile'
+        buildContext: 'packages/frontend'
         tags: |
           $(appVersion)
           latest
