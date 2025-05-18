@@ -1,10 +1,16 @@
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).parent.parent))
+from .database import db
 
-from backend.__init__ import db, create_app
-app = create_app()
+def create_all_tables():
+    """
+    DBの全テーブルを作成する関数
+    """
+    from .models.user import User
+    from .models.incident import Incident
+    from .models.problem import Problem
+    from .models.system import System
 
-with app.app_context():
     db.create_all()
-    print("✅ データベーステーブルが正常に作成されました")
+
+if __name__ == "__main__":
+    create_all_tables()
+    print("全テーブルの作成が完了しました。")

@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js \${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: \${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./packages/frontend
+
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: ./packages/frontend
+
+      - name: Run Vitest
+        run: npm run test
+        working-directory: ./packages/frontend
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install backend dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+        working-directory: ./packages/backend
+
+      - name: Run backend tests
+        run: |
+          source venv/bin/activate
+          pytest
+        working-directory: ./packages/backend

@@ -1,60 +1,78 @@
-{
-  "default_mode": "auto",
-  "shell_integration": {
-    "enabled": true,
-    "terminal_type": "vscode"
-  },
-  "auto_approval": true,
-  "auto_approval_messages": ["*"],
-  "safe_commands": ["*"],
-  "dangerous_commands": [
-    "rm", "del", "rmdir", "shutdown", "format",
-    "curl", "wget", "mv /", "dd", "mkfs", "scp",
-    "Invoke-WebRequest", "Start-Process"
-  ],
-  "global_policy": {
-    "max_retry": 7,
-    "on_failure": "mark TODO for user",
-    "retry_loop_enabled": true
-  },
-  "custom_instructions": {
-    "common": "[FigmaContext]\nhttps://www.figma.com/make/Ec7KhOu8rp7uHAyjawjlUS/ITSM-IT-Operations-Platform?node-id=0-1&p=f&t=DiKIi0LD5aqkGwOV-0&fullscreen=1\n\nVSCode の「問題」タブに表示されている構文エラーや型エラー、警告を自動的に検出・修復してください。\n質問や確認を行わず、自動的にタスクを修復・実行・完了してください。\n不足があれば自動補完し、曖昧さがある場合も仮定で進めてください。\n「問題」がゼロになったら `✅ 問題なし` を表示してください。",
-    "orchestrator": "このスクリプト全体を完全に修復し、エラーがなくなるまで Debug → Architect の順でモード切り替えと修正を繰り返してください。",
-    "debug": "スクリプトを実行し、1. エラー内容、行番号、種別を出力し、必要に応じて修正案テンプレートを生成してください。",
-    "architect": "Debugで報告されたエラーに基づき、構文や論理ミスを修正してください。UI構成・状態設計も補完してください。",
-    "code": "Architectの設計に基づき、React + Tailwind CSS でUIを実装してください。コンポーネントを分離・構造化してください。",
-    "ask": "Figmaからデザイン情報を読み取り、色・余白・構造の未定義箇所を確認してください。必要であればユーザーに質問してください。"
-  },
-  "modes": {
-    "debug": {
-      "enable_auto_repair": true,
-      "max_repair_attempts": 5,
-      "repair_on": ["SyntaxError", "RuntimeError"]
-    },
-    "architect": {},
-    "code": {},
-    "ask": {},
-    "orchestrator": {},
-    "auto": {
-      "enable_full_automation": true,
-      "cycle_interval": 3600,
-      "notify_on_complete": true,
-      "max_consecutive_failures": 3
-    }
-  },
-  "logging": {
-    "level": "info",
-    "file": "roocode_repair.log"
-  },
-  "mcpServers": {
-    "taskmaster-ai": {
-      "command": "node",
-      "args": [
-        "./node_modules/task-master-ai/bin/task-master.js"
-      ],
-      "alwaysAllow": ["*"],
-      "disabled": false
-    }
-  },
-  "mcp_config_path": "./mcp_setting.json"
-}
+default_mode: orchestrator
+
+auto_approval: true
+auto_approval_messages:
+  - "実行中も続行"
+  - "コマンド実行"
+  - "ビルドを開始します"
+  - "修復を試みます"
+  - "自動生成を行います"
+
+shell_integration:
+  enabled: true
+  terminal_type: "vscode"
+
+safe_commands:
+  - "*"
+
+dangerous_commands:
+  - rm
+  - del
+  - rmdir
+  - shutdown
+  - format
+  - curl
+  - wget
+  - "mv /"
+  - dd
+  - mkfs
+  - scp
+  - Invoke-WebRequest
+  - Start-Process
+
+global_policy:
+  max_retry: 7
+  retry_loop_enabled: true
+  on_failure: "再試行後も失敗する場合はエラー内容をマークして保持"
+
+custom_instructions:
+  Code: |
+    🧠 **Codeモード**
+    - コードの自動生成・構文エラー修正・型チェックを行ってください。
+    - 出力には ✅（成功）/ ⚠️（警告）/ ❌（失敗）を使ってください。
+    - コメント付きで修正理由を示してください。
+
+  Architect: |
+    🏗 **Architectモード**
+    - ディレクトリ構造・モジュール設計・依存構成を提案してください。
+    - 提案には 📁（フォルダ）/ 🧩（構成要素）を使ってください。
+
+  Ask: |
+    💬 **Askモード**
+    - ユーザーへ質問を投げてください。選択肢がある場合は ✅ / ❌ で区別してください。
+    - なるべく Yes/No 形式で簡潔に確認してください。
+
+  Debug: |
+    🐞 **Debugモード**
+    - バグの原因特定・スタックトレース解析を行ってください。
+    - 修正提案後に 🛠️（修正） → ✅（確認）を繰り返してください。
+
+  Orchestrator: |
+    🎯 **Orchestratorモード**
+    - 全モードの制御を統括します。各処理の順序を明示し、状態管理を行ってください。
+    - 📌（開始）→ ⏳（実行中）→ ✅（完了）の流れで進行してください。
+
+  Boomerang: |
+    🔁 **Boomerangモード**
+    - 修正前後の比較・再適用を繰り返します。
+    - ⏪（前）/ 🔁（途中）/ ✅（後）を使って差分評価してください。
+
+  Test: |
+    🧪 **Testモード**
+    - 自動生成されたコードのユニットテスト・統合テストを作成してください。
+    - 成果には ✅（パス）/ ❌（失敗）/ 🟡（スキップ）を明示し、テストフレームワーク準拠で書いてください。
+
+  common: |
+    # 🔁 完全自動ループ修復
+    - エラー検出 → 自動修正 → 再確認 → 完全復旧まで7回リトライしてください。
+    - AIはコード/テスト/ドキュメントの3点を自動で整備します。

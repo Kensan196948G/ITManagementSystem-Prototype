@@ -1,9 +1,0 @@
-{
-  "files": [
-    {
-      "fileKey": "Ec7KhOu8rp7uHAyjawjlUS", // ←あなたの実ファイルIDに置換
-      "name": "ITManagementSystem-Prototype",
-      "pages": ["Dashboard", "Settings", "Incidents"]
-    }
-  ]
-}
