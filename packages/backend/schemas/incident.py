@@ -2,22 +2,22 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
-class ProblemBase(BaseModel):
-    title: str = Field(..., example="Database connection issue")
-    description: Optional[str] = Field(None, example="Description of the problem")
+class IncidentBase(BaseModel):
+    title: str = Field(..., example="Network outage")
+    description: Optional[str] = Field(None, example="Description of the incident")
     status: Optional[str] = Field("open", example="open")
-    priority: Optional[int] = Field(1, example=1)
+    severity: Optional[int] = Field(1, example=1)
 
-class ProblemCreateSchema(ProblemBase):
+class IncidentCreateSchema(IncidentBase):
     pass
 
-class ProblemUpdateSchema(BaseModel):
+class IncidentUpdateSchema(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[str] = None
-    priority: Optional[int] = None
+    severity: Optional[int] = None
 
-class ProblemResponseSchema(ProblemBase):
+class IncidentResponseSchema(IncidentBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime]

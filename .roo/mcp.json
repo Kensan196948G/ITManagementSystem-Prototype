@@ -27,7 +27,13 @@
         "update",
         "update_subtask",
         "expand_task",
-        "analyze_project_complexity"
+        "analyze_project_complexity",
+        "add_subtask",
+        "clear_subtasks",
+        "remove_subtask",
+        "add_dependency",
+        "remove_dependency",
+        "validate_dependencies"
       ],
       "disabled": false
     }
