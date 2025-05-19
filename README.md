@@ -63,7 +63,7 @@
 git clone https://github.com/yourusername/ITManagementSystem.git
 
 # プロジェクトルートに移動
-cd ITManagementSystem
+cd ITManagementSystem-Prototype
 
 # 依存関係のインストール (npm ワークスペースが使用されます)
 npm install
@@ -99,3 +99,48 @@ npm start --workspace=backend
 
 ## ライセンス
 このプロジェクトは企業内部利用を目的としており、プロプライエタリライセンスの下で管理されています。無断での複製・配布・改変は禁止されています。
+## バックエンドのテスト環境構築と実行方法
+
+### 1. Python仮想環境の作成と有効化
+
+```bash
+# プロジェクトルートで仮想環境を作成
+python -m venv .venv
+
+# Windows PowerShellの場合（仮想環境の有効化）
+.\.venv\Scripts\Activate.ps1
+
+# Windows コマンドプロンプトの場合（仮想環境の有効化）
+.\.venv\Scripts\activate.bat
+```
+
+### 2. 必要なパッケージのインストール
+
+```bash
+# 仮想環境有効化後に以下を実行
+pip install -r requirements.txt
+```
+
+### 3. pytest-covの導入
+
+`requirements.txt` に以下を追加してください。
+
+```
+pytest
+pytest-cov
+```
+
+### 4. テストの実行とカバレッジ確認
+
+```bash
+# 仮想環境有効化後に以下を実行
+pytest --cov=backend --cov-report=term-missing --cov-report=html
+```
+
+- `--cov=backend` はカバレッジ計測対象のディレクトリを指定しています。
+- `--cov-report=term-missing` はカバレッジの不足箇所をターミナルに表示します。
+- `--cov-report=html` はHTML形式のカバレッジレポートを生成します。
+
+生成されたHTMLレポートは `htmlcov/index.html` で確認可能です。
+
+---
