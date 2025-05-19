@@ -1,10 +1,10 @@
-## 📁 プロジェクトルート構成 完全版（Roocode × Figma Make 開発向け）
+## 📁 プロジェクトルート構成 完全版（Roocode × Figma Make × npm Workspaces 対応）
 
-フロントエンド・バックエンド・共通リソース・ログ・テスト・CI/CDなど、すべてを一貫して管理可能な構成を提案します。
+フロントエンド・バックエンド・共通リソース・ログ・テスト・CI/CDなど、すべてを一貫して管理可能な**モノレポ（Monorepo）構成 + npm Workspaces**対応構成です。
 
 ---
 
-### 📂 推奨ディレクトリ構成
+### 📂 推奨ディレクトリ構成（npm workspaces 対応）
 
 ```
 /ITManagementSystem-Prototype
@@ -13,18 +13,21 @@
 │   │   ├── components/          # 各UIコンポーネント（Button, Modal など）
 │   │   ├── pages/               # ページ単位の画面構成（LoginPage, DashboardPage など）
 │   │   ├── styles/              # CSS/Tailwind設定、テーマ
-│   │   └── public/              # 静的アセット（画像, アイコン）
+│   │   ├── public/              # 静的アセット（画像, アイコン）
+│   │   └── package.json         # frontend専用npm依存
 │   └── backend/                 # APIアプリ（Flask, FastAPI, Node.js 等）
 │       ├── routes/              # エンドポイント定義（/login, /user など）
 │       ├── models/              # DBモデル or Pydanticスキーマ
 │       ├── services/            # 業務ロジック層
-│       └── config/              # 環境設定や認証関連
+│       ├── config/              # 環境設定や認証関連
+│       └── requirements.txt     # Python依存管理
 │
-├── shared/                      # 共通リソース
+├── shared/                      # 共通リソース（npm管理対象）
 │   ├── api-specs/               # OpenAPI/GraphQLなどAPI定義ファイル（YAML/JSON）
 │   ├── types/                   # 共通型定義（TypeScript, Pydanticなど）
 │   ├── constants/               # 定数（例：画面タイトル, メッセージ）
-│   └── utils/                   # 再利用関数（日時変換, バリデータなど）
+│   ├── utils/                   # 再利用関数（日時変換, バリデータなど）
+│   └── package.json             # sharedパッケージとしてnpm依存定義
 │
 ├── logs/                        # ログ（時間ごと・アプリごとに分類）
 │   ├── frontend/                # UIエラー、通信ログなど
@@ -43,50 +46,43 @@
 ├── .env                         # 実行環境ごとの変数管理
 ├── .gitignore                   # Git管理除外ファイル
 ├── README.md                    # プロジェクト概要と使い方
-├── package.json                 # Node.js（フロント用）依存管理
-├── Pipfile / requirements.txt   # Python（バックエンド用）依存管理
+├── package.json                 # npm workspace定義（apps/frontend, shared）
+├── package-lock.json            # npmロックファイル
 └── tailwind.config.ts           # Tailwind CSS設定（UI系）
 ```
 
 ---
 
-### 📝 各ディレクトリの補足説明
+### 📝 各ディレクトリの補足説明（npm workspace対応ポイント）
 
 #### 1. `apps/`
 
-* **frontend/**: UI実装（React, Tailwind）を格納。Figma Make の出力先。
-* **backend/**: API処理を担当。Python系またはNode.js系に応じて構成変更。
+* **frontend/**: UI実装（React, Tailwind）を格納。独立した `package.json` によりnpmワークスペースの一部として管理。
+* **backend/**: Pythonアプリ（Flask, FastAPI）。npmとは別に `requirements.txt` / `Pipfile` で管理。
 
 #### 2. `shared/`
 
-* 全体を横断して使う型定義、定数、共通ロジックを格納。
-* **例**: TS型 `UserProfile.ts`、日時変換 `formatDate.ts`、Pydantic共通モデルなど。
+* 共通のユーティリティ、型、定数をモジュール化し、**npmワークスペースの1パッケージとして再利用可能**。
+* フロントエンドや他モジュールから `import { formatDate } from 'shared/utils'` のように利用可能。
 
-#### 3. `logs/`
+#### 3. `package.json`（ルート）
 
-* `frontend/`：フォーム入力失敗やコンソールログ
-* `backend/`：APIエラーログ、SQL実行ログなど
-* CIと組み合わせて自動収集も可
+```json
+{
+  "private": true,
+  "workspaces": [
+    "apps/frontend",
+    "shared"
+  ]
+}
+```
 
-#### 4. `tests/`
+#### 4. `npm install` 実行位置
 
-* `frontend/`：Cypress, Playwright などによる画面動作確認
-* `backend/`：pytestやunittestを活用してルート単位にチェック
+* ルートディレクトリで `npm install` を実行すれば、すべての依存（frontend + shared）が一括でインストールされる。
 
-#### 5. `scripts/`
-
-* 定常処理（Zip解凍、ログクリア、自動ビルド）などの運用自動化を担当
-
-#### 6. `.roocode/`
-
-* Roocode が参照する MCP 構成やカスタム指示
-* `.roocode`, `.roomodes`, `.taskmasterconfig` などと連携
-
-#### 7. ルートファイル
-
-* `.env`：APIキーや機密パスなど
-* `README.md`：全体概要・導入手順・使い方など
-* `package.json / Pipfile`：各層の依存管理・ビルド設定
-* `tailwind.config.ts`：UI系スタイル構成ファイル
+#### 5. `scripts/` や `tests/` もワークスペース構成と統一的に運用可能
 
 ---
+
+この構成により、Roocodeで開発する際にも**モノレポとしての拡張性・一貫性・保守性が大幅に向上**します。

@@ -1,0 +1,94 @@
+npm管理モノレポ（Monorepo）運用の導入してください。
+モノレポ（monorepo）構成として扱う
+npmワークスペース構成
+### 📂 推奨ディレクトリ構成（npm workspaces 対応）
+
+```
+/ITManagementSystem-Prototype
+├── apps/                         # 実行アプリ群（フロント・バック）
+│   ├── frontend/                # Figma Makeで生成されたUI実装（React, Tailwind 等）
+│   │   ├── components/          # 各UIコンポーネント（Button, Modal など）
+│   │   ├── pages/               # ページ単位の画面構成（LoginPage, DashboardPage など）
+│   │   ├── styles/              # CSS/Tailwind設定、テーマ
+│   │   ├── public/              # 静的アセット（画像, アイコン）
+│   │   └── package.json         # frontend専用npm依存
+│   └── backend/                 # APIアプリ（Flask, FastAPI, Node.js 等）
+│       ├── routes/              # エンドポイント定義（/login, /user など）
+│       ├── models/              # DBモデル or Pydanticスキーマ
+│       ├── services/            # 業務ロジック層
+│       ├── config/              # 環境設定や認証関連
+│       └── requirements.txt     # Python依存管理
+│
+├── shared/                      # 共通リソース（npm管理対象）
+│   ├── api-specs/               # OpenAPI/GraphQLなどAPI定義ファイル（YAML/JSON）
+│   ├── types/                   # 共通型定義（TypeScript, Pydanticなど）
+│   ├── constants/               # 定数（例：画面タイトル, メッセージ）
+│   ├── utils/                   # 再利用関数（日時変換, バリデータなど）
+│   └── package.json             # sharedパッケージとしてnpm依存定義
+│
+├── logs/                        # ログ（時間ごと・アプリごとに分類）
+│   ├── frontend/                # UIエラー、通信ログなど
+│   └── backend/                 # API実行ログ、DBアクセスエラーなど
+│
+├── tests/                       # テストコード群
+│   ├── frontend/                # UIコンポーネントテスト、e2eテスト（Cypressなど）
+│   └── backend/                 # APIのユニット/統合テスト（pytestなど）
+│
+├── scripts/                     # 自動処理スクリプト
+│   ├── figma-unzip.ps1          # Figma MakeのZipをfrontendへ展開する
+│   ├── clean-logs.ps1           # ログ削除スクリプト
+│   └── deploy.ps1               # ビルド＆Git連携などCI/CD用
+│
+├── .roocode/                    # Roocode関連設定（mcp.jsonなど）
+├── .env                         # 実行環境ごとの変数管理
+├── .gitignore                   # Git管理除外ファイル
+├── README.md                    # プロジェクト概要と使い方
+├── package.json                 # npm workspace定義（apps/frontend, shared）
+├── package-lock.json            # npmロックファイル
+└── tailwind.config.ts           # Tailwind CSS設定（UI系）
+```
+
+---
+
+### 📝 各ディレクトリの補足説明（npm workspace対応ポイント）
+
+#### 1. `apps/`
+
+* **frontend/**: UI実装（React, Tailwind）を格納。独立した `package.json` によりnpmワークスペースの一部として管理。
+* **backend/**: Pythonアプリ（Flask, FastAPI）。npmとは別に `requirements.txt` / `Pipfile` で管理。
+
+#### 2. `shared/`
+
+* 共通のユーティリティ、型、定数をモジュール化し、**npmワークスペースの1パッケージとして再利用可能**。
+* フロントエンドや他モジュールから `import { formatDate } from 'shared/utils'` のように利用可能。
+
+#### 3. `package.json`（ルート）
+
+```json
+{
+  "private": true,
+  "workspaces": [
+    "apps/frontend",
+    "shared"
+  ]
+}
+```
+
+#### 4. `npm install` 実行位置
+
+* ルートディレクトリで `npm install` を実行すれば、すべての依存（frontend + shared）が一括でインストールされる。
+
+#### 5. `scripts/` や `tests/` もワークスペース構成と統一的に運用可能
+
+
+ 運用メリット：以下を望みます。
+ルートで npm install 一発ですべての依存が解決（frontend/backend含む）
+各パッケージの依存は frontend/package.json に独立管理
+npm run build --workspace=frontend のように 個別実行も可能
+shared/ ディレクトリで共通コードも管理しやすい
+
+🔚 まとめ：やるべきこと
+ルートに workspaces 設定を追加し、モノレポ構成に統合
+npm install はルートだけで済むようにする
+開発・CI/CDもすべてルート中心に構成
+
