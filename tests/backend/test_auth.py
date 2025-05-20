@@ -1,7 +1,7 @@
 import pytest
-from packages.backend.database import db, db_session
-from packages.backend.models import User
-from packages.backend.routes.auth import auth_bp
+from packages.backend.database import db, db_session  # 修正ポイント: インポートパスに packages.backend を追加
+from packages.backend.models import User  # 修正ポイント: インポートパスに packages.backend を追加
+from packages.backend.routes.auth import auth_bp  # 修正ポイント: インポートパスに packages.backend を追加
 from flask import Flask
 import bcrypt
 

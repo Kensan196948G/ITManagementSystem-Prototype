@@ -34,6 +34,14 @@ describe('TicketEditForm', () => {
         });
     });
 
+    test('API fetchが例外をスローした場合にエラーメッセージが表示される', async () => {
+        (fetch as jest.Mock).mockImplementationOnce(() => { throw new Error('ネットワークエラー'); });
+        render(<TicketEditForm ticketId={1} authToken={authToken} onUpdateSuccess={onUpdateSuccess} onCancel={onCancel} />);
+        await waitFor(() => {
+            expect(screen.getByText(/エラー: ネットワークエラー/)).toBeInTheDocument();
+        });
+    });
+
     test('フォームにAPIからの初期値がセットされる', async () => {
         const mockData = {
             title: 'Test Title',
@@ -48,6 +56,22 @@ describe('TicketEditForm', () => {
         expect(await screen.findByDisplayValue(mockData.title)).toBeInTheDocument();
         expect(screen.getByDisplayValue(mockData.description)).toBeInTheDocument();
         expect(screen.getByDisplayValue(mockData.status)).toBeInTheDocument();
+    });
+
+    test('descriptionフィールドの変更が反映される', async () => {
+        const mockData = {
+            title: 'Title',
+            description: 'Desc',
+            status: 'Open',
+        };
+        (fetch as jest.Mock).mockResolvedValueOnce({
+            ok: true,
+            json: async () => mockData,
+        });
+        render(<TicketEditForm ticketId={1} authToken={authToken} onUpdateSuccess={onUpdateSuccess} onCancel={onCancel} />);
+        const textarea = await screen.findByLabelText('説明');
+        fireEvent.change(textarea, { target: { value: 'Updated Description' } });
+        expect((textarea as HTMLTextAreaElement).value).toBe('Updated Description');
     });
 
     test('バリデーションエラー（タイトル空）表示', async () => {
@@ -86,6 +110,30 @@ describe('TicketEditForm', () => {
         fireEvent.click(screen.getByText('更新'));
 
         expect(await screen.findByText('無効なステータスです。')).toBeInTheDocument();
+    });
+
+    test('handleSubmitのAPI PUTリクエスト失敗時にエラーメッセージが表示される', async () => {
+        const mockData = {
+            title: 'Title',
+            description: 'Desc',
+            status: 'Open',
+        };
+        (fetch as jest.Mock).mockResolvedValueOnce({
+            ok: true,
+            json: async () => mockData,
+        });
+        (fetch as jest.Mock).mockResolvedValueOnce({
+            ok: false,
+            status: 400,
+        });
+        render(<TicketEditForm ticketId={1} authToken={authToken} onUpdateSuccess={onUpdateSuccess} onCancel={onCancel} />);
+        expect(await screen.findByDisplayValue(mockData.title)).toBeInTheDocument();
+
+        fireEvent.click(screen.getByText('更新'));
+
+        await waitFor(() => {
+            expect(screen.getByText(/更新に失敗しました/)).toBeInTheDocument();
+        });
     });
 
     test('正常に送信できてonUpdateSuccessが呼ばれる', async () => {

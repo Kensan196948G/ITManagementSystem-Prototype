@@ -12,10 +12,11 @@
     "start": "npx concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "start:frontend": "npm start --workspace=frontend",
     "build:frontend": "npm run build --workspace=frontend",
-    "test:frontend": "npm test --workspace=frontend",
+    "test:frontend": "npm test --workspace=frontend -- --coverage",
     "start:backend": "npm start --workspace=backend",
     "build:backend": "npm run build --workspace=backend",
-    "test:backend": "npm test --workspace=backend",
+    "test:backend": "npm test --workspace=backend -- --coverage",
+    "test": "npx concurrently \"npm run test:frontend\" \"npm run test:backend\"",
     "install:all": "npm install",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx"
   },
