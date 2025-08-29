@@ -1,0 +1,41 @@
+{
+  "claude_flow": {
+    "enabled": true,
+    "version": "1.0.0",
+    "features": {
+      "parallel_processing": {
+        "enabled": true,
+        "max_concurrent_tasks": 10,
+        "timeout_seconds": 300
+      },
+      "workflow_orchestration": {
+        "enabled": true,
+        "strategies": ["sequential", "parallel", "conditional", "loop"]
+      },
+      "error_handling": {
+        "retry_attempts": 3,
+        "backoff_strategy": "exponential",
+        "fallback_enabled": true
+      },
+      "monitoring": {
+        "enabled": true,
+        "log_level": "INFO",
+        "metrics_collection": true
+      }
+    },
+    "integrations": {
+      "subagents": {
+        "enabled": true,
+        "auto_dispatch": true
+      },
+      "self_healing": {
+        "enabled": true,
+        "auto_repair": true
+      },
+      "task_management": {
+        "enabled": true,
+        "priority_queue": true
+      }
+    }
+  }
+}

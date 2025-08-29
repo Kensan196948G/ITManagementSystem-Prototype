@@ -1,0 +1,87 @@
+{
+  "app": {
+    "name": "IT Management System",
+    "version": "1.0.0",
+    "env": "development",
+    "debug": false,
+    "rootPath": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype"
+  },
+  "server": {
+    "host": "localhost",
+    "port": 3000,
+    "httpsEnabled": false,
+    "sslCertPath": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/certs/server.crt",
+    "sslKeyPath": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/certs/server.key"
+  },
+  "database": {
+    "type": "sqlite",
+    "path": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/itsm.db",
+    "host": "localhost",
+    "port": 5432,
+    "username": "postgres",
+    "password": "",
+    "migrationsPath": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/src/database/migrations",
+    "backupPath": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/backups"
+  },
+  "paths": {
+    "root": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype",
+    "src": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/src",
+    "config": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/config",
+    "logs": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/logs",
+    "uploads": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/uploads",
+    "temp": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/temp",
+    "certs": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/certs",
+    "backups": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/backups",
+    "frontend": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/frontend",
+    "frontendSrc": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/frontend/src",
+    "frontendBuild": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/frontend/dist",
+    "backend": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/backend",
+    "backendSrc": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/apps/backend",
+    "database": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/itsm.db",
+    "nodeModules": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/node_modules",
+    "venv": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/venv",
+    "mcpConfigs": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/*.json",
+    "scripts": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/scripts",
+    "docs": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype/docs"
+  },
+  "mcp": {
+    "claudeFlow": {
+      "configPath": "./claude-flow-config.json",
+      "workingDirectory": ".",
+      "logPath": "./logs/claude-flow.log"
+    },
+    "playwright": {
+      "configPath": "./mcp-playwright-config.json",
+      "workingDirectory": ".",
+      "testOutputPath": "./test-results",
+      "screenshotPath": "./screenshots"
+    },
+    "context7": {
+      "configPath": "./context7-config.json",
+      "workingDirectory": ".",
+      "cachePath": "./cache/context7"
+    },
+    "serena": {
+      "configPath": "./serena-mcp-config.json",
+      "workingDirectory": ".",
+      "deploymentPath": "./deployments"
+    },
+    "githubAction": {
+      "configPath": "./github-action-mcp-config.json",
+      "workingDirectory": ".",
+      "workflowsPath": "./.github/workflows"
+    }
+  },
+  "platform": {
+    "os": "linux",
+    "isWindows": false,
+    "pathSeparator": "/",
+    "homeDir": "/home/kensan",
+    "tmpDir": "/tmp"
+  },
+  "scripts": {
+    "start": "./start-all.sh",
+    "backend": "./start-backend.sh",
+    "test": "./run_tests.sh"
+  }
+}

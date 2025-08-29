@@ -1,0 +1,105 @@
+.sidebar {
+  background: var(--surface-color);
+  border-right: 1px solid var(--border-color);
+  transition: width 0.3s ease;
+  height: calc(100vh - 60px);
+  position: sticky;
+  top: 60px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.sidebar-open {
+  width: 240px;
+}
+
+.sidebar-closed {
+  width: 60px;
+}
+
+.sidebar-nav {
+  padding: 1rem 0;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  margin: 0.25rem 0;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: var(--text-color);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+  gap: 0.75rem;
+}
+
+.nav-link:hover {
+  background-color: var(--hover-color);
+  color: var(--primary-color);
+}
+
+.nav-link.active {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  border-right: 3px solid var(--primary-color);
+}
+
+.nav-icon {
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-label {
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-closed .nav-label {
+  opacity: 0;
+}
+
+/* Tooltip for closed sidebar */
+.sidebar-closed .nav-link {
+  position: relative;
+}
+
+.sidebar-closed .nav-link:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--text-color);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.sidebar-closed .nav-link:hover::before {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: var(--text-color);
+  margin-left: -5px;
+  z-index: 1001;
+}

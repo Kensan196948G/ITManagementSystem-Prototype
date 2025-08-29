@@ -1,0 +1,25 @@
+{
+    "name": "@project/eslint-config",
+    "version": "1.0.0",
+    "description": "Shared ESLint configuration for the project",
+    "main": "index.js",
+    "files": [
+        "index.js"
+    ],
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "peerDependencies": {
+        "eslint": ">=8.0.0",
+        "typescript": ">=5.0.0"
+    },
+    "dependencies": {
+        "@typescript-eslint/eslint-plugin": "^7.0.0",
+        "@typescript-eslint/parser": "^7.0.0",
+        "eslint-plugin-security": "^1.7.1",
+        "eslint-plugin-import": "^2.29.1",
+        "eslint-plugin-react": "^7.33.2",
+        "eslint-plugin-react-hooks": "^4.6.0"
+    },
+    "license": "MIT"
+}

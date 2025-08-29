@@ -1,0 +1,297 @@
+name: Auto Git Sync
+# =============================================================================
+# ITManagement System - 自動Git同期ワークフロー
+# =============================================================================
+# 機能:
+# - 自動コミット・プッシュ・プル同期
+# - 定期実行とトリガー実行の両対応
+# - エラー自動修復機能
+# - セキュリティ重視の安全な自動化
+# =============================================================================
+
+on:
+  # 手動トリガー実行
+  workflow_dispatch:
+    inputs:
+      commit_message:
+        description: 'Custom commit message (optional)'
+        required: false
+        type: string
+      sync_type:
+        description: 'Synchronization type'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - 'full'        # フル同期（プル→コミット→プッシュ）
+          - 'commit'      # コミットのみ
+          - 'push'        # プッシュのみ
+          - 'pull'        # プルのみ
+
+  # プッシュ時の自動同期（保護ブランチ向け）
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/*'
+    paths-ignore:
+      - '.github/**'
+      - '**.md'
+      - '.gitignore'
+      - '.gitattributes'
+
+  # 定期実行（毎時0分に実行）
+  schedule:
+    - cron: '0 * * * *'  # 毎時間実行
+
+  # Pull Request のマージ後
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+      - develop
+
+# 環境変数
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+# 同時実行制御
+concurrency:
+  group: git-sync-${{ github.ref }}
+  cancel-in-progress: false  # Git操作は中断しない
+
+jobs:
+  # =============================================================================
+  # 事前チェックジョブ
+  # =============================================================================
+  pre-check:
+    name: Pre-flight Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      should_sync: ${{ steps.check.outputs.should_sync }}
+      sync_type: ${{ steps.check.outputs.sync_type }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check Sync Requirements
+        id: check
+        run: |
+          echo "Checking if sync is needed..."
+          
+          # 手動実行の場合
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should_sync=true" >> $GITHUB_OUTPUT
+            echo "sync_type=${{ inputs.sync_type }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # PR マージの場合
+          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            echo "should_sync=true" >> $GITHUB_OUTPUT
+            echo "sync_type=full" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # 定期実行や通常プッシュの場合は変更をチェック
+          if git diff --quiet HEAD~1 HEAD -- . ':!.github/' ':!*.md'; then
+            echo "should_sync=false" >> $GITHUB_OUTPUT
+            echo "No significant changes detected"
+          else
+            echo "should_sync=true" >> $GITHUB_OUTPUT
+            echo "sync_type=full" >> $GITHUB_OUTPUT
+            echo "Changes detected, sync needed"
+          fi
+
+  # =============================================================================
+  # メイン同期ジョブ
+  # =============================================================================
+  git-sync:
+    name: Git Synchronization
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: pre-check
+    if: needs.pre-check.outputs.should_sync == 'true'
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git config --global init.defaultBranch main
+
+      - name: Install Dependencies
+        run: |
+          if [ -f package.json ]; then
+            npm ci --prefer-offline --no-audit
+          fi
+          
+          if [ -f requirements.txt ]; then
+            pip install --no-cache-dir -r requirements.txt
+          fi
+
+      - name: Run Git Automation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          SYNC_TYPE: ${{ needs.pre-check.outputs.sync_type }}
+          COMMIT_MESSAGE: ${{ inputs.commit_message }}
+        run: |
+          echo "🚀 Starting Git automation..."
+          echo "Sync type: $SYNC_TYPE"
+          
+          # Git自動化スクリプトを実行
+          if [ -f scripts/git-automation.js ]; then
+            node scripts/git-automation.js $SYNC_TYPE "$COMMIT_MESSAGE"
+          else
+            echo "⚠️ Git automation script not found, running manual sync..."
+            
+            case "$SYNC_TYPE" in
+              "pull")
+                git fetch origin
+                git pull origin $(git branch --show-current) || echo "Pull completed with warnings"
+                ;;
+              "commit")
+                if ! git diff --quiet || ! git diff --cached --quiet; then
+                  git add .
+                  git commit -m "${COMMIT_MESSAGE:-Auto-commit: $(date '+%Y-%m-%d %H:%M:%S')}" \
+                    -m "🤖 Automated commit from GitHub Actions" \
+                    -m "Co-authored-by: Claude <noreply@anthropic.com>" || echo "Nothing to commit"
+                fi
+                ;;
+              "push")
+                git push origin $(git branch --show-current) || echo "Push completed with warnings"
+                ;;
+              "full"|*)
+                # フル同期
+                git fetch origin
+                git pull origin $(git branch --show-current) || echo "Pull completed with warnings"
+                
+                if ! git diff --quiet || ! git diff --cached --quiet; then
+                  git add .
+                  git commit -m "${COMMIT_MESSAGE:-Auto-sync: $(date '+%Y-%m-%d %H:%M:%S')}" \
+                    -m "🤖 Automated sync from GitHub Actions" \
+                    -m "Co-authored-by: Claude <noreply@anthropic.com>" || echo "Nothing to commit"
+                fi
+                
+                git push origin $(git branch --show-current) || echo "Push completed with warnings"
+                ;;
+            esac
+          fi
+
+      - name: Generate Sync Report
+        if: always()
+        run: |
+          echo "## 📊 Git Sync Report" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: $(git branch --show-current)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Sync Type**: ${{ needs.pre-check.outputs.sync_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          
+          # 最新のコミット情報
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Latest Commits" >> $GITHUB_STEP_SUMMARY
+          git log --oneline -5 >> $GITHUB_STEP_SUMMARY || echo "No commits found" >> $GITHUB_STEP_SUMMARY
+          
+          # 変更統計
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📈 Repository Stats" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total commits**: $(git rev-list --count HEAD)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Contributors**: $(git shortlog -sn --all | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branches**: $(git branch -r | wc -l)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify on Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_body = `## 🚨 Git Auto-Sync Failed
+            
+            **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            **Branch**: \`${{ github.ref_name }}\`
+            **Trigger**: ${{ github.event_name }}
+            **Timestamp**: ${new Date().toISOString()}
+            
+            ### Details
+            The automated Git synchronization workflow failed. Please check the workflow logs and resolve any issues.
+            
+            ### Possible Causes
+            - Merge conflicts
+            - Permission issues
+            - Network connectivity problems
+            - Repository configuration issues
+            
+            ### Action Required
+            Please review the failed workflow and resolve any issues manually if necessary.
+            
+            ---
+            *This issue was automatically created by the Git Auto-Sync workflow.*`;
+            
+            // 既存の同様のissueがないかチェック
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['auto-sync-failure'],
+              state: 'open'
+            });
+            
+            if (issues.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🚨 Git Auto-Sync Failed - ${new Date().toISOString().split('T')[0]}`,
+                body: issue_body,
+                labels: ['auto-sync-failure', 'bug', 'automation']
+              });
+            }
+
+  # =============================================================================
+  # 後処理・クリーンアップジョブ
+  # =============================================================================
+  cleanup:
+    name: Cleanup and Reporting
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [pre-check, git-sync]
+    if: always()
+    
+    steps:
+      - name: Workflow Summary
+        run: |
+          echo "## 🎯 Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Pre-check Status**: ${{ needs.pre-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Git Sync Status**: ${{ needs.git-sync.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Should Sync**: ${{ needs.pre-check.outputs.should_sync }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Overall Status**: ${{ (needs.pre-check.result == 'success' && (needs.pre-check.outputs.should_sync != 'true' || needs.git-sync.result == 'success')) && '✅ Success' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          
+          # リンク集
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [Repository](https://github.com/${{ github.repository }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [All Workflows](https://github.com/${{ github.repository }}/actions)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Settings](https://github.com/${{ github.repository }}/settings)" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Test</title>
+</head>
+<body>
+    <h1>Login Test</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="result"></div>
+    
+    <script>
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('http://192.168.3.135:8000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Login response:', data);
+                resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                // Test /auth/me endpoint
+                if (data.access_token) {
+                    const meResponse = await fetch('http://192.168.3.135:8000/api/auth/me', {
+                        headers: {
+                            'Authorization': 'Bearer ' + data.access_token
+                        }
+                    });
+                    
+                    const userData = await meResponse.json();
+                    console.log('User data:', userData);
+                    resultDiv.innerHTML += '<h2>User Data:</h2><pre>' + JSON.stringify(userData, null, 2) + '</pre>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+# Prometheusアラート設定 - ITマネジメントシステム本番環境
+
+groups:
+  - name: availability_alerts
+    rules:
+      # インスタンス稼働状況アラート
+      - alert: InstanceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "インスタンスダウン - {{ $labels.instance }}"
+          description: "{{ $labels.job }}の{{ $labels.instance }}が1分以上ダウンしています"
+          
+      # エンドポイント可用性アラート
+      - alert: EndpointDown
+        expr: probe_success == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "エンドポイント到達不可 - {{ $labels.instance }}"
+          description: "{{ $labels.instance }}が1分以上応答していません"
+
+  - name: performance_alerts
+    rules:
+      # 高CPU使用率アラート
+      - alert: HighCPUUsage
+        expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高CPU使用率 - {{ $labels.instance }}"
+          description: "{{ $labels.instance }}のCPU使用率が5分以上85%を超えています"
+          
+      # 高メモリ使用率アラート
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Buffers_bytes - node_memory_Cached_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高メモリ使用率 - {{ $labels.instance }}"
+          description: "{{ $labels.instance }}のメモリ使用率が5分以上85%を超えています"
+          
+      # ディスク容量警告アラート
+      - alert: DiskSpaceFilling
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ディスク容量警告 - {{ $labels.instance }}"
+          description: "{{ $labels.instance }}:{{ $labels.mountpoint }}の空き容量が20%を下回っています"
+          
+      # ディスク容量危険アラート
+      - alert: DiskSpaceCritical
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ディスク容量危険 - {{ $labels.instance }}"
+          description: "{{ $labels.instance }}:{{ $labels.mountpoint }}の空き容量が10%を下回っています！緊急対応が必要です"
+
+  - name: application_alerts
+    rules:
+      # API高エラーレートアラート
+      - alert: APIHighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) by (instance, job) / sum(rate(http_requests_total[5m])) by (instance, job) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API高エラーレート - {{ $labels.instance }}"
+          description: "{{ $labels.instance }}のAPIエラーレートが5%を超えています"
+          
+      # API応答時間遅延アラート
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, instance, path)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API応答時間遅延 - {{ $labels.instance }}"
+          description: "{{ $labels.instance }}のパス {{ $labels.path }} の95パーセンタイル応答時間が1秒を超えています"
+          
+      # データベース接続数アラート
+      - alert: HighDatabaseConnections
+        expr: sql_exporter_mssql_connections > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "データベース接続数過多 - {{ $labels.instance }}"
+          description: "{{ $labels.instance }}のデータベース接続数が80を超えています"
+
+  - name: security_alerts
+    rules:
+      # HTTPSリダイレクト失敗アラート
+      - alert: HTTPSRedirectFailing
+        expr: sum(probe_http_status_code{job="blackbox"}) != 301
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "HTTPSリダイレクト失敗 - {{ $labels.instance }}"
+          description: "{{ $labels.instance }}のHTTPSリダイレクトが機能していません"
+          
+      # 証明書有効期限アラート
+      - alert: SSLCertificateExpiringSoon
+        expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "SSL証明書有効期限間近 - {{ $labels.instance }}"
+          description: "{{ $labels.instance }}のSSL証明書が30日以内に期限切れになります"
+          
+      # 証明書有効期限緊急アラート
+      - alert: SSLCertificateExpiringSoon
+        expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 7
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SSL証明書有効期限緊急 - {{ $labels.instance }}"
+          description: "{{ $labels.instance }}のSSL証明書が7日以内に期限切れになります！至急更新してください"
+
+  - name: business_alerts
+    rules:
+      # ユーザーセッション数異常アラート
+      - alert: AbnormalUserSessions
+        expr: sum(rate(user_sessions_total[10m])) < 10
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "異常なユーザーセッション数"
+          description: "過去30分間のユーザーセッション数が通常より少なくなっています。アクセス障害の可能性があります。"
+          
+      # チケット増加アラート
+      - alert: HighTicketCreationRate
+        expr: rate(tickets_created_total[1h]) > 20
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "チケット作成レートの増加"
+          description: "過去15分間のチケット作成レートが異常に高くなっています。システム問題の可能性があります。"

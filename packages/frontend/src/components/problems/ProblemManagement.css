@@ -1,0 +1,134 @@
+@import '../incidents/IncidentManagement.css';
+
+.problem-management {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.problems-table-container {
+  background: var(--surface-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.problems-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.problems-table th {
+  background: var(--background-color);
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.problems-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-color);
+  font-size: 0.875rem;
+}
+
+.problems-table tr:hover {
+  background: var(--hover-color);
+  cursor: pointer;
+}
+
+.problem-id {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.problem-title {
+  font-weight: 500;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.related-incidents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.incident-badge {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  padding: 0.125rem 0.375rem;
+  border-radius: 12px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.more-incidents {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.related-incidents-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.related-incidents-detail .incident-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.problem-details {
+  display: grid;
+  gap: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row strong {
+  min-width: 140px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .problem-management {
+    padding: 1rem;
+  }
+  
+  .problems-table-container {
+    overflow-x: auto;
+  }
+  
+  .related-incidents {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

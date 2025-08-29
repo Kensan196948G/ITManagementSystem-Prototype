@@ -1,0 +1,83 @@
+## 🔧 PowerShell + タスクスケジューラによる Figma Make Zip 自動統合仕様書
+
+### 📌 概要
+
+Figma Make で出力された Zip ファイルを自動的に検出・解凍し、Roocode 上での実装開始を促すための自動処理仕様。
+
+---
+
+### ✅ ワークフローステップ（自動化処理フロー）
+
+1. **PowerShellスクリプト** + **Windowsタスクスケジューラ**によって、Zipファイルを定期監視
+2. Zipファイルの最新ファイル（`ITSM IT Operations Platform*.zip`）を自動検出
+3. ルートフォルダ配下の `frontend/` に転送
+4. 一時フォルダに解凍後、`components`、`pages`、`styles` へ分類して配置
+5. 解凍＆配置完了後、**Roocode Orchestratorモード起動をユーザーに通知**
+
+---
+
+### 💻 PowerShell スクリプト詳細
+
+```powershell
+$downloadDir = "$env:USERPROFILE\Downloads"
+$searchPattern = "ITSM IT Operations Platform*.zip"
+$projectRoot = "C:\\kitting\\ITManagementSystem-Prototype"
+$frontendRoot = "$projectRoot\\frontend"
+$tempUnzip = "$env:TEMP\\figma_unzip"
+
+# 最新のZipファイル検出
+$latestZip = Get-ChildItem -Path $downloadDir -Filter $searchPattern |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+
+if (-not $latestZip) {
+    Write-Host "❌ Figma Make の Zip ファイルが見つかりません。"
+    exit 1
+}
+
+Write-Host "✅ 最新ファイルを発見: $($latestZip.Name)"
+
+# frontend へ転送
+$destZip = Join-Path $frontendRoot $latestZip.Name
+Copy-Item -Path $latestZip.FullName -Destination $destZip -Force
+
+# 一時解凍フォルダを準備
+if (Test-Path $tempUnzip) { Remove-Item $tempUnzip -Recurse -Force }
+New-Item -Path $tempUnzip -ItemType Directory | Out-Null
+
+# 解凍
+Expand-Archive -Path $destZip -DestinationPath $tempUnzip -Force
+
+# components, pages, styles の各フォルダを frontend に配置
+foreach ($folder in "components", "pages", "styles") {
+    $source = Join-Path $tempUnzip $folder
+    $dest = Join-Path $frontendRoot $folder
+    if (Test-Path $source) {
+        Copy-Item -Path "$source\\*" -Destination $dest -Recurse -Force
+        Write-Host "📁 $folder フォルダを更新しました。"
+    }
+}
+
+# Roocode呼びかけメッセージ
+Write-Host "\n🚀 Figma Make UI の配置が完了しました！"
+Write-Host "👉 Roocode を開いて Orchestrator モードで実装を開始してください！"
+```
+
+---
+
+### 🕒 スケジューラ設定（推奨）
+
+* 実行頻度：毎日または2時間おき
+* トリガー：Windowsタスクスケジューラ（ログオン時 or 定期）
+* 実行ファイル：このPowerShellスクリプト
+
+---
+
+### ✨ 拡張可能なオプション（今後）
+
+* Zipファイル検出後にRoocodeを自動起動する（`Start-Process`）
+* 差分ファイル一覧をログに出力
+
+---
+
+この仕様により、Figma Make → frontend配置 → Roocode実装開始 までが一連の開発体験として自動化されます。

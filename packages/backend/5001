@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "C:\kitting\ITManagementSystem-Prototype\backend\main.py", line 10, in <module>
+    from backend.__init__ import create_app
+  File "C:\kitting\ITManagementSystem-Prototype\backend\__init__.py", line 1, in <module>
+    from flask import Flask
+ModuleNotFoundError: No module named 'flask'
+ * Serving Flask app 'backend.__init__'
+ * Debug mode: on
+INFO:werkzeug:WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.3.92:5001
+INFO:werkzeug:Press CTRL+C to quit
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 100-317-949
+INFO:werkzeug:127.0.0.1 - - [10/May/2025 17:06:30] "GET /api/health HTTP/1.1" 404 -
+INFO:werkzeug:127.0.0.1 - - [10/May/2025 18:52:45] "GET / HTTP/1.1" 404 -
+INFO:werkzeug:127.0.0.1 - - [10/May/2025 19:36:12] "HEAD / HTTP/1.1" 404 -
+INFO:werkzeug:127.0.0.1 - - [10/May/2025 19:50:58] "GET / HTTP/1.1" 404 -
+INFO:werkzeug: * Detected change in 'C:\\kitting\\ITManagementSystem-Prototype\\backend\\main.py', reloading

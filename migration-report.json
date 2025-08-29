@@ -1,0 +1,49 @@
+{
+  "timestamp": "2025-08-29T21:19:49.102Z",
+  "platform": "linux",
+  "rootDirectory": "/mnt/Linux-ExHDD/ITManagementSystem-Prototype",
+  "portabilityStatus": {
+    "absolutePaths": "RESOLVED - All paths converted to relative",
+    "crossPlatform": "SUPPORTED - Windows/Linux/macOS compatible",
+    "environmentVariables": "CONFIGURED - .env.example provided",
+    "mcpConfigs": "UPDATED - Portable MCP configurations generated"
+  },
+  "requiredDirectories": [
+    "root",
+    "src",
+    "config",
+    "logs",
+    "uploads",
+    "temp",
+    "certs",
+    "backups",
+    "frontend",
+    "frontendSrc",
+    "frontendBuild",
+    "backend",
+    "backendSrc",
+    "database",
+    "nodeModules",
+    "venv",
+    "mcpConfigs",
+    "scripts",
+    "docs"
+  ],
+  "configurationFiles": [
+    ".env.example",
+    "portable-config.json",
+    "claude-flow-config.json",
+    "mcp-playwright-config.json",
+    "context7-config.json",
+    "serena-mcp-config.json",
+    "github-action-mcp-config.json"
+  ],
+  "migrationSteps": [
+    "1. Copy project to target location",
+    "2. Copy .env.example to .env and customize values",
+    "3. Run npm install to install dependencies",
+    "4. Run pip install -r requirements.txt for Python dependencies",
+    "5. Create necessary directories with config.ensureDirectories()",
+    "6. Run migration verification script"
+  ]
+}

@@ -1,0 +1,123 @@
+## 📄 Roocode Zip解凍後 処理仕様書（完全統合版）
+
+### 📌 概要
+
+この仕様書は、Figma Make で出力された Zip ファイルを `apps/frontend/` に解凍した後の Roocode 上での実装作業フローを、プロジェクトルート構成完全版に準拠して、フロントエンド・バックエンド両視点から統合的にまとめたものです。
+
+---
+
+## 🧩 Roocodeでの総合処理フロー
+
+1. **Zipファイル自動解凍（scripts/figma-unzip.ps1）**
+
+   * ダウンロードされたZipを検出し `apps/frontend/` に解凍配置
+2. **WebUIとAPIの初期レビュー**（Roocode + 拡張機能）
+3. **Orchestrator → Code → Debug → Askモードでの順次実装**
+4. **API連携・スキーマ整合性確認（apps/backend/とshared/types）**
+5. **統合テスト（tests/配下）＋ログ確認（logs/配下）**
+6. **README・仕様書・CI/CD反映**
+
+---
+
+## 🖥️ フロントエンド：Roocode実装詳細
+
+### 1. 解凍・配置されたファイルの確認
+
+* 対象パス: `apps/frontend/components/`, `pages/`, `styles/`
+* 対象拡張子: `.tsx`, `.ts`, `.css`
+
+### 2. WebUI構成の確認
+
+* Roocodeの`Preview`または`Run`モードを使用し、`Browser`タブでUIを表示
+* `Component Explorer`, `Responsive Design Viewer`, `DevTools` などで:
+
+  * ページ構成
+  * コンポーネント状態
+  * API通信
+  * スタイル適用状態
+    を検証
+
+#### 📌 プロンプト例
+
+```
+- apps/frontend/pages/DashboardPage.tsx を確認し、UI構造を可視化してください
+- コンポーネントの状態バリエーションをComponent Explorerで検証してください
+- Live Previewを使って変更を即時確認してください
+```
+
+---
+
+## 🖧 バックエンド：Roocode実装詳細
+
+### 1. 必要なAPIの洗い出し
+
+* `apps/frontend/` 内の axios や Fetch 呼び出しを探索し、未実装APIを特定
+
+### 2. APIエンドポイントの追加
+
+* ルーティング: `apps/backend/routes/`
+* モデル・バリデーション: `apps/backend/models/`, `shared/types/`
+* DB・サービスロジック: `apps/backend/services/`
+
+#### 📌 プロンプト例
+
+```
+- POST /login を apps/backend/routes/login.py に追加してください
+- shared/types/user.py に UserCreate スキーマを定義してください
+```
+
+---
+
+## 🧠 Roocode活用モード一覧
+
+### ✅ Orchestrator モード
+
+* 自然言語でやりたい処理を指示（手動）
+
+### ✅ Code モード
+
+* props整備・型注釈追加・shadcn/uiスタイル調整
+
+### ✅ Debug モード
+
+* 構文/型/実行エラー検出と修正
+
+### ✅ Ask モード
+
+* UI改善提案（バリデーション・名称統一 など）
+
+---
+
+## 🔁 拡張機能・確認環境（Roocode/VS Code）
+
+* **Live Preview**：変更の即時レンダリング
+* **Component Explorer**：UI部品の個別検証
+* **Responsive Design Viewer**：マルチデバイスレイアウト確認
+* **DevTools**：状態・通信・性能の可視化
+* **REST Client（VS Code）**：APIレスポンス確認
+
+---
+
+## 🧪 テスト・CI対応
+
+### テスト
+
+* `tests/frontend/`: Playwright, Cypress によるUI検証
+* `tests/backend/`: pytest によるAPIテスト
+
+### ログ
+
+* `logs/frontend/`, `logs/backend/` にそれぞれ出力
+* Roocode上でもモニタリング可能
+
+---
+
+## 📦 ドキュメント・バージョン管理
+
+* `README.md`：手順・構成概要更新
+* `shared/api-specs/`：OpenAPI仕様更新
+* `git add . && git commit -m "Figma統合 + API更新"`
+
+---
+
+この「完全統合版」により、**Roocode実装とプロジェクト構成が完全に一致し、フロント・バック・共通層すべての作業がスムーズに連携**できる運用体制が整います。

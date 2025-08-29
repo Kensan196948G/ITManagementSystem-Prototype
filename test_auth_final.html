@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>認証フローテスト</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .danger {
+            background: linear-gradient(45deg, #f44336, #da190b);
+        }
+        .info {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+        }
+        .warning {
+            background: linear-gradient(45deg, #ff9800, #e68900);
+        }
+        .console {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .step {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #4CAF50;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 認証フロー最終テスト</h1>
+        
+        <div class="status">
+            <h2>現在の状態</h2>
+            <div id="status">確認中...</div>
+        </div>
+        
+        <div>
+            <h2>テストアクション</h2>
+            <button onclick="checkStatus()">📊 状態確認</button>
+            <button onclick="clearAndTest()" class="danger">🧹 完全クリア＆テスト</button>
+            <button onclick="goToRoot()" class="info">🏠 ルート (/) へ移動</button>
+            <button onclick="goToLogin()" class="warning">🔐 ログインへ移動</button>
+            <button onclick="goToDashboard()" class="warning">📊 ダッシュボードへ移動</button>
+        </div>
+        
+        <div class="status">
+            <h2>期待される動作</h2>
+            <div class="step">1. 「完全クリア＆テスト」ボタンをクリック</div>
+            <div class="step">2. LocalStorageがクリアされる</div>
+            <div class="step">3. 「ルート (/) へ移動」ボタンをクリック</div>
+            <div class="step">4. 自動的に /login へリダイレクトされる（未認証のため）</div>
+            <div class="step">5. admin/admin123 でログイン</div>
+            <div class="step">6. 自動的に /dashboard へリダイレクトされる</div>
+        </div>
+        
+        <div>
+            <h2>コンソール出力</h2>
+            <div id="console" class="console"></div>
+        </div>
+    </div>
+    
+    <script>
+        const BASE_URL = 'http://192.168.3.135:5176';
+        const API_URL = 'http://192.168.3.135:8000/api';
+        
+        function log(message) {
+            const consoleDiv = document.getElementById('console');
+            const time = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${time}] ${message}<br>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        function checkStatus() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            const statusDiv = document.getElementById('status');
+            
+            log('=== 状態確認 ===');
+            
+            if (token && user) {
+                try {
+                    const userData = JSON.parse(user);
+                    statusDiv.innerHTML = `
+                        <div style="color: #4CAF50;">✅ 認証済み</div>
+                        <div>ユーザー: ${userData.username}</div>
+                        <div>トークン: ${token.substring(0, 20)}...</div>
+                    `;
+                    log('認証済み: ' + userData.username);
+                } catch (e) {
+                    statusDiv.innerHTML = '<div style="color: #ff9800;">⚠️ 認証データ不正</div>';
+                    log('認証データ解析エラー');
+                }
+            } else {
+                statusDiv.innerHTML = '<div style="color: #f44336;">❌ 未認証</div>';
+                log('未認証状態');
+            }
+            
+            // トークン形式チェック
+            if (token) {
+                const parts = token.split('.');
+                log('トークン形式: ' + (parts.length === 3 ? '✅ 有効なJWT' : '❌ 無効な形式'));
+            }
+        }
+        
+        function clearAndTest() {
+            log('=== LocalStorage完全クリア ===');
+            
+            // すべてのキーを取得してクリア
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                log('削除: ' + key);
+                localStorage.removeItem(key);
+            });
+            
+            // SessionStorageもクリア
+            sessionStorage.clear();
+            
+            log('✅ クリア完了');
+            log('ブラウザをリロードするか、ルート(/)へ移動してテストしてください');
+            
+            checkStatus();
+        }
+        
+        function goToRoot() {
+            log('ルート (/) へ移動します...');
+            log('未認証の場合 → /login へリダイレクトされるはずです');
+            log('認証済みの場合 → /dashboard へリダイレクトされるはずです');
+            setTimeout(() => {
+                window.location.href = BASE_URL + '/';
+            }, 1000);
+        }
+        
+        function goToLogin() {
+            log('ログインページへ移動します...');
+            window.location.href = BASE_URL + '/login';
+        }
+        
+        function goToDashboard() {
+            log('ダッシュボードへ移動します...');
+            log('未認証の場合 → /login へリダイレクトされるはずです');
+            window.location.href = BASE_URL + '/dashboard';
+        }
+        
+        // 初期化
+        window.onload = () => {
+            log('テストツール起動');
+            checkStatus();
+            
+            // コンソールの情報も表示
+            log('');
+            log('=== ブラウザコンソールで確認できる情報 ===');
+            log('[AuthContext] - 認証初期化のログ');
+            log('[App] - ルーティングのログ');
+            log('これらのログはF12でデベロッパーツールを開いて確認できます');
+        };
+    </script>
+</body>
+</html>

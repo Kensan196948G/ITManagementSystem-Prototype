@@ -1,0 +1,81 @@
+{
+  "serena_mcp": {
+    "enabled": true,
+    "version": "1.0.0",
+    "server": {
+      "protocol": "stdio",
+      "command": "serena-mcp-server",
+      "args": ["--config", "./serena-mcp-config.json"],
+      "env": {
+        "SERENA_ENV": "production"
+      }
+    },
+    "features": {
+      "change_management": {
+        "enabled": true,
+        "approval_workflow": true,
+        "rollback_support": true,
+        "impact_analysis": true
+      },
+      "release_management": {
+        "enabled": true,
+        "deployment_automation": true,
+        "version_control": true,
+        "release_notes_generation": true
+      },
+      "configuration_management": {
+        "enabled": true,
+        "cmdb_integration": true,
+        "dependency_mapping": true,
+        "baseline_management": true
+      },
+      "service_management": {
+        "enabled": true,
+        "service_catalog": true,
+        "sla_monitoring": true,
+        "incident_management": true
+      },
+      "deployment_automation": {
+        "enabled": true,
+        "continuous_deployment": true,
+        "blue_green_deployment": true,
+        "canary_releases": true,
+        "automated_rollback": true
+      }
+    },
+    "integrations": {
+      "git": {
+        "enabled": true,
+        "auto_commit": false,
+        "branch_protection": true
+      },
+      "ci_cd": {
+        "enabled": true,
+        "github_actions": true,
+        "jenkins": false,
+        "azure_devops": false
+      },
+      "monitoring": {
+        "enabled": true,
+        "prometheus": true,
+        "grafana": true,
+        "alerts": true
+      },
+      "claude_flow": true,
+      "context7": true,
+      "playwright_mcp": true
+    },
+    "security": {
+      "authentication": "token",
+      "encryption": true,
+      "audit_logging": true,
+      "compliance_checks": true
+    },
+    "performance": {
+      "max_concurrent_operations": 10,
+      "timeout_seconds": 300,
+      "retry_attempts": 3,
+      "cache_enabled": true
+    }
+  }
+}

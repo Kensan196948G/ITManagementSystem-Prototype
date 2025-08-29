@@ -1,0 +1,82 @@
+{
+  "context7": {
+    "enabled": true,
+    "version": "1.0.0",
+    "layers": {
+      "project_context": {
+        "enabled": true,
+        "scope": "global",
+        "persistence": true,
+        "max_entries": 1000
+      },
+      "conversation_context": {
+        "enabled": true,
+        "scope": "session",
+        "persistence": false,
+        "max_entries": 500
+      },
+      "code_context": {
+        "enabled": true,
+        "scope": "file",
+        "persistence": true,
+        "max_entries": 2000,
+        "features": {
+          "syntax_aware": true,
+          "dependency_tracking": true,
+          "refactoring_support": true
+        }
+      },
+      "error_context": {
+        "enabled": true,
+        "scope": "runtime",
+        "persistence": true,
+        "max_entries": 300,
+        "features": {
+          "stack_trace_analysis": true,
+          "root_cause_detection": true
+        }
+      },
+      "user_context": {
+        "enabled": true,
+        "scope": "user",
+        "persistence": true,
+        "max_entries": 100,
+        "features": {
+          "preference_learning": true,
+          "skill_assessment": true
+        }
+      },
+      "task_context": {
+        "enabled": true,
+        "scope": "task",
+        "persistence": true,
+        "max_entries": 500,
+        "features": {
+          "priority_management": true,
+          "dependency_resolution": true
+        }
+      },
+      "system_context": {
+        "enabled": true,
+        "scope": "system",
+        "persistence": true,
+        "max_entries": 200,
+        "features": {
+          "performance_monitoring": true,
+          "resource_tracking": true
+        }
+      }
+    },
+    "integrations": {
+      "claude_flow": true,
+      "subagents": true,
+      "self_healing": true,
+      "mcp_servers": true
+    },
+    "optimization": {
+      "cache_enabled": true,
+      "compression": true,
+      "async_processing": true
+    }
+  }
+}

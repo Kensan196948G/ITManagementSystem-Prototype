@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン画面強制表示</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            padding: 50px;
+            border-radius: 25px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            margin: 0 0 30px 0;
+            text-align: center;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .action-button {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: #1e3c72;
+            border: none;
+            padding: 20px 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: all 0.3s;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .action-button:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+        .action-button:active {
+            transform: translateY(-1px) scale(1);
+        }
+        .status {
+            background: rgba(0,0,0,0.3);
+            padding: 20emotions;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        .steps {
+            background: rgba(255,255,255,0.05);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            border-left: 4px solid #38f9d7;
+            font-size: 1.1em;
+        }
+        .warning {
+            background: rgba(255,152,0,0.2);
+            border: 1px solid rgba(255,152,0,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .success {
+            background: rgba(76,175,80,0.2);
+            border: 1px solid rgba(76,175,80,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+        .loader {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid #38f9d7;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        code {
+            background: rgba(0,0,0,0.5);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔓 ログイン画面を強制表示</h1>
+        
+        <div class="warning">
+            ⚠️ 現在ログイン済みのため、自動的にダッシュボードへリダイレクトされています
+        </div>
+        
+        <button class="action-button" onclick="forceShowLogin()">
+            🚀 今すぐログイン画面を表示する
+        </button>
+        
+        <div class="loader" id="loader"></div>
+        
+        <div class="success" id="success">
+            ✅ 認証データをクリアしました！ログイン画面へ移動中...
+        </div>
+        
+        <div class="status" id="status">
+            準備完了。ボタンをクリックしてください。
+        </div>
+        
+        <div class="steps">
+            <h3>📋 実行される処理：</h3>
+            <div class="step">1. LocalStorageの認証データを完全削除</div>
+            <div class="step">2. SessionStorageをクリア</div>
+            <div class="step">3. ログインページへ強制リダイレクト</div>
+            <div class="step">4. ユーザー名: <code>admin</code></div>
+            <div class="step">5. パスワード: <code>admin123</code></div>
+        </div>
+    </div>
+    
+    <script>
+        function forceShowLogin() {
+            const statusDiv = document.getElementById('status');
+            const loaderDiv = document.getElementById('loader');
+            const successDiv = document.getElementById('success');
+            const button = document.querySelector('.action-button');
+            
+            // ボタンを無効化
+            button.disabled = true;
+            button.style.opacity = '0.5';
+            button.style.cursor = 'not-allowed';
+            
+            // ローダー表示
+            loaderDiv.style.display = 'block';
+            statusDiv.innerHTML = '🔄 認証データをクリア中...';
+            
+            // Step 1: LocalStorageを完全クリア
+            setTimeout(() => {
+                const keys = Object.keys(localStorage);
+                keys.forEach(key => {
+                    console.log('Removing from localStorage:', key);
+                    localStorage.removeItem(key);
+                });
+                statusDiv.innerHTML = '✅ LocalStorageをクリアしました';
+            }, 500);
+            
+            // Step 2: SessionStorageをクリア
+            setTimeout(() => {
+                sessionStorage.clear();
+                statusDiv.innerHTML = '✅ SessionStorageをクリアしました';
+            }, 1000);
+            
+            // Step 3: 成功メッセージ表示
+            setTimeout(() => {
+                loaderDiv.style.display = 'none';
+                successDiv.style.display = 'block';
+                statusDiv.innerHTML = '🚀 ログインページへリダイレクト中...';
+            }, 1500);
+            
+            // Step 4: ログインページへリダイレクト（clearAuthパラメータ付き）
+            setTimeout(() => {
+                // clearAuthパラメータを付けて認証を確実にクリア
+                window.location.href = 'http://192.168.3.135:5176/?clearAuth=true';
+            }, 2500);
+        }
+        
+        // ページロード時に認証状態をチェック
+        window.onload = () => {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token || user) {
+                console.log('認証データ検出:', { 
+                    token: token ? 'あり' : 'なし',
+                    user: user ? 'あり' : 'なし'
+                });
+            } else {
+                document.getElementById('status').innerHTML = 
+                    '✅ 既に未認証状態です。<a href="http://192.168.3.135:5176/login" style="color: #38f9d7;">ログインページへ移動</a>';
+            }
+        };
+    </script>
+</body>
+</html>

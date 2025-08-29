@@ -1,0 +1,50 @@
+@import '../incidents/IncidentManagement.css';
+
+.asset-management {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.assets-table-container {
+  background: var(--surface-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.assets-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.assets-table th {
+  background: var(--background-color);
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.assets-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-color);
+  font-size: 0.875rem;
+}
+
+.assets-table tr:hover {
+  background: var(--hover-color);
+  cursor: pointer;
+}
+
+.asset-id {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--primary-color);
+}

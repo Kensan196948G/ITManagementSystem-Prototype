@@ -1,0 +1,147 @@
+@import '../incidents/IncidentManagement.css';
+
+.change-management {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.changes-table-container {
+  background: var(--surface-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.changes-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.changes-table th {
+  background: var(--background-color);
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.changes-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-color);
+  font-size: 0.875rem;
+}
+
+.changes-table tr:hover {
+  background: var(--hover-color);
+  cursor: pointer;
+}
+
+.change-id {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.change-title {
+  font-weight: 500;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.type-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.type-emergency {
+  background: var(--error-light);
+  color: var(--error-color);
+}
+
+.type-standard {
+  background: var(--info-light);
+  color: var(--info-color);
+}
+
+.type-normal {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.status-pending {
+  background: var(--warning-light);
+  color: var(--warning-color);
+}
+
+.status-approved {
+  background: var(--info-light);
+  color: var(--info-color);
+}
+
+.status-scheduled {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.status-completed {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.status-cancelled {
+  background: var(--text-light);
+  color: var(--text-secondary);
+}
+
+.change-details {
+  display: grid;
+  gap: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row strong {
+  min-width: 120px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .change-management {
+    padding: 1rem;
+  }
+  
+  .changes-table-container {
+    overflow-x: auto;
+  }
+  
+  .filter-controls {
+    flex-wrap: wrap;
+  }
+}

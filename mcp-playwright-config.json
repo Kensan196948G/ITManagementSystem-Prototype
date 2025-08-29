@@ -1,0 +1,45 @@
+{
+  "playwright_mcp": {
+    "enabled": true,
+    "version": "1.0.0",
+    "server": {
+      "command": "npx",
+      "args": ["playwright-mcp-server"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    "browsers": {
+      "chromium": {
+        "enabled": true,
+        "headless": true,
+        "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+      },
+      "firefox": {
+        "enabled": true,
+        "headless": true
+      },
+      "webkit": {
+        "enabled": true,
+        "headless": true
+      }
+    },
+    "testing": {
+      "parallel": true,
+      "timeout": 30000,
+      "retries": 2,
+      "screenshot_on_failure": true,
+      "video_on_failure": true
+    },
+    "automation": {
+      "page_load_timeout": 30000,
+      "action_timeout": 10000,
+      "navigation_timeout": 30000
+    },
+    "integration": {
+      "with_claude_flow": true,
+      "with_self_healing": true,
+      "auto_repair_tests": true
+    }
+  }
+}

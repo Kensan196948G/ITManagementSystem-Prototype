@@ -1,0 +1,180 @@
+# ====================
+# DEPENDENCIES
+# ====================
+node_modules/
+*/node_modules/
+venv/
+env/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ====================
+# BUILD OUTPUTS
+# ====================
+dist/
+build/
+*/dist/
+*/build/
+*.min.js
+*.min.css
+
+# ====================
+# ENVIRONMENT FILES
+# ====================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# ====================
+# LOGS
+# ====================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+pnpm-debug.log*
+lerna-debug.log*
+
+# ====================
+# PYTHON
+# ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# ====================
+# DATABASES
+# ====================
+*.db
+*.sqlite
+*.sqlite3
+instance/
+database.db
+
+# ====================
+# CACHE & TEMP FILES
+# ====================
+.cache/
+.temp/
+tmp/
+*.tmp
+*.swp
+*.swo
+*~
+
+# ====================
+# EDITOR & IDE
+# ====================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.project
+.classpath
+.c9revisions
+.c9
+*.launch
+
+# ====================
+# OS SPECIFIC
+# ====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ====================
+# TESTING
+# ====================
+coverage/
+*.lcov
+.nyc_output
+junit.xml
+test-results/
+playwright-report/
+test-results.xml
+
+# ====================
+# CONFIG FILES
+# ====================
+config.json
+config.local.json
+mcp_setting.json
+
+# ====================
+# SECURITY
+# ====================
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+
+# ====================
+# DEPLOYMENT
+# ====================
+.vercel
+.netlify
+
+# ====================
+# MISC
+# ====================
+*.tgz
+*.tar.gz
+*.rar
+
+# PowerShell
+*.ps1~
+
+# Task files
+tasks.json
+tasks/
+
+# Claude Task Master specific
+.claude/

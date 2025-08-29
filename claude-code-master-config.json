@@ -1,0 +1,91 @@
+{
+  "claude_code_master": {
+    "version": "1.0.0",
+    "created": "2025-08-25",
+    "description": "Claude Code統合設定 - 全機能有効化",
+    
+    "enabled_features": {
+      "subagents": {
+        "enabled": true,
+        "count": 30,
+        "config": "./claude-flow-config.json",
+        "auto_dispatch": true
+      },
+      "claude_flow": {
+        "enabled": true,
+        "config": "./claude-flow-config.json",
+        "parallel_processing": true,
+        "max_concurrent": 10
+      },
+      "playwright_mcp": {
+        "enabled": true,
+        "config": "./mcp-playwright-config.json",
+        "browsers": ["chromium", "firefox", "webkit"]
+      },
+      "context7": {
+        "enabled": true,
+        "config": "./context7-config.json",
+        "layers": 7,
+        "persistence": true
+      },
+      "serena_mcp": {
+        "enabled": true,
+        "config": "./serena-mcp-config.json",
+        "automation": true
+      },
+      "github_action_mcp": {
+        "enabled": true,
+        "config": "./github-action-mcp-config.json",
+        "auto_repair": true,
+        "workflows": [".github/workflows/auto-repair.yml"]
+      }
+    },
+    
+    "integration_matrix": {
+      "subagents_claude_flow": true,
+      "subagents_context7": true,
+      "claude_flow_playwright": true,
+      "claude_flow_serena": true,
+      "context7_all": true,
+      "github_actions_all": true
+    },
+    
+    "performance": {
+      "optimization_level": "high",
+      "caching": true,
+      "lazy_loading": true,
+      "parallel_execution": true
+    },
+    
+    "monitoring": {
+      "enabled": true,
+      "log_level": "INFO",
+      "metrics": true,
+      "alerts": true,
+      "dashboard": true
+    },
+    
+    "security": {
+      "authentication": "multi-factor",
+      "encryption": "AES-256",
+      "audit_logging": true,
+      "compliance": ["ISO-20000", "ISO-27001", "ISO-27002"]
+    },
+    
+    "development_mode": {
+      "hot_reload": true,
+      "debug": false,
+      "verbose": false,
+      "test_mode": false
+    },
+    
+    "auto_features": {
+      "auto_complete": true,
+      "auto_suggest": true,
+      "auto_fix": true,
+      "auto_format": true,
+      "auto_test": true,
+      "auto_deploy": false
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "it-management-system-backend",
+  "version": "1.0.0",
+  "description": "Backend for IT Management System",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py",
+    "dev": "python -m flask --app app.py --debug run",
+    "test": "python -m pytest"
+  },
+  "keywords": ["flask", "python", "backend", "it-management"],
+  "author": "",
+  "license": "ISC"
+}

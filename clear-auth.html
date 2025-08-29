@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>認証クリア</title>
+</head>
+<body>
+    <h1>認証データをクリアしています...</h1>
+    <script>
+        // Clear all auth-related data
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Clear cookies
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        console.log('All authentication data cleared');
+        
+        // Redirect to main app with clearAuth parameter
+        setTimeout(() => {
+            window.location.href = 'http://192.168.3.135:5176/?clearAuth=true';
+        }, 1000);
+    </script>
+</body>
+</html>

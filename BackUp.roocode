@@ -1,0 +1,91 @@
+default_mode: auto
+
+shell_integration:
+  enabled: true
+  terminal_type: "vscode"
+
+auto_approval: true
+auto_approval_messages:
+  - "*"
+
+safe_commands:
+  - "*"
+
+dangerous_commands:
+  - rm
+  - del
+  - rmdir
+  - shutdown
+  - format
+  - curl
+  - wget
+  - "mv /"
+  - dd
+  - mkfs
+  - scp
+  - Invoke-WebRequest
+  - Start-Process
+
+global_policy:
+  max_retry: 7
+  on_failure: "mark TODO for user"
+  retry_loop_enabled: true
+
+custom_instructions:
+   common: |
+    [FigmaContext]
+    https://www.figma.com/make/Ec7KhOu8rp7uHAyjawjlUS/ITSM-IT-Operations-Platform?node-id=0-1&p=f&t=DiKIi0LD5aqkGwOV-0&fullscreen=1
+
+    VSCode の「問題」タブに表示されている構文エラーや型エラー、警告を自動的に検出・修復してください。
+      質問や確認を行わず、自動的にタスクを修復・実行・完了してください。
+      入力が不完全な場合でも推測して実行してください。
+      不足があれば自動補完し、曖昧さがある場合も仮定で進めてください。
+      修復ループは最大5回まで自動で行ってください。
+      エラーが出た場合も、ユーザーに質問せずに自動で対処してください。
+      修正内容にはコメントを入れてください（例: # 修正済み）。
+      「問題」がゼロになったら `✅ 問題なし` を表示してください。
+
+    あわせて、すべてのエラー（構文・実行・依存関係）を検出し、修復後に再試行してください。
+    ループ最大10回。危険なコマンドは 'TODO: ユーザー確認' として保留してください。
+  orchestrator: |
+    このスクリプト全体を完全に修復し、エラーがなくなるまで Debug → Architect の順でモード切り替えと修正を繰り返してください。
+    すべてが成功したら『✅ 完了』を表示してください。
+    Figma構成を元に以下の流れで自動実行してください：① Architect → ② Code → ③ Debug → ④ Ask（必要時）
+  debug: |
+    スクリプトを実行し、1. エラー内容 2. 発生行番号 3. エラー種別（構文／実行／依存）を出力し、必要に応じて修正案テンプレートを生成してください。
+  architect: |
+    Debugで報告されたエラーに基づき、構文や論理ミスを修正してください。
+    FigmaからUI構造を読み取り、ページ構成、責務、状態構成を設計してください。
+    修正箇所にはコメントで理由を付けてください。ロジックや意図は可能な限り維持してください。
+  code: |
+    Architectの設計に基づき、FigmaのUIと一致するReact + Tailwind UIを実装してください。
+    コンポーネントは機能単位で分離し、コメント付きで明確に構造化してください。
+    レスポンシブデザインを意識してください。
+  ask: |
+    Figmaから色・フォント・間隔・配置情報などを確認し、デザイン上の意図や未定義項目を明らかにしてください。
+    また、疑問点があればユーザーに質問してください。
+
+modes:
+  debug:
+    enable_auto_repair: true
+    max_repair_attempts: 5
+    repair_on:
+      - SyntaxError
+      - RuntimeError
+
+  architect: {}
+  code: {}
+  ask: {}
+  orchestrator: {}
+
+  auto:
+    enable_full_automation: true
+    cycle_interval: 3600
+    notify_on_complete: true
+    max_consecutive_failures: 3
+
+
+
+logging:
+  level: info
+  file: roocode_repair.log
