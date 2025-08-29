@@ -1,0 +1,27 @@
+# Minimal Requirements for GitHub Actions
+# Essential packages only for CI/CD workflows
+
+# Core Web Framework
+Flask==3.0.3
+fastapi==0.104.1
+
+# Basic Database
+sqlalchemy==2.0.34
+
+# Essential Tools
+requests==2.32.3
+python-dotenv==1.0.1
+pyyaml==6.0.1
+
+# Development Tools  
+pytest==8.3.2
+black==24.8.0
+isort==5.12.0
+flake8==7.1.1
+
+# Security Tools
+bandit==1.7.5
+safety==3.2.7
+
+# Basic utilities
+python-dateutil==2.9.0.post0

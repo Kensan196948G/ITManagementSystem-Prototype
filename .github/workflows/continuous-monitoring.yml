@@ -52,10 +52,37 @@ jobs:
         node-version: '18'
         cache: 'npm'
     
-    - name: 📦 Install Monitoring Dependencies
+    - name: 📦 Install System Dependencies
       run: |
-        npm install -g npm-check lighthouse-ci
-        pip install psutil requests
+        # システム依存関係の確実なインストール
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends \
+          libpq-dev \
+          build-essential \
+          python3-dev \
+          pkg-config \
+          libssl-dev \
+          libffi-dev \
+          curl \
+          jq
+    
+    - name: 📦 Install Monitoring Dependencies
+      continue-on-error: true
+      run: |
+        echo "🔍 監視ツールインストール中..."
+        
+        # Python tools upgrade
+        python -m pip install --upgrade pip setuptools wheel
+        
+        # Global npm tools with error handling
+        npm install -g npm-check || echo "⚠️ npm-check install failed"
+        npm install -g lighthouse-ci || echo "⚠️ lighthouse-ci install failed"
+        
+        # Python monitoring tools
+        pip install psutil requests bandit safety vulture || {
+          echo "⚠️ Some monitoring tools failed to install, continuing..."
+          pip install psutil requests || echo "⚠️ Basic monitoring tools failed"
+        }
     
     - name: 🔍 Repository Health Check
       id: repo-health
