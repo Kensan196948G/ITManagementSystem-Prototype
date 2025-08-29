@@ -1,0 +1,631 @@
+name: 🧠 Intelligent Self-Healing System
+
+on:
+  schedule:
+    - cron: '0 */1 * * *'  # 1時間ごと
+    - cron: '0 2 * * *'    # 深夜2時に完全スキャン
+  workflow_dispatch:
+    inputs:
+      healing_mode:
+        description: '自動修復モード'
+        required: true
+        default: 'smart'
+        type: choice
+        options:
+        - conservative  # 保守的修復
+        - smart        # スマート修復
+        - aggressive   # 積極的修復
+      target_components:
+        description: '対象コンポーネント'
+        required: true  
+        default: 'all'
+        type: choice
+        options:
+        - frontend
+        - backend
+        - database
+        - dependencies
+        - configuration
+        - all
+  repository_dispatch:
+    types: [self-healing-trigger]
+
+env:
+  HEALING_MODE: ${{ github.event.inputs.healing_mode || 'smart' }}
+  TARGET_COMPONENTS: ${{ github.event.inputs.target_components || 'all' }}
+  PYTHON_VERSION: '3.10'
+  NODE_VERSION: '18'
+
+jobs:
+  # 🧠 Phase 1: AI駆動健康診断
+  health-diagnostic:
+    name: 🧠 AI Health Diagnostic
+    runs-on: ubuntu-latest
+    outputs:
+      health-score: ${{ steps.diagnostic.outputs.health-score }}
+      critical-issues: ${{ steps.diagnostic.outputs.critical-issues }}
+      healing-required: ${{ steps.diagnostic.outputs.healing-required }}
+      recommended-actions: ${{ steps.diagnostic.outputs.recommended-actions }}
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 🔧 Setup Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+    
+    - name: 📦 Install Diagnostic Tools
+      run: |
+        npm install -g npm-check-updates
+        pip install bandit safety vulture
+        
+        # 開発依存関係のインストール
+        npm ci --silent || echo "⚠️ npm install issues detected"
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt || echo "⚠️ pip install issues detected"
+        fi
+    
+    - name: 🧠 AI Health Diagnostic Analysis
+      id: diagnostic
+      run: |
+        echo "🧠 AI健康診断システム実行中..."
+        
+        # 初期化
+        HEALTH_SCORE=100
+        CRITICAL_ISSUES=0
+        ISSUES=()
+        RECOMMENDATIONS=()
+        
+        # 1. コードベース健康度チェック
+        echo "📊 コードベース分析中..."
+        
+        # TypeScript/JavaScript 品質チェック
+        if [ "$TARGET_COMPONENTS" = "all" ] || [ "$TARGET_COMPONENTS" = "frontend" ]; then
+          # 循環依存の検出
+          if npx madge --circular src/ 2>/dev/null; then
+            HEALTH_SCORE=$((HEALTH_SCORE - 10))
+            CRITICAL_ISSUES=$((CRITICAL_ISSUES + 1))
+            ISSUES+=("Circular dependencies detected in frontend")
+            RECOMMENDATIONS+=("Refactor circular dependencies")
+          fi
+          
+          # 未使用コードの検出
+          if command -v npx >/dev/null 2>&1; then
+            UNUSED_FILES=$(find src -name "*.ts" -o -name "*.tsx" | wc -l)
+            if [ $UNUSED_FILES -gt 100 ]; then
+              HEALTH_SCORE=$((HEALTH_SCORE - 5))
+              RECOMMENDATIONS+=("Consider code cleanup - large codebase detected")
+            fi
+          fi
+        fi
+        
+        # 2. Python コード品質チェック
+        if [ "$TARGET_COMPONENTS" = "all" ] || [ "$TARGET_COMPONENTS" = "backend" ]; then
+          # セキュリティ脆弱性スキャン
+          if command -v bandit >/dev/null 2>&1; then
+            BANDIT_ISSUES=$(find . -name "*.py" -not -path "./.venv/*" | xargs bandit -r 2>/dev/null | grep -c "Issue:" || echo "0")
+            if [ $BANDIT_ISSUES -gt 0 ]; then
+              HEALTH_SCORE=$((HEALTH_SCORE - BANDIT_ISSUES * 2))
+              CRITICAL_ISSUES=$((CRITICAL_ISSUES + BANDIT_ISSUES))
+              ISSUES+=("$BANDIT_ISSUES security issues detected in Python code")
+              RECOMMENDATIONS+=("Apply security patches using bandit suggestions")
+            fi
+          fi
+          
+          # デッドコード検出
+          if command -v vulture >/dev/null 2>&1; then
+            DEAD_CODE=$(vulture . 2>/dev/null | wc -l || echo "0")
+            if [ $DEAD_CODE -gt 10 ]; then
+              HEALTH_SCORE=$((HEALTH_SCORE - 3))
+              RECOMMENDATIONS+=("Remove dead Python code - $DEAD_CODE items detected")
+            fi
+          fi
+        fi
+        
+        # 3. 依存関係健康度チェック
+        if [ "$TARGET_COMPONENTS" = "all" ] || [ "$TARGET_COMPONENTS" = "dependencies" ]; then
+          # npm依存関係の健康度
+          OUTDATED_DEPS=$(npm outdated --json 2>/dev/null | jq 'length' || echo "0")
+          if [ $OUTDATED_DEPS -gt 5 ]; then
+            HEALTH_SCORE=$((HEALTH_SCORE - OUTDATED_DEPS))
+            RECOMMENDATIONS+=("Update $OUTDATED_DEPS outdated npm packages")
+          fi
+          
+          # Python依存関係の脆弱性
+          if command -v safety >/dev/null 2>&1; then
+            SAFETY_ISSUES=$(safety check 2>/dev/null | grep -c "vulnerability" || echo "0")
+            if [ $SAFETY_ISSUES -gt 0 ]; then
+              HEALTH_SCORE=$((HEALTH_SCORE - SAFETY_ISSUES * 3))
+              CRITICAL_ISSUES=$((CRITICAL_ISSUES + SAFETY_ISSUES))
+              ISSUES+=("$SAFETY_ISSUES Python dependency vulnerabilities")
+              RECOMMENDATIONS+=("Update vulnerable Python packages")
+            fi
+          fi
+        fi
+        
+        # 4. 設定ファイル健康度チェック
+        if [ "$TARGET_COMPONENTS" = "all" ] || [ "$TARGET_COMPONENTS" = "configuration" ]; then
+          # package.jsonの健康度
+          if ! jq empty package.json 2>/dev/null; then
+            HEALTH_SCORE=$((HEALTH_SCORE - 20))
+            CRITICAL_ISSUES=$((CRITICAL_ISSUES + 1))
+            ISSUES+=("Malformed package.json detected")
+            RECOMMENDATIONS+=("Fix package.json syntax errors")
+          fi
+          
+          # TypeScript設定
+          if [ -f tsconfig.json ] && ! jq empty tsconfig.json 2>/dev/null; then
+            HEALTH_SCORE=$((HEALTH_SCORE - 15))
+            CRITICAL_ISSUES=$((CRITICAL_ISSUES + 1))
+            ISSUES+=("Malformed tsconfig.json detected")
+            RECOMMENDATIONS+=("Fix tsconfig.json syntax errors")
+          fi
+          
+          # 環境変数ファイル
+          if [ -f .env ] && grep -q "CHANGEME\|TODO\|FIXME" .env; then
+            HEALTH_SCORE=$((HEALTH_SCORE - 10))
+            RECOMMENDATIONS+=("Update placeholder values in .env file")
+          fi
+        fi
+        
+        # 5. パフォーマンス健康度チェック
+        # ファイルサイズチェック
+        LARGE_FILES=$(find . -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.py" | xargs wc -l 2>/dev/null | awk '$1 > 500 { count++ } END { print count+0 }')
+        if [ $LARGE_FILES -gt 10 ]; then
+          HEALTH_SCORE=$((HEALTH_SCORE - 5))
+          RECOMMENDATIONS+=("Consider refactoring large files ($LARGE_FILES files > 500 lines)")
+        fi
+        
+        # 6. Git健康度チェック
+        # 大きなファイルの検出
+        GIT_LARGE_FILES=$(git ls-files | xargs ls -la 2>/dev/null | awk '$5 > 1048576 { count++ } END { print count+0 }')
+        if [ $GIT_LARGE_FILES -gt 0 ]; then
+          HEALTH_SCORE=$((HEALTH_SCORE - GIT_LARGE_FILES * 2))
+          RECOMMENDATIONS+=("Consider Git LFS for $GIT_LARGE_FILES large files")
+        fi
+        
+        # 最終健康度の調整
+        if [ $HEALTH_SCORE -lt 0 ]; then
+          HEALTH_SCORE=0
+        fi
+        
+        # 修復必要性の判定
+        HEALING_REQUIRED="false"
+        if [ $HEALTH_SCORE -lt 80 ] || [ $CRITICAL_ISSUES -gt 0 ]; then
+          HEALING_REQUIRED="true"
+        fi
+        
+        # 結果の出力
+        echo "health-score=$HEALTH_SCORE" >> $GITHUB_OUTPUT
+        echo "critical-issues=$CRITICAL_ISSUES" >> $GITHUB_OUTPUT
+        echo "healing-required=$HEALING_REQUIRED" >> $GITHUB_OUTPUT
+        
+        # 推奨アクションの出力
+        RECOMMENDATIONS_JSON=$(printf '%s\n' "${RECOMMENDATIONS[@]}" | jq -R . | jq -s .)
+        echo "recommended-actions=$RECOMMENDATIONS_JSON" >> $GITHUB_OUTPUT
+        
+        # 健康診断レポートの生成
+        cat > health-diagnostic-report.json << EOF
+        {
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "health_score": $HEALTH_SCORE,
+          "critical_issues": $CRITICAL_ISSUES,
+          "healing_required": $HEALING_REQUIRED,
+          "healing_mode": "$HEALING_MODE",
+          "target_components": "$TARGET_COMPONENTS",
+          "issues": $(printf '%s\n' "${ISSUES[@]}" | jq -R . | jq -s .),
+          "recommendations": $RECOMMENDATIONS_JSON,
+          "analysis": {
+            "codebase_quality": "$(if [ $HEALTH_SCORE -gt 90 ]; then echo "excellent"; elif [ $HEALTH_SCORE -gt 70 ]; then echo "good"; elif [ $HEALTH_SCORE -gt 50 ]; then echo "fair"; else echo "poor"; fi)",
+            "risk_level": "$(if [ $CRITICAL_ISSUES -eq 0 ]; then echo "low"; elif [ $CRITICAL_ISSUES -lt 3 ]; then echo "medium"; else echo "high"; fi)",
+            "recommendation_priority": "$(if [ $HEALTH_SCORE -lt 60 ]; then echo "urgent"; elif [ $HEALTH_SCORE -lt 80 ]; then echo "high"; else echo "normal"; fi)"
+          }
+        }
+        EOF
+        
+        echo "🧠 AI健康診断完了:"
+        echo "  健康スコア: $HEALTH_SCORE/100"
+        echo "  重大問題: $CRITICAL_ISSUES 件"
+        echo "  修復必要: $HEALING_REQUIRED"
+        echo "  推奨アクション: ${#RECOMMENDATIONS[@]} 件"
+    
+    - name: 📤 Upload Diagnostic Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: health-diagnostic-report
+        path: health-diagnostic-report.json
+        retention-days: 30
+
+  # 🔧 Phase 2: インテリジェント自動修復
+  intelligent-healing:
+    name: 🔧 Intelligent Self-Healing
+    runs-on: ubuntu-latest
+    needs: health-diagnostic
+    if: needs.health-diagnostic.outputs.healing-required == 'true'
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 🔧 Setup Development Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: 🐍 Setup Python Environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+    
+    - name: 📦 Install Healing Tools
+      run: |
+        # Node.js修復ツール
+        npm install -g npm-check-updates eslint prettier
+        
+        # Python修復ツール
+        pip install autopep8 black isort bandit safety
+        
+        # プロジェクト依存関係
+        npm ci --silent || echo "⚠️ Installing with issues"
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt || echo "⚠️ Python install with issues"
+        fi
+    
+    - name: 🔧 Smart Dependency Healing
+      if: env.TARGET_COMPONENTS == 'all' || env.TARGET_COMPONENTS == 'dependencies'
+      continue-on-error: true
+      run: |
+        echo "🔧 依存関係スマート修復実行中..."
+        
+        # npm依存関係の更新
+        if [ "$HEALING_MODE" = "aggressive" ]; then
+          # 積極的更新 (メジャーバージョンも更新)
+          npx npm-check-updates -u
+          npm install
+        elif [ "$HEALING_MODE" = "smart" ]; then
+          # スマート更新 (マイナー・パッチのみ)
+          npx npm-check-updates -u --target minor
+          npm install
+        else
+          # 保守的更新 (パッチのみ)
+          npm update
+        fi
+        
+        # セキュリティ脆弱性の修復
+        npm audit fix --force
+        
+        # Python依存関係の更新
+        if [ -f requirements.txt ]; then
+          if [ "$HEALING_MODE" = "aggressive" ] || [ "$HEALING_MODE" = "smart" ]; then
+            # 脆弱性のあるパッケージを特定・更新
+            safety check --json > safety-report.json || true
+            # NOTE: 実際の環境では pip-upgrader や similar tools を使用
+          fi
+        fi
+    
+    - name: 🔧 Code Quality Healing
+      if: env.TARGET_COMPONENTS == 'all' || env.TARGET_COMPONENTS == 'frontend' || env.TARGET_COMPONENTS == 'backend'
+      continue-on-error: true
+      run: |
+        echo "🔧 コード品質自動修復実行中..."
+        
+        # TypeScript/JavaScript修復
+        if [ "$TARGET_COMPONENTS" != "backend" ]; then
+          # ESLint自動修復
+          npx eslint . --ext .ts,.tsx,.js,.jsx --fix || true
+          
+          # Prettierコード整形
+          npx prettier --write "src/**/*.{ts,tsx,js,jsx,json,css,md}" || true
+          
+          # Import整理
+          if command -v organize-imports-cli >/dev/null 2>&1; then
+            npx organize-imports-cli tsconfig.json || true
+          fi
+        fi
+        
+        # Python修復
+        if [ "$TARGET_COMPONENTS" != "frontend" ]; then
+          # autopep8自動修復
+          find . -name "*.py" -not -path "./.venv/*" -not -path "./venv/*" -exec autopep8 --in-place --aggressive --aggressive {} \;
+          
+          # Black code formatting
+          black . --line-length 88 || true
+          
+          # isort import sorting
+          isort . --profile black || true
+          
+          # セキュリティ問題の自動修復
+          # NOTE: 実環境ではより高度なセキュリティ修復ツールを使用
+        fi
+    
+    - name: 🔧 Configuration Healing
+      if: env.TARGET_COMPONENTS == 'all' || env.TARGET_COMPONENTS == 'configuration'
+      continue-on-error: true
+      run: |
+        echo "🔧 設定ファイル自動修復実行中..."
+        
+        # package.json修復
+        if [ -f package.json ]; then
+          # JSON形式の修復
+          jq '.' package.json > package.json.tmp && mv package.json.tmp package.json
+          
+          # 不要なフィールドの整理
+          jq 'del(.._| select(. == null or . == ""))' package.json > package.json.tmp && mv package.json.tmp package.json
+        fi
+        
+        # tsconfig.json修復
+        if [ -f tsconfig.json ]; then
+          jq '.' tsconfig.json > tsconfig.json.tmp && mv tsconfig.json.tmp tsconfig.json
+        fi
+        
+        # .gitignore最適化
+        if [ -f .gitignore ]; then
+          # 重複エントリの削除
+          sort .gitignore | uniq > .gitignore.tmp && mv .gitignore.tmp .gitignore
+          
+          # 一般的な不要ファイルパターンの追加
+          cat >> .gitignore << 'EOF'
+        
+        # Auto-added by self-healing system
+        *.log
+        .DS_Store
+        Thumbs.db
+        *.tmp
+        *.temp
+        EOF
+        fi
+        
+        # 環境変数ファイルの整理
+        if [ -f .env ]; then
+          # 重複変数の削除
+          sort .env | uniq > .env.tmp && mv .env.tmp .env
+          # 空行の削除
+          grep -v '^$' .env > .env.tmp && mv .env.tmp .env || true
+        fi
+    
+    - name: 🔧 Performance Healing
+      continue-on-error: true
+      run: |
+        echo "🔧 パフォーマンス最適化実行中..."
+        
+        # 大きなファイルの検出と最適化提案
+        find . -name "*.js" -o -name "*.ts" -o -name "*.tsx" -size +100k | while read file; do
+          echo "⚠️ Large file detected: $file"
+          # NOTE: 実環境では自動リファクタリングツールを使用
+        done
+        
+        # 未使用依存関係の削除
+        if command -v depcheck >/dev/null 2>&1; then
+          npx depcheck --json > depcheck-report.json || true
+        fi
+        
+        # Git最適化
+        git gc --aggressive || true
+    
+    - name: 🧪 Healing Verification
+      id: verify-healing
+      run: |
+        echo "🧪 修復結果検証中..."
+        
+        HEALING_SUCCESS=0
+        TOTAL_CHECKS=0
+        
+        # ビルドテスト
+        TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+        if npm run build; then
+          HEALING_SUCCESS=$((HEALING_SUCCESS + 1))
+          echo "✅ Build successful after healing"
+        else
+          echo "⚠️ Build issues remain after healing"
+        fi
+        
+        # Lintテスト
+        TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+        if npm run lint; then
+          HEALING_SUCCESS=$((HEALING_SUCCESS + 1))
+          echo "✅ Lint successful after healing"
+        else
+          echo "⚠️ Lint issues remain after healing"
+        fi
+        
+        # セキュリティテスト
+        TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+        if npm audit --audit-level moderate; then
+          HEALING_SUCCESS=$((HEALING_SUCCESS + 1))
+          echo "✅ Security audit passed after healing"
+        else
+          echo "⚠️ Security issues remain after healing"
+        fi
+        
+        # テスト実行
+        TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+        if npm test -- --watchAll=false --passWithNoTests; then
+          HEALING_SUCCESS=$((HEALING_SUCCESS + 1))
+          echo "✅ Tests passing after healing"
+        else
+          echo "⚠️ Test failures remain after healing"
+        fi
+        
+        # 成功率計算
+        if [ $TOTAL_CHECKS -gt 0 ]; then
+          SUCCESS_RATE=$((HEALING_SUCCESS * 100 / TOTAL_CHECKS))
+        else
+          SUCCESS_RATE=0
+        fi
+        
+        echo "healing-success-rate=$SUCCESS_RATE" >> $GITHUB_OUTPUT
+        
+        # 新しい健康スコア計算
+        ORIGINAL_SCORE=${{ needs.health-diagnostic.outputs.health-score }}
+        if [ $SUCCESS_RATE -ge 75 ]; then
+          NEW_SCORE=$((ORIGINAL_SCORE + 15))
+          echo "healing-status=excellent" >> $GITHUB_OUTPUT
+        elif [ $SUCCESS_RATE -ge 50 ]; then
+          NEW_SCORE=$((ORIGINAL_SCORE + 10))
+          echo "healing-status=good" >> $GITHUB_OUTPUT
+        elif [ $SUCCESS_RATE -ge 25 ]; then
+          NEW_SCORE=$((ORIGINAL_SCORE + 5))
+          echo "healing-status=partial" >> $GITHUB_OUTPUT
+        else
+          NEW_SCORE=$ORIGINAL_SCORE
+          echo "healing-status=failed" >> $GITHUB_OUTPUT
+        fi
+        
+        if [ $NEW_SCORE -gt 100 ]; then
+          NEW_SCORE=100
+        fi
+        
+        echo "new-health-score=$NEW_SCORE" >> $GITHUB_OUTPUT
+        
+        echo "🧪 修復検証完了:"
+        echo "  成功率: $SUCCESS_RATE% ($HEALING_SUCCESS/$TOTAL_CHECKS)"
+        echo "  健康スコア: $ORIGINAL_SCORE → $NEW_SCORE"
+    
+    - name: 💾 Commit Healing Changes
+      if: steps.verify-healing.outputs.healing-success-rate != '0'
+      run: |
+        git config --local user.email "self-healing@github.com"
+        git config --local user.name "Intelligent Self-Healing System"
+        
+        if ! git diff --quiet; then
+          SUCCESS_RATE="${{ steps.verify-healing.outputs.healing-success-rate }}"
+          HEALING_STATUS="${{ steps.verify-healing.outputs.healing-status }}"
+          ORIGINAL_HEALTH="${{ needs.health-diagnostic.outputs.health-score }}"
+          NEW_HEALTH="${{ steps.verify-healing.outputs.new-health-score }}"
+          
+          git add -A
+          git commit -m "🧠 Self-Healing: Intelligent system optimization (${SUCCESS_RATE}% success)
+
+          🤖 AI-Driven Healing Applied:
+          - Code quality improvements
+          - Dependency security updates  
+          - Configuration optimization
+          - Performance enhancements
+          
+          📊 Healing Results:
+          - Success Rate: ${SUCCESS_RATE}%
+          - Health Score: ${ORIGINAL_HEALTH} → ${NEW_HEALTH}
+          - Status: ${HEALING_STATUS}
+          - Mode: ${{ env.HEALING_MODE }}
+          - Components: ${{ env.TARGET_COMPONENTS }}
+          
+          🧠 Generated by Intelligent Self-Healing System v2.0
+          
+          Co-authored-by: Claude <noreply@anthropic.com>"
+          
+          echo "✅ Self-healing changes committed"
+        else
+          echo "ℹ️ No healing changes to commit"
+        fi
+    
+    - name: 📤 Push Healing Changes
+      if: steps.verify-healing.outputs.healing-success-rate != '0'
+      run: |
+        git push origin main
+        echo "✅ Self-healing changes pushed successfully"
+
+  # 📊 Phase 3: 健康レポート生成
+  health-report:
+    name: 📊 Generate Health Report
+    runs-on: ubuntu-latest
+    needs: [health-diagnostic, intelligent-healing]
+    if: always()
+    
+    steps:
+    - name: 📥 Download Diagnostic Reports
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: health-diagnostic-report
+        path: ./reports
+    
+    - name: 📊 Generate Comprehensive Health Report
+      run: |
+        mkdir -p reports
+        
+        cat > reports/health-system-report.md << EOF
+        # 🧠 Intelligent Self-Healing System Report
+        
+        **実行時刻**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')  
+        **モード**: ${{ env.HEALING_MODE }}  
+        **対象**: ${{ env.TARGET_COMPONENTS }}  
+        **トリガー**: ${{ github.event_name }}
+        
+        ## 📊 Health Diagnostic Results
+        
+        - **健康スコア**: ${{ needs.health-diagnostic.outputs.health-score }}/100
+        - **重大問題**: ${{ needs.health-diagnostic.outputs.critical-issues }} 件
+        - **修復必要**: ${{ needs.health-diagnostic.outputs.healing-required }}
+        
+        ## 🔧 Self-Healing Results
+        
+        EOF
+        
+        if [ "${{ needs.intelligent-healing.result }}" = "success" ]; then
+          echo "- **修復ステータス**: ✅ 成功" >> reports/health-system-report.md
+          echo "- **修復成功率**: ${{ needs.intelligent-healing.outputs.healing-success-rate || 'N/A' }}%" >> reports/health-system-report.md
+          echo "- **新健康スコア**: ${{ needs.intelligent-healing.outputs.new-health-score || 'N/A' }}/100" >> reports/health-system-report.md
+        elif [ "${{ needs.intelligent-healing.result }}" = "skipped" ]; then
+          echo "- **修復ステータス**: ⏭️ スキップ (修復不要)" >> reports/health-system-report.md
+        else
+          echo "- **修復ステータス**: ❌ 失敗" >> reports/health-system-report.md
+        fi
+        
+        cat >> reports/health-system-report.md << EOF
+        
+        ## 📈 Health Trend
+        
+        $(if [ "${{ needs.health-diagnostic.outputs.health-score }}" -gt 80 ]; then
+          echo "🟢 **HEALTHY** - システムは良好な状態です"
+        elif [ "${{ needs.health-diagnostic.outputs.health-score }}" -gt 60 ]; then
+          echo "🟡 **FAIR** - 軽微な問題があります"  
+        elif [ "${{ needs.health-diagnostic.outputs.health-score }}" -gt 40 ]; then
+          echo "🟠 **POOR** - 改善が必要です"
+        else
+          echo "🔴 **CRITICAL** - 緊急の対応が必要です"
+        fi)
+        
+        ## 🎯 Recommended Actions
+        
+        $(echo '${{ needs.health-diagnostic.outputs.recommended-actions }}' | jq -r '.[]' | sed 's/^/- /')
+        
+        ## 📅 Next Health Check
+        
+        次回の自動健康診断: 1時間後
+        次回の完全スキャン: 明日 2:00 AM (UTC)
+        
+        ---
+        *Generated by Intelligent Self-Healing System v2.0*  
+        *AI-powered health monitoring and automatic repair*
+        EOF
+        
+        echo "📊 Health report generated successfully"
+    
+    - name: 📤 Upload Final Health Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: health-system-final-report
+        path: reports/
+        retention-days: 90

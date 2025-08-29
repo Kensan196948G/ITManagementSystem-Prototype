@@ -1,0 +1,534 @@
+name: 🔍 Continuous System Monitoring & Alerts
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # 30分ごと
+    - cron: '0 0 * * *'     # 毎日深夜0時
+  workflow_dispatch:
+    inputs:
+      monitoring_level:
+        description: '監視レベル'
+        required: true
+        default: 'standard'
+        type: choice
+        options:
+        - light      # 軽量監視
+        - standard   # 標準監視  
+        - intensive  # 集約監視
+      alert_threshold:
+        description: 'アラート閾値'
+        required: true
+        default: 'medium'
+        type: choice
+        options:
+        - low     # 低レベル
+        - medium  # 中レベル
+        - high    # 高レベル
+
+env:
+  MONITORING_LEVEL: ${{ github.event.inputs.monitoring_level || 'standard' }}
+  ALERT_THRESHOLD: ${{ github.event.inputs.alert_threshold || 'medium' }}
+
+jobs:
+  # 🔍 Phase 1: システム監視
+  system-monitoring:
+    name: 🔍 System Health Monitoring
+    runs-on: ubuntu-latest
+    outputs:
+      system-status: ${{ steps.monitoring.outputs.system-status }}
+      alert-level: ${{ steps.monitoring.outputs.alert-level }}
+      issues-detected: ${{ steps.monitoring.outputs.issues-detected }}
+      requires-attention: ${{ steps.monitoring.outputs.requires-attention }}
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+    
+    - name: 🔧 Setup Monitoring Tools
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: 📦 Install Monitoring Dependencies
+      run: |
+        npm install -g npm-check lighthouse-ci
+        pip install psutil requests
+    
+    - name: 🔍 Repository Health Check
+      id: repo-health
+      run: |
+        echo "🔍 リポジトリ健康度チェック実行中..."
+        
+        HEALTH_ISSUES=0
+        ALERTS=()
+        
+        # 1. ファイルシステム健康度
+        TOTAL_FILES=$(find . -type f | wc -l)
+        LARGE_FILES=$(find . -type f -size +10M | wc -l)
+        
+        if [ $LARGE_FILES -gt 5 ]; then
+          HEALTH_ISSUES=$((HEALTH_ISSUES + 1))
+          ALERTS+=("Large files detected: $LARGE_FILES files > 10MB")
+        fi
+        
+        # 2. Git健康度
+        GIT_STATUS=$(git status --porcelain)
+        if [ -n "$GIT_STATUS" ]; then
+          UNCOMMITTED_FILES=$(echo "$GIT_STATUS" | wc -l)
+          if [ $UNCOMMITTED_FILES -gt 0 ]; then
+            ALERTS+=("Uncommitted changes: $UNCOMMITTED_FILES files")
+          fi
+        fi
+        
+        # 3. 依存関係健康度
+        if [ -f package.json ]; then
+          # package-lock.jsonの存在確認
+          if [ ! -f package-lock.json ]; then
+            HEALTH_ISSUES=$((HEALTH_ISSUES + 1))
+            ALERTS+=("Missing package-lock.json - dependency integrity at risk")
+          fi
+          
+          # node_modulesサイズチェック
+          if [ -d node_modules ]; then
+            NODE_MODULES_SIZE=$(du -sm node_modules | cut -f1)
+            if [ $NODE_MODULES_SIZE -gt 500 ]; then
+              ALERTS+=("Large node_modules detected: ${NODE_MODULES_SIZE}MB")
+            fi
+          fi
+        fi
+        
+        # 4. セキュリティ監視
+        if [ -f .env ] && [ -r .env ]; then
+          if grep -q "password\|secret\|key\|token" .env; then
+            SECRET_COUNT=$(grep -c "password\|secret\|key\|token" .env)
+            ALERTS+=("Potential secrets in .env file: $SECRET_COUNT entries")
+          fi
+        fi
+        
+        # 結果の記録
+        echo "repo-health-issues=$HEALTH_ISSUES" >> $GITHUB_OUTPUT
+        printf '%s\n' "${ALERTS[@]}" > repo-alerts.txt
+        
+        echo "📊 Repository Health: $HEALTH_ISSUES issues detected"
+    
+    - name: 🔍 Performance Monitoring
+      if: env.MONITORING_LEVEL != 'light'
+      id: performance
+      continue-on-error: true
+      run: |
+        echo "🔍 パフォーマンス監視実行中..."
+        
+        PERF_ISSUES=0
+        PERF_ALERTS=()
+        
+        # 1. ビルド時間監視
+        BUILD_START=$(date +%s)
+        if npm run build; then
+          BUILD_END=$(date +%s)
+          BUILD_TIME=$((BUILD_END - BUILD_START))
+          
+          if [ $BUILD_TIME -gt 300 ]; then  # 5分以上
+            PERF_ISSUES=$((PERF_ISSUES + 1))
+            PERF_ALERTS+=("Slow build detected: ${BUILD_TIME}s (threshold: 300s)")
+          fi
+          
+          echo "✅ Build completed in ${BUILD_TIME}s"
+        else
+          PERF_ISSUES=$((PERF_ISSUES + 1))
+          PERF_ALERTS+=("Build failure detected")
+          echo "❌ Build failed"
+        fi
+        
+        # 2. バンドルサイズ監視
+        if [ -d dist ]; then
+          BUNDLE_SIZE=$(du -sm dist | cut -f1)
+          if [ $BUNDLE_SIZE -gt 50 ]; then  # 50MB以上
+            PERF_ALERTS+=("Large bundle size: ${BUNDLE_SIZE}MB")
+          fi
+          echo "📦 Bundle size: ${BUNDLE_SIZE}MB"
+        fi
+        
+        # 3. 依存関係パフォーマンス
+        DEPENDENCY_COUNT=$(cat package.json | jq '.dependencies | length' 2>/dev/null || echo "0")
+        DEV_DEPENDENCY_COUNT=$(cat package.json | jq '.devDependencies | length' 2>/dev/null || echo "0")
+        TOTAL_DEPS=$((DEPENDENCY_COUNT + DEV_DEPENDENCY_COUNT))
+        
+        if [ $TOTAL_DEPS -gt 100 ]; then
+          PERF_ALERTS+=("High dependency count: $TOTAL_DEPS packages")
+        fi
+        
+        echo "performance-issues=$PERF_ISSUES" >> $GITHUB_OUTPUT
+        printf '%s\n' "${PERF_ALERTS[@]}" > performance-alerts.txt
+        
+        echo "📊 Performance: $PERF_ISSUES issues detected"
+    
+    - name: 🔍 Security Monitoring
+      if: env.MONITORING_LEVEL == 'intensive' || env.ALERT_THRESHOLD != 'low'
+      id: security
+      continue-on-error: true
+      run: |
+        echo "🔍 セキュリティ監視実行中..."
+        
+        SECURITY_ISSUES=0
+        SECURITY_ALERTS=()
+        
+        # 1. npm audit監視
+        if npm audit --audit-level=moderate --json > npm-audit-monitoring.json 2>&1; then
+          echo "✅ No security vulnerabilities detected"
+        else
+          VULN_COUNT=$(cat npm-audit-monitoring.json | jq '.metadata.vulnerabilities.total' 2>/dev/null || echo "0")
+          if [ $VULN_COUNT -gt 0 ]; then
+            SECURITY_ISSUES=$((SECURITY_ISSUES + VULN_COUNT))
+            SECURITY_ALERTS+=("npm security vulnerabilities: $VULN_COUNT")
+          fi
+        fi
+        
+        # 2. 機密情報スキャン
+        SENSITIVE_FILES=$(find . -name "*.key" -o -name "*.pem" -o -name "*.p12" -o -name "*.jks" 2>/dev/null | wc -l)
+        if [ $SENSITIVE_FILES -gt 0 ]; then
+          SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+          SECURITY_ALERTS+=("Potentially sensitive files found: $SENSITIVE_FILES")
+        fi
+        
+        # 3. 設定ファイルセキュリティ
+        if [ -f docker-compose.yml ]; then
+          if grep -q "password.*admin\|password.*123" docker-compose.yml; then
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+            SECURITY_ALERTS+=("Weak passwords detected in docker-compose.yml")
+          fi
+        fi
+        
+        # 4. ファイル権限チェック
+        EXECUTABLE_CONFIG=$(find . -name "*.json" -o -name "*.yml" -o -name "*.yaml" | xargs ls -la | grep -c "^-rwx" || echo "0")
+        if [ $EXECUTABLE_CONFIG -gt 0 ]; then
+          SECURITY_ALERTS+=("Configuration files with execute permissions: $EXECUTABLE_CONFIG")
+        fi
+        
+        echo "security-issues=$SECURITY_ISSUES" >> $GITHUB_OUTPUT
+        printf '%s\n' "${SECURITY_ALERTS[@]}" > security-alerts.txt
+        
+        echo "📊 Security: $SECURITY_ISSUES issues detected"
+    
+    - name: 📊 System Status Assessment
+      id: monitoring
+      run: |
+        echo "📊 システム状態評価実行中..."
+        
+        # 各監視結果の取得
+        REPO_ISSUES=${{ steps.repo-health.outputs.repo-health-issues || '0' }}
+        PERF_ISSUES=${{ steps.performance.outputs.performance-issues || '0' }}
+        SECURITY_ISSUES=${{ steps.security.outputs.security-issues || '0' }}
+        
+        TOTAL_ISSUES=$((REPO_ISSUES + PERF_ISSUES + SECURITY_ISSUES))
+        
+        # アラートレベルの決定
+        if [ $TOTAL_ISSUES -eq 0 ]; then
+          SYSTEM_STATUS="healthy"
+          ALERT_LEVEL="none"
+          REQUIRES_ATTENTION="false"
+        elif [ $TOTAL_ISSUES -le 2 ]; then
+          SYSTEM_STATUS="warning"
+          ALERT_LEVEL="low"
+          REQUIRES_ATTENTION="false"
+        elif [ $TOTAL_ISSUES -le 5 ]; then
+          SYSTEM_STATUS="degraded"
+          ALERT_LEVEL="medium"
+          REQUIRES_ATTENTION="true"
+        else
+          SYSTEM_STATUS="critical"
+          ALERT_LEVEL="high"
+          REQUIRES_ATTENTION="true"
+        fi
+        
+        # 閾値による調整
+        if [ "$ALERT_THRESHOLD" = "low" ]; then
+          if [ $TOTAL_ISSUES -gt 0 ]; then
+            REQUIRES_ATTENTION="true"
+          fi
+        elif [ "$ALERT_THRESHOLD" = "high" ]; then
+          if [ $TOTAL_ISSUES -lt 5 ]; then
+            REQUIRES_ATTENTION="false"
+          fi
+        fi
+        
+        # 結果の出力
+        echo "system-status=$SYSTEM_STATUS" >> $GITHUB_OUTPUT
+        echo "alert-level=$ALERT_LEVEL" >> $GITHUB_OUTPUT
+        echo "issues-detected=$TOTAL_ISSUES" >> $GITHUB_OUTPUT
+        echo "requires-attention=$REQUIRES_ATTENTION" >> $GITHUB_OUTPUT
+        
+        # 総合レポートの生成
+        cat > monitoring-summary.json << EOF
+        {
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "system_status": "$SYSTEM_STATUS",
+          "alert_level": "$ALERT_LEVEL",
+          "total_issues": $TOTAL_ISSUES,
+          "requires_attention": $REQUIRES_ATTENTION,
+          "monitoring_level": "$MONITORING_LEVEL",
+          "alert_threshold": "$ALERT_THRESHOLD",
+          "breakdown": {
+            "repository": $REPO_ISSUES,
+            "performance": $PERF_ISSUES,
+            "security": $SECURITY_ISSUES
+          }
+        }
+        EOF
+        
+        echo "📊 System Status: $SYSTEM_STATUS ($TOTAL_ISSUES issues)"
+        echo "🚨 Alert Level: $ALERT_LEVEL"
+        echo "⚠️ Requires Attention: $REQUIRES_ATTENTION"
+    
+    - name: 📤 Upload Monitoring Data
+      uses: actions/upload-artifact@v4
+      with:
+        name: monitoring-data
+        path: |
+          monitoring-summary.json
+          *-alerts.txt
+          npm-audit-monitoring.json
+        retention-days: 7
+
+  # 🚨 Phase 2: アラートシステム  
+  alert-system:
+    name: 🚨 Intelligent Alert System
+    runs-on: ubuntu-latest
+    needs: system-monitoring
+    if: needs.system-monitoring.outputs.requires-attention == 'true'
+    permissions:
+      contents: read
+      issues: write
+      discussions: write
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+    
+    - name: 📥 Download Monitoring Data
+      uses: actions/download-artifact@v4
+      with:
+        name: monitoring-data
+        path: ./monitoring
+    
+    - name: 🚨 Create System Alert
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // 監視データの読み込み
+          let monitoringData = {};
+          try {
+            monitoringData = JSON.parse(fs.readFileSync('./monitoring/monitoring-summary.json', 'utf8'));
+          } catch (error) {
+            console.log('Could not read monitoring data');
+          }
+          
+          // アラートファイルの読み込み
+          function readAlertFile(filename) {
+            try {
+              return fs.readFileSync(`./monitoring/${filename}`, 'utf8').split('\n').filter(line => line.trim());
+            } catch {
+              return [];
+            }
+          }
+          
+          const repoAlerts = readAlertFile('repo-alerts.txt');
+          const perfAlerts = readAlertFile('performance-alerts.txt');
+          const securityAlerts = readAlertFile('security-alerts.txt');
+          
+          // アラートレベルに応じたアイコンと色
+          const alertConfig = {
+            'high': { icon: '🔴', color: 'red', priority: 'HIGH PRIORITY' },
+            'medium': { icon: '🟡', color: 'orange', priority: 'MEDIUM PRIORITY' },
+            'low': { icon: '🟢', color: 'green', priority: 'LOW PRIORITY' }
+          };
+          
+          const config = alertConfig[monitoringData.alert_level] || alertConfig['medium'];
+          
+          // Issue作成
+          const issueBody = `${config.icon} **SYSTEM ALERT - ${config.priority}**
+          
+          ## 📊 System Status Summary
+          
+          - **Status**: ${monitoringData.system_status?.toUpperCase() || 'UNKNOWN'}
+          - **Alert Level**: ${config.icon} ${monitoringData.alert_level?.toUpperCase() || 'UNKNOWN'}
+          - **Total Issues**: ${monitoringData.total_issues || 0}
+          - **Detection Time**: ${monitoringData.timestamp || new Date().toISOString()}
+          - **Monitoring Level**: ${monitoringData.monitoring_level || 'standard'}
+          
+          ## 🔍 Detected Issues
+          
+          ### Repository Health
+          ${repoAlerts.length > 0 ? repoAlerts.map(alert => `- ⚠️ ${alert}`).join('\n') : '- ✅ No repository issues'}
+          
+          ### Performance Issues  
+          ${perfAlerts.length > 0 ? perfAlerts.map(alert => `- ⚠️ ${alert}`).join('\n') : '- ✅ No performance issues'}
+          
+          ### Security Concerns
+          ${securityAlerts.length > 0 ? securityAlerts.map(alert => `- ⚠️ ${alert}`).join('\n') : '- ✅ No security issues'}
+          
+          ## 🎯 Recommended Actions
+          
+          ${monitoringData.alert_level === 'high' ? `
+          **IMMEDIATE ACTION REQUIRED:**
+          - [ ] Review security vulnerabilities immediately
+          - [ ] Check system performance metrics
+          - [ ] Validate repository integrity
+          - [ ] Consider triggering emergency repair workflow
+          ` : monitoringData.alert_level === 'medium' ? `
+          **ACTION RECOMMENDED:**
+          - [ ] Review detected issues
+          - [ ] Run auto-repair workflow if needed
+          - [ ] Monitor system for escalation
+          - [ ] Update dependencies if applicable
+          ` : `
+          **INFORMATIONAL:**
+          - [ ] Review minor issues
+          - [ ] Schedule maintenance if needed
+          - [ ] Monitor trends
+          `}
+          
+          ## 🤖 Automated Response
+          
+          - **Auto-Repair**: ${monitoringData.alert_level === 'high' ? 'Will trigger automatically' : 'Available on-demand'}
+          - **Self-Healing**: ${monitoringData.system_status === 'critical' ? 'Activated' : 'Standby'}
+          - **Monitoring**: Continuous monitoring active
+          
+          ## 📎 Related Data
+          
+          - **Workflow Run**: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          - **Branch**: \`${{ github.ref_name }}\`
+          - **Commit**: \`${{ github.sha }}\`
+          
+          ---
+          *Automated alert generated by Continuous System Monitoring v1.0*
+          `;
+          
+          // Issue作成
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `${config.icon} System Alert: ${monitoringData.system_status?.toUpperCase() || 'SYSTEM ISSUE'} - ${config.priority}`,
+            body: issueBody,
+            labels: [
+              'system-alert',
+              `alert-${monitoringData.alert_level || 'medium'}`,
+              `status-${monitoringData.system_status || 'unknown'}`,
+              'automated'
+            ]
+          });
+          
+          console.log(`Alert created for ${monitoringData.system_status} system status`);
+    
+    - name: 🚨 Trigger Emergency Repair
+      if: needs.system-monitoring.outputs.alert-level == 'high'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          // 高レベルアラートの場合、緊急修復ワークフローをトリガー
+          await github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'auto-error-detection-repair.yml',
+            ref: 'main',
+            inputs: {
+              repair_level: 'aggressive',
+              target_scope: 'all'
+            }
+          });
+          
+          console.log('Emergency repair workflow triggered');
+
+  # 📊 Phase 3: 監視レポート生成
+  monitoring-report:
+    name: 📊 Generate Monitoring Report
+    runs-on: ubuntu-latest
+    needs: [system-monitoring]
+    if: always()
+    
+    steps:
+    - name: 📥 Download Monitoring Data
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: monitoring-data
+        path: ./monitoring
+    
+    - name: 📊 Generate Comprehensive Monitoring Report
+      run: |
+        mkdir -p reports
+        
+        # 監視データの読み込み
+        SYSTEM_STATUS="${{ needs.system-monitoring.outputs.system-status }}"
+        ALERT_LEVEL="${{ needs.system-monitoring.outputs.alert-level }}"
+        TOTAL_ISSUES="${{ needs.system-monitoring.outputs.issues-detected }}"
+        
+        cat > reports/monitoring-report.md << EOF
+        # 🔍 Continuous System Monitoring Report
+        
+        **監視時刻**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')  
+        **監視レベル**: ${{ env.MONITORING_LEVEL }}  
+        **アラート閾値**: ${{ env.ALERT_THRESHOLD }}  
+        **実行トリガー**: ${{ github.event_name }}
+        
+        ## 📊 System Overview
+        
+        | メトリック | 値 | ステータス |
+        |---------|-----|-----------|
+        | システム状態 | ${SYSTEM_STATUS} | $(if [ "$SYSTEM_STATUS" = "healthy" ]; then echo "🟢 良好"; elif [ "$SYSTEM_STATUS" = "warning" ]; then echo "🟡 注意"; elif [ "$SYSTEM_STATUS" = "degraded" ]; then echo "🟠 劣化"; else echo "🔴 重大"; fi) |
+        | アラートレベル | ${ALERT_LEVEL} | $(if [ "$ALERT_LEVEL" = "none" ]; then echo "✅ なし"; elif [ "$ALERT_LEVEL" = "low" ]; then echo "🟢 低"; elif [ "$ALERT_LEVEL" = "medium" ]; then echo "🟡 中"; else echo "🔴 高"; fi) |
+        | 検出された問題 | ${TOTAL_ISSUES} | $(if [ "$TOTAL_ISSUES" = "0" ]; then echo "✅ なし"; elif [ "$TOTAL_ISSUES" -lt "3" ]; then echo "🟡 軽微"; else echo "🔴 重大"; fi) |
+        | 要注意 | ${{ needs.system-monitoring.outputs.requires-attention }} | $(if [ "${{ needs.system-monitoring.outputs.requires-attention }}" = "false" ]; then echo "✅ いいえ"; else echo "⚠️ はい"; fi) |
+        
+        ## 📈 Monitoring Insights
+        
+        ### 🏥 System Health
+        $(if [ "$SYSTEM_STATUS" = "healthy" ]; then
+          echo "✅ システムは正常に動作しています。すべての監視項目が正常範囲内です。"
+        elif [ "$SYSTEM_STATUS" = "warning" ]; then
+          echo "🟡 軽微な問題が検出されましたが、システムは安定しています。継続監視中です。"
+        elif [ "$SYSTEM_STATUS" = "degraded" ]; then
+          echo "🟠 システムパフォーマンスの低下が検出されました。改善措置が推奨されます。"
+        else
+          echo "🔴 重大なシステム問題が検出されました。即座の対応が必要です。"
+        fi)
+        
+        ### 🔍 Detection Coverage
+        - **Repository Health**: $(if [ -f monitoring/repo-alerts.txt ]; then echo "監視済み"; else echo "スキップ"; fi)
+        - **Performance Metrics**: $(if [ -f monitoring/performance-alerts.txt ]; then echo "監視済み"; else echo "スキップ"; fi)  
+        - **Security Scanning**: $(if [ -f monitoring/security-alerts.txt ]; then echo "監視済み"; else echo "スキップ"; fi)
+        
+        ## 📅 Monitoring Schedule
+        
+        - **連続監視**: 30分間隔
+        - **詳細スキャン**: 毎日 0:00 UTC
+        - **レポート生成**: 監視実行ごと
+        - **アラート**: 閾値超過時
+        
+        ## 🎯 Next Steps
+        
+        $(if [ "${{ needs.system-monitoring.outputs.requires-attention }}" = "true" ]; then
+          echo "⚠️ **要注意**: システムアラートが発生しています。関連するIssueを確認し、必要に応じて修復ワークフローを実行してください。"
+        else
+          echo "✅ **正常**: 現在のシステム状態は正常です。継続的な監視を維持します。"
+        fi)
+        
+        ---
+        *Generated by Continuous System Monitoring v1.0*  
+        *Next monitoring: $(date -u -d '+30 minutes' '+%Y-%m-%d %H:%M UTC')*
+        EOF
+        
+        echo "📊 Monitoring report generated successfully"
+    
+    - name: 📤 Upload Monitoring Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: monitoring-final-report
+        path: reports/
+        retention-days: 30

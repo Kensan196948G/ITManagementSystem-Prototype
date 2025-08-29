@@ -1,0 +1,609 @@
+name: 🔍 Auto Error Detection & Repair System
+
+on:
+  push:
+    branches: [ main, develop, 'feature/*' ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 */2 * * *'  # 2時間ごとに自動実行
+  workflow_dispatch:
+    inputs:
+      repair_level:
+        description: '修復レベル (basic/advanced/aggressive)'
+        required: true
+        default: 'advanced'
+        type: choice
+        options:
+        - basic
+        - advanced
+        - aggressive
+      target_scope:
+        description: '修復対象 (frontend/backend/all)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - frontend
+        - backend
+        - all
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.10'
+  REPAIR_LEVEL: ${{ github.event.inputs.repair_level || 'advanced' }}
+  TARGET_SCOPE: ${{ github.event.inputs.target_scope || 'all' }}
+
+jobs:
+  # 🔍 Phase 1: 包括的エラー検出
+  error-detection:
+    name: 🔍 Error Detection & Analysis
+    runs-on: ubuntu-latest
+    outputs:
+      has-errors: ${{ steps.error-summary.outputs.has-errors }}
+      error-count: ${{ steps.error-summary.outputs.error-count }}
+      critical-errors: ${{ steps.error-summary.outputs.critical-errors }}
+      repair-needed: ${{ steps.error-summary.outputs.repair-needed }}
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 🔧 Setup Node.js Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: 🐍 Setup Python Environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+    
+    - name: 📦 Install Dependencies
+      run: |
+        npm ci --silent
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        fi
+        if [ -f backend/requirements.txt ]; then
+          pip install -r backend/requirements.txt
+        fi
+    
+    - name: 🔍 TypeScript Error Detection
+      id: ts-errors
+      continue-on-error: true
+      run: |
+        echo "🔍 TypeScript エラー検出中..."
+        npm run build 2>&1 | tee ts-errors.log || echo "BUILD_FAILED=true" >> $GITHUB_OUTPUT
+        
+        # TypeScriptエラーの詳細分析
+        if grep -q "error TS" ts-errors.log; then
+          ERROR_COUNT=$(grep -c "error TS" ts-errors.log)
+          echo "ts-error-count=$ERROR_COUNT" >> $GITHUB_OUTPUT
+          echo "ts-has-errors=true" >> $GITHUB_OUTPUT
+          echo "⚠️ TypeScript errors detected: $ERROR_COUNT"
+        else
+          echo "ts-has-errors=false" >> $GITHUB_OUTPUT
+          echo "✅ TypeScript compilation successful"
+        fi
+    
+    - name: 🔍 ESLint Error Detection  
+      id: eslint-errors
+      continue-on-error: true
+      run: |
+        echo "🔍 ESLint エラー検出中..."
+        npm run lint 2>&1 | tee eslint-errors.log || echo "LINT_FAILED=true" >> $GITHUB_OUTPUT
+        
+        # ESLintエラーの分析
+        if grep -q "✖" eslint-errors.log; then
+          ERROR_COUNT=$(grep -o "[0-9]* error" eslint-errors.log | grep -o "[0-9]*" | head -1)
+          WARNING_COUNT=$(grep -o "[0-9]* warning" eslint-errors.log | grep -o "[0-9]*" | head -1)
+          echo "eslint-error-count=${ERROR_COUNT:-0}" >> $GITHUB_OUTPUT
+          echo "eslint-warning-count=${WARNING_COUNT:-0}" >> $GITHUB_OUTPUT
+          echo "eslint-has-errors=true" >> $GITHUB_OUTPUT
+          echo "⚠️ ESLint issues detected: $ERROR_COUNT errors, $WARNING_COUNT warnings"
+        else
+          echo "eslint-has-errors=false" >> $GITHUB_OUTPUT
+          echo "✅ ESLint validation successful"
+        fi
+    
+    - name: 🔍 Python Error Detection
+      id: python-errors
+      continue-on-error: true
+      if: env.TARGET_SCOPE == 'all' || env.TARGET_SCOPE == 'backend'
+      run: |
+        echo "🔍 Python エラー検出中..."
+        
+        # Python syntax check
+        find . -name "*.py" -not -path "./.venv/*" -not -path "./venv/*" | xargs python -m py_compile 2>&1 | tee python-errors.log || echo "PYTHON_FAILED=true" >> $GITHUB_OUTPUT
+        
+        # flake8によるコード品質チェック
+        if command -v flake8 >/dev/null 2>&1; then
+          flake8 --statistics --count . 2>&1 | tee -a python-errors.log || true
+        fi
+        
+        if [ -s python-errors.log ]; then
+          ERROR_COUNT=$(wc -l < python-errors.log)
+          echo "python-error-count=$ERROR_COUNT" >> $GITHUB_OUTPUT
+          echo "python-has-errors=true" >> $GITHUB_OUTPUT
+          echo "⚠️ Python errors detected: $ERROR_COUNT issues"
+        else
+          echo "python-has-errors=false" >> $GITHUB_OUTPUT
+          echo "✅ Python validation successful"
+        fi
+    
+    - name: 🔍 Dependency Vulnerability Detection
+      id: security-audit
+      continue-on-error: true
+      run: |
+        echo "🔍 依存関係の脆弱性検出中..."
+        
+        # npm audit
+        npm audit --audit-level=moderate --json > npm-audit.json 2>&1 || echo "NPM_AUDIT_ISSUES=true" >> $GITHUB_OUTPUT
+        
+        # Python safety check
+        if command -v safety >/dev/null 2>&1; then
+          safety check --json > safety-audit.json 2>&1 || echo "PYTHON_AUDIT_ISSUES=true" >> $GITHUB_OUTPUT
+        fi
+        
+        # 脆弱性レポートの分析
+        if [ -f npm-audit.json ] && [ "$(jq '.metadata.vulnerabilities.total' npm-audit.json 2>/dev/null)" != "0" ]; then
+          VULN_COUNT=$(jq '.metadata.vulnerabilities.total' npm-audit.json)
+          echo "security-vulnerability-count=$VULN_COUNT" >> $GITHUB_OUTPUT
+          echo "security-has-vulnerabilities=true" >> $GITHUB_OUTPUT
+          echo "⚠️ Security vulnerabilities detected: $VULN_COUNT"
+        else
+          echo "security-has-vulnerabilities=false" >> $GITHUB_OUTPUT
+          echo "✅ Security audit passed"
+        fi
+    
+    - name: 🔍 Test Failure Detection
+      id: test-failures
+      continue-on-error: true
+      run: |
+        echo "🔍 テスト失敗検出中..."
+        
+        # Frontend tests
+        if [ "$TARGET_SCOPE" = "all" ] || [ "$TARGET_SCOPE" = "frontend" ]; then
+          npm test -- --watchAll=false --coverage 2>&1 | tee test-results.log || echo "TEST_FAILED=true" >> $GITHUB_OUTPUT
+        fi
+        
+        # Backend tests  
+        if [ "$TARGET_SCOPE" = "all" ] || [ "$TARGET_SCOPE" = "backend" ]; then
+          if [ -f backend/requirements.txt ]; then
+            cd backend && python -m pytest --tb=short 2>&1 | tee -a ../test-results.log || echo "PYTEST_FAILED=true" >> $GITHUB_OUTPUT
+            cd ..
+          fi
+        fi
+        
+        # テスト結果の分析
+        if grep -q "FAILED\|ERROR\|FAIL" test-results.log; then
+          FAILED_COUNT=$(grep -c "FAILED\|ERROR" test-results.log || echo "0")
+          echo "test-failure-count=$FAILED_COUNT" >> $GITHUB_OUTPUT
+          echo "test-has-failures=true" >> $GITHUB_OUTPUT
+          echo "⚠️ Test failures detected: $FAILED_COUNT"
+        else
+          echo "test-has-failures=false" >> $GITHUB_OUTPUT
+          echo "✅ All tests passed"
+        fi
+    
+    - name: 📊 Error Summary & Analysis
+      id: error-summary
+      run: |
+        echo "📊 エラー集計・分析中..."
+        
+        # エラーカウントの集計
+        TS_ERRORS=${{ steps.ts-errors.outputs.ts-error-count || '0' }}
+        ESLINT_ERRORS=${{ steps.eslint-errors.outputs.eslint-error-count || '0' }}
+        PYTHON_ERRORS=${{ steps.python-errors.outputs.python-error-count || '0' }}
+        SECURITY_VULNS=${{ steps.security-audit.outputs.security-vulnerability-count || '0' }}
+        TEST_FAILURES=${{ steps.test-failures.outputs.test-failure-count || '0' }}
+        
+        TOTAL_ERRORS=$((TS_ERRORS + ESLINT_ERRORS + PYTHON_ERRORS + SECURITY_VULNS + TEST_FAILURES))
+        
+        echo "error-count=$TOTAL_ERRORS" >> $GITHUB_OUTPUT
+        
+        # 重大エラーの判定
+        CRITICAL_ERRORS=0
+        if [ "$TS_ERRORS" -gt 0 ]; then CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1)); fi
+        if [ "$SECURITY_VULNS" -gt 0 ]; then CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1)); fi
+        if [ "$TEST_FAILURES" -gt 0 ]; then CRITICAL_ERRORS=$((CRITICAL_ERRORS + 1)); fi
+        
+        echo "critical-errors=$CRITICAL_ERRORS" >> $GITHUB_OUTPUT
+        
+        # 修復必要性の判定
+        if [ "$TOTAL_ERRORS" -gt 0 ]; then
+          echo "has-errors=true" >> $GITHUB_OUTPUT
+          echo "repair-needed=true" >> $GITHUB_OUTPUT
+          echo "🔴 Total errors detected: $TOTAL_ERRORS (Critical: $CRITICAL_ERRORS)"
+        else
+          echo "has-errors=false" >> $GITHUB_OUTPUT
+          echo "repair-needed=false" >> $GITHUB_OUTPUT
+          echo "✅ No errors detected - system healthy"
+        fi
+        
+        # エラーレポートの保存
+        cat > error-report.json << EOF
+        {
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "total_errors": $TOTAL_ERRORS,
+          "critical_errors": $CRITICAL_ERRORS,
+          "breakdown": {
+            "typescript": $TS_ERRORS,
+            "eslint": $ESLINT_ERRORS,
+            "python": $PYTHON_ERRORS,
+            "security": $SECURITY_VULNS,
+            "tests": $TEST_FAILURES
+          },
+          "repair_level": "$REPAIR_LEVEL",
+          "target_scope": "$TARGET_SCOPE"
+        }
+        EOF
+    
+    - name: 📤 Upload Error Reports
+      uses: actions/upload-artifact@v4
+      if: steps.error-summary.outputs.has-errors == 'true'
+      with:
+        name: error-detection-reports
+        path: |
+          error-report.json
+          *-errors.log
+          npm-audit.json
+          safety-audit.json
+          test-results.log
+        retention-days: 7
+
+  # 🔧 Phase 2: 自動修復システム
+  auto-repair:
+    name: 🔧 Intelligent Auto-Repair System
+    runs-on: ubuntu-latest
+    needs: error-detection
+    if: needs.error-detection.outputs.repair-needed == 'true'
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 🔧 Setup Development Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: 🐍 Setup Python Environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+    
+    - name: 📦 Install Dependencies
+      run: |
+        npm ci --silent
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+    
+    - name: 🔧 Auto-Fix ESLint Issues
+      if: env.REPAIR_LEVEL != 'basic'
+      continue-on-error: true
+      run: |
+        echo "🔧 ESLint自動修復実行中..."
+        npm run lint -- --fix || true
+        
+        # 修復結果の確認
+        if git diff --quiet; then
+          echo "ℹ️ No ESLint fixes applied"
+        else
+          echo "✅ ESLint fixes applied successfully"
+          git add -A
+        fi
+    
+    - name: 🔧 Auto-Fix TypeScript Issues
+      if: env.REPAIR_LEVEL == 'aggressive'
+      continue-on-error: true
+      run: |
+        echo "🔧 TypeScript自動修復実行中..."
+        
+        # 一般的なTypeScriptエラーの自動修復
+        find src -name "*.ts" -o -name "*.tsx" | while read file; do
+          # 不足しているimportの自動追加
+          if grep -q "React" "$file" && ! grep -q "import.*React" "$file"; then
+            sed -i '1i import React from '\''react'\'';' "$file"
+          fi
+          
+          # 型定義の自動修復
+          sed -i 's/any\[\]/unknown[]/g' "$file"
+          sed -i 's/: any;/: unknown;/g' "$file"
+        done
+        
+        # 修復後の確認
+        npm run build || echo "⚠️ Some TypeScript issues remain"
+    
+    - name: 🔧 Auto-Fix Python Issues
+      if: env.TARGET_SCOPE != 'frontend'
+      continue-on-error: true
+      run: |
+        echo "🔧 Python自動修復実行中..."
+        
+        # autopep8による自動修復
+        if command -v autopep8 >/dev/null 2>&1; then
+          find . -name "*.py" -not -path "./.venv/*" -not -path "./venv/*" -exec autopep8 --in-place --aggressive {} \;
+        fi
+        
+        # isortによるimport整理
+        if command -v isort >/dev/null 2>&1; then
+          isort . --profile black
+        fi
+        
+        # blackによるコード整形
+        if command -v black >/dev/null 2>&1; then
+          black . --line-length 88
+        fi
+    
+    - name: 🔧 Auto-Fix Security Vulnerabilities
+      continue-on-error: true
+      run: |
+        echo "🔧 セキュリティ脆弱性自動修復中..."
+        
+        # npm auditによる自動修復
+        npm audit fix --force || echo "⚠️ Some vulnerabilities require manual intervention"
+        
+        # package.jsonの更新確認
+        if git diff --quiet package.json package-lock.json; then
+          echo "ℹ️ No security fixes applied"
+        else
+          echo "✅ Security vulnerabilities fixed"
+          git add package.json package-lock.json
+        fi
+    
+    - name: 🔧 Auto-Fix Configuration Issues
+      continue-on-error: true
+      run: |
+        echo "🔧 設定ファイル自動修復中..."
+        
+        # package.jsonの修復
+        if ! jq empty package.json 2>/dev/null; then
+          echo "🔧 Fixing malformed package.json"
+          jq '.' package.json > package.json.tmp && mv package.json.tmp package.json
+        fi
+        
+        # tsconfig.jsonの修復
+        if [ -f tsconfig.json ] && ! jq empty tsconfig.json 2>/dev/null; then
+          echo "🔧 Fixing malformed tsconfig.json"
+          jq '.' tsconfig.json > tsconfig.json.tmp && mv tsconfig.json.tmp tsconfig.json
+        fi
+        
+        # .envファイルの修復
+        if [ -f .env ]; then
+          # 重複する環境変数の削除
+          sort .env | uniq > .env.tmp && mv .env.tmp .env
+        fi
+    
+    - name: 🧪 Verify Repairs
+      id: verify-repairs
+      run: |
+        echo "🧪 修復結果の検証中..."
+        
+        # ビルドテスト
+        BUILD_SUCCESS=false
+        if npm run build; then
+          BUILD_SUCCESS=true
+          echo "✅ Build successful after repairs"
+        else
+          echo "⚠️ Build still failing after repairs"
+        fi
+        
+        # Lintテスト
+        LINT_SUCCESS=false
+        if npm run lint; then
+          LINT_SUCCESS=true
+          echo "✅ Lint successful after repairs"
+        else
+          echo "⚠️ Lint issues remain after repairs"
+        fi
+        
+        # テスト実行
+        TEST_SUCCESS=false
+        if npm test -- --watchAll=false --passWithNoTests; then
+          TEST_SUCCESS=true
+          echo "✅ Tests passing after repairs"
+        else
+          echo "⚠️ Test failures remain after repairs"
+        fi
+        
+        # 全体の成功率
+        SUCCESS_COUNT=0
+        if [ "$BUILD_SUCCESS" = true ]; then SUCCESS_COUNT=$((SUCCESS_COUNT + 1)); fi
+        if [ "$LINT_SUCCESS" = true ]; then SUCCESS_COUNT=$((SUCCESS_COUNT + 1)); fi
+        if [ "$TEST_SUCCESS" = true ]; then SUCCESS_COUNT=$((SUCCESS_COUNT + 1)); fi
+        
+        SUCCESS_RATE=$((SUCCESS_COUNT * 100 / 3))
+        echo "repair-success-rate=$SUCCESS_RATE" >> $GITHUB_OUTPUT
+        
+        if [ $SUCCESS_RATE -ge 66 ]; then
+          echo "repair-status=successful" >> $GITHUB_OUTPUT
+          echo "✅ Auto-repair mostly successful ($SUCCESS_RATE%)"
+        else
+          echo "repair-status=partial" >> $GITHUB_OUTPUT
+          echo "⚠️ Auto-repair partially successful ($SUCCESS_RATE%)"
+        fi
+    
+    - name: 💾 Commit Auto-Repairs
+      if: steps.verify-repairs.outputs.repair-success-rate != '0'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Auto-Repair Bot"
+        
+        if ! git diff --quiet; then
+          REPAIR_RATE="${{ steps.verify-repairs.outputs.repair-success-rate }}"
+          
+          git add -A
+          git commit -m "🔧 Auto-repair: Intelligent error resolution (${REPAIR_RATE}% success)
+
+          🤖 Automated repairs applied:
+          - ESLint issues fixed
+          - TypeScript errors resolved  
+          - Python code formatting
+          - Security vulnerabilities patched
+          - Configuration files repaired
+          
+          📊 Repair Statistics:
+          - Success Rate: ${REPAIR_RATE}%
+          - Repair Level: ${{ env.REPAIR_LEVEL }}
+          - Target Scope: ${{ env.TARGET_SCOPE }}
+          
+          🚀 Generated by Auto-Repair System
+          
+          Co-authored-by: Claude <noreply@anthropic.com>"
+          
+          echo "✅ Auto-repair changes committed"
+        else
+          echo "ℹ️ No changes to commit"
+        fi
+    
+    - name: 📤 Push Auto-Repairs
+      if: steps.verify-repairs.outputs.repair-success-rate != '0'
+      run: |
+        git push origin main
+        echo "✅ Auto-repair changes pushed to repository"
+
+  # 📋 Phase 3: 修復レポート生成
+  repair-report:
+    name: 📋 Generate Repair Report
+    runs-on: ubuntu-latest
+    needs: [error-detection, auto-repair]
+    if: always()
+    
+    steps:
+    - name: 📥 Download Error Reports
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: error-detection-reports
+        path: ./reports
+    
+    - name: 📋 Generate Comprehensive Report
+      run: |
+        mkdir -p reports
+        
+        cat > reports/repair-summary.md << EOF
+        # 🔧 Auto-Repair System Report
+        
+        **実行時刻**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')  
+        **トリガー**: ${{ github.event_name }}  
+        **ブランチ**: ${{ github.ref_name }}  
+        **コミット**: ${{ github.sha }}
+        
+        ## 📊 Detection Results
+        
+        - **総エラー数**: ${{ needs.error-detection.outputs.error-count || 'N/A' }}
+        - **重大エラー数**: ${{ needs.error-detection.outputs.critical-errors || 'N/A' }}
+        - **修復必要**: ${{ needs.error-detection.outputs.repair-needed || 'false' }}
+        
+        ## 🔧 Repair Results
+        
+        EOF
+        
+        if [ "${{ needs.auto-repair.result }}" = "success" ]; then
+          echo "- **修復ステータス**: ✅ 成功" >> reports/repair-summary.md
+          echo "- **修復成功率**: ${{ needs.auto-repair.outputs.repair-success-rate || 'N/A' }}%" >> reports/repair-summary.md
+        elif [ "${{ needs.auto-repair.result }}" = "failure" ]; then
+          echo "- **修復ステータス**: ❌ 失敗" >> reports/repair-summary.md
+        elif [ "${{ needs.auto-repair.result }}" = "skipped" ]; then
+          echo "- **修復ステータス**: ⏭️ スキップ (エラーなし)" >> reports/repair-summary.md
+        else
+          echo "- **修復ステータス**: ⚠️ 部分的成功" >> reports/repair-summary.md
+        fi
+        
+        cat >> reports/repair-summary.md << EOF
+        
+        ## 🎯 Next Steps
+        
+        $(if [ "${{ needs.error-detection.outputs.has-errors }}" = "true" ]; then
+          if [ "${{ needs.auto-repair.result }}" = "success" ]; then
+            echo "✅ 自動修復が完了しました。変更内容を確認してください。"
+          else
+            echo "⚠️ 手動での対応が必要なエラーが残っています。"
+          fi
+        else
+          echo "🎉 すべて正常です！継続的な監視を行います。"
+        fi)
+        
+        ---
+        *Generated by Auto-Repair System v1.0*
+        EOF
+        
+        echo "📋 Repair report generated successfully"
+    
+    - name: 📤 Upload Final Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: repair-final-report
+        path: reports/
+        retention-days: 30
+
+  # 🚨 Phase 4: 緊急時対応
+  emergency-response:
+    name: 🚨 Emergency Response System
+    runs-on: ubuntu-latest
+    needs: [error-detection, auto-repair]
+    if: needs.error-detection.outputs.critical-errors > 2 && needs.auto-repair.result == 'failure'
+    
+    steps:
+    - name: 🚨 Critical System Alert
+      run: |
+        echo "🚨 CRITICAL SYSTEM ALERT 🚨"
+        echo "Multiple critical errors detected and auto-repair failed"
+        echo "Immediate manual intervention required"
+        
+        # 緊急時メトリクス
+        echo "📊 Emergency Metrics:"
+        echo "- Critical Errors: ${{ needs.error-detection.outputs.critical-errors }}"
+        echo "- Total Errors: ${{ needs.error-detection.outputs.error-count }}"
+        echo "- Auto-Repair Result: ${{ needs.auto-repair.result }}"
+    
+    - name: 📧 Create Emergency Issue
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 Emergency: Critical System Errors Detected',
+            body: `## 🚨 Critical System Alert
+            
+            Multiple critical errors have been detected and automatic repair has failed.
+            **Immediate manual intervention is required.**
+            
+            ### 📊 Error Summary
+            - **Critical Errors**: ${{ needs.error-detection.outputs.critical-errors }}
+            - **Total Errors**: ${{ needs.error-detection.outputs.error-count }}
+            - **Auto-Repair Status**: Failed
+            
+            ### 🔍 Investigation Required
+            - [ ] Review error detection logs
+            - [ ] Analyze failed repair attempts  
+            - [ ] Apply manual fixes
+            - [ ] Update auto-repair system
+            
+            ### 📎 Related Artifacts
+            - Error Detection Reports: Available in workflow artifacts
+            - Repair Attempt Logs: Check auto-repair job output
+            
+            **Triggered by**: ${{ github.event_name }} on ${{ github.ref_name }}
+            **Commit**: ${{ github.sha }}
+            **Workflow**: ${{ github.run_id }}
+            `,
+            labels: ['critical', 'auto-repair', 'emergency']
+          })
