@@ -2,10 +2,12 @@
 問題関連のPydanticスキーマ
 """
 
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List
 from datetime import datetime
 from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class ProblemPriority(str, Enum):
     LOW = "low"
@@ -13,12 +15,14 @@ class ProblemPriority(str, Enum):
     HIGH = "high"
     CRITICAL = "critical"
 
+
 class ProblemStatus(str, Enum):
     NEW = "new"
     INVESTIGATING = "investigating"
     KNOWN_ERROR = "known_error"
     RESOLVED = "resolved"
     CLOSED = "closed"
+
 
 class ProblemBase(BaseModel):
     title: str = Field(..., example="Database performance issue")
@@ -30,9 +34,11 @@ class ProblemBase(BaseModel):
     root_cause: Optional[str] = None
     workaround: Optional[str] = None
 
+
 class ProblemCreate(ProblemBase):
     reporter_id: int
     assignee_id: Optional[int] = None
+
 
 class ProblemUpdate(BaseModel):
     title: Optional[str] = None
@@ -46,6 +52,7 @@ class ProblemUpdate(BaseModel):
     assignee_id: Optional[int] = None
     solution: Optional[str] = None
 
+
 class ProblemInDB(ProblemBase):
     id: int
     problem_id: str
@@ -56,12 +63,14 @@ class ProblemInDB(ProblemBase):
     updated_at: datetime
     resolved_at: Optional[datetime] = None
     closed_at: Optional[datetime] = None
-    
+
     model_config = ConfigDict(from_attributes=True)
+
 
 class Problem(ProblemInDB):
     reporter: Optional[dict] = None
     assignee: Optional[dict] = None
+
 
 class ProblemList(BaseModel):
     items: List[Problem]

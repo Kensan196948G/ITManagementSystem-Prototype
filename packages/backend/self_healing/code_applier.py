@@ -1,9 +1,11 @@
 import os
 
+
 class CodeApplier:
     """
     生成されたコード変更をファイルに適用するクラス。
     """
+
     def apply_repair_plan(self, repair_plan):
         """
         Debugモードから提供された修復案を解析し、コード変更を適用する。
@@ -23,7 +25,9 @@ class CodeApplier:
         for change in repair_plan:
             # 修正ポイント: 各変更エントリの検証とサニタイズ
             if not isinstance(change, dict):
-                print(f"Warning: Skipping invalid change entry (not a dictionary): {change}")
+                print(
+                    f"Warning: Skipping invalid change entry (not a dictionary): {change}"
+                )
                 success = False
                 continue
 
@@ -34,7 +38,9 @@ class CodeApplier:
 
             # 必須フィールドの確認
             if not file_path or not code_changes:
-                print(f"Warning: Skipping change entry due to missing file_path or code_changes: {change}")
+                print(
+                    f"Warning: Skipping change entry due to missing file_path or code_changes: {change}"
+                )
                 success = False
                 continue
 
@@ -43,27 +49,30 @@ class CodeApplier:
             # 修正ポイント: テスト用の一時ファイルパスも許可するように変更
             abs_file_path = os.path.abspath(file_path)
             abs_tests_path = os.path.abspath(os.path.join(os.getcwd(), "tests"))
-            abs_backend_path = os.path.abspath(os.path.join(os.getcwd(), "packages/backend/self_healing"))
+            abs_backend_path = os.path.abspath(
+                os.path.join(os.getcwd(), "packages/backend/self_healing")
+            )
             # pytestの一時ディレクトリも許可
             abs_tmp_path = os.path.abspath(os.path.join(os.path.expandvars("%TEMP%")))
 
-            if (
-                ".." in file_path
-                or (
-                    not abs_file_path.startswith(abs_backend_path)
-                    and not abs_file_path.startswith(abs_tests_path)
-                    and not abs_file_path.startswith(abs_tmp_path)
-                )
+            if ".." in file_path or (
+                not abs_file_path.startswith(abs_backend_path)
+                and not abs_file_path.startswith(abs_tests_path)
+                and not abs_file_path.startswith(abs_tmp_path)
             ):
-                print(f"Warning: Skipping change entry due to potentially malicious file_path: {file_path}")
+                print(
+                    f"Warning: Skipping change entry due to potentially malicious file_path: {file_path}"
+                )
                 success = False
                 continue
 
             # code_changes のサニタイズ (簡易的: 危険な関数の呼び出しを防ぐ)
             # より厳密なサニタイズには構文解析やAST操作が必要
-            forbidden_patterns = ["os.system", "eval(", "exec("] # 例
+            forbidden_patterns = ["os.system", "eval(", "exec("]  # 例
             if any(pattern in code_changes for pattern in forbidden_patterns):
-                print(f"Warning: Skipping change entry due to potentially malicious code_changes: {code_changes}")
+                print(
+                    f"Warning: Skipping change entry due to potentially malicious code_changes: {code_changes}"
+                )
                 success = False
                 continue
 
@@ -74,7 +83,9 @@ class CodeApplier:
                     success = False
                     continue
 
-                print(f"Attempting to apply changes to {file_path} at line {line_number}")
+                print(
+                    f"Attempting to apply changes to {file_path} at line {line_number}"
+                )
 
                 # 変更適用ロジック
                 # Debugモードからの code_changes の形式に応じてツールを使い分ける
@@ -123,7 +134,16 @@ class CodeApplier:
         # </insert_content>
         pass
 
-    def _search_and_replace(self, file_path, pattern, replacement, use_regex=False, ignore_case=False, start_line=None, end_line=None):
+    def _search_and_replace(
+        self,
+        file_path,
+        pattern,
+        replacement,
+        use_regex=False,
+        ignore_case=False,
+        start_line=None,
+        end_line=None,
+    ):
         """
         search_and_replace ツールを呼び出すプライベートメソッド。
         """
@@ -140,6 +160,7 @@ class CodeApplier:
         # </search_and_replace>
         pass
 
+
 # コード適用処理の実行例 (開発/テスト用)
 if __name__ == "__main__":
     applier = CodeApplier()
@@ -149,14 +170,14 @@ if __name__ == "__main__":
             "file_path": "example.py",
             "line_number": 5,
             "code_changes": "    print('Hello from new_func')",
-            "reason": "デバッグログを追加"
+            "reason": "デバッグログを追加",
         },
         {
             "file_path": "another_file.py",
-            "line_number": None, # 行指定なしの場合は末尾に追記
+            "line_number": None,  # 行指定なしの場合は末尾に追記
             "code_changes": "def another_new_func():\n    pass",
-            "reason": "新しい関数を追加"
-        }
+            "reason": "新しい関数を追加",
+        },
     ]
     # 実際には Debug モードからこのデータ構造が渡されることを想定
     result, applied_files = applier.apply_repair_plan(sample_repair_plan)

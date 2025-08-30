@@ -1,13 +1,20 @@
-from flask import Blueprint, request, jsonify
-from pydantic import ValidationError
 from typing import Optional
-from packages.backend.schemas.report import ReportCreateSchema, ReportUpdateSchema, ReportResponseSchema
-from packages.backend.models.report import Report
+
+from flask import Blueprint, jsonify, request
+from pydantic import ValidationError
+
 from packages.backend.database import SessionLocal
+from packages.backend.models.report import Report
+from packages.backend.schemas.report import (
+    ReportCreateSchema,
+    ReportResponseSchema,
+    ReportUpdateSchema,
+)
 
-reports_bp = Blueprint('reports', __name__, url_prefix='/api/reports')
+reports_bp = Blueprint("reports", __name__, url_prefix="/api/reports")
 
-@reports_bp.route('/', methods=['GET'])
+
+@reports_bp.route("/", methods=["GET"])
 def list_reports():
     db = SessionLocal()
     try:
@@ -17,7 +24,8 @@ def list_reports():
         db.close()
     return jsonify(response), 200
 
-@reports_bp.route('/<int:report_id>', methods=['GET'])
+
+@reports_bp.route("/<int:report_id>", methods=["GET"])
 def get_report(report_id: int):
     db = SessionLocal()
     try:
@@ -29,7 +37,8 @@ def get_report(report_id: int):
         db.close()
     return jsonify(response), 200
 
-@reports_bp.route('/', methods=['POST'])
+
+@reports_bp.route("/", methods=["POST"])
 def create_report():
     try:
         data = ReportCreateSchema.parse_obj(request.json)
@@ -48,7 +57,8 @@ def create_report():
     response = ReportResponseSchema.from_orm(report).dict()
     return jsonify(response), 201
 
-@reports_bp.route('/<int:report_id>', methods=['PUT'])
+
+@reports_bp.route("/<int:report_id>", methods=["PUT"])
 def update_report(report_id: int):
     db = SessionLocal()
     try:
@@ -71,7 +81,8 @@ def update_report(report_id: int):
     response = ReportResponseSchema.from_orm(report).dict()
     return jsonify(response), 200
 
-@reports_bp.route('/<int:report_id>', methods=['DELETE'])
+
+@reports_bp.route("/<int:report_id>", methods=["DELETE"])
 def delete_report(report_id: int):
     db = SessionLocal()
     try:

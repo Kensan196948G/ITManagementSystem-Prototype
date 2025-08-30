@@ -1,5 +1,6 @@
 # backend/self_healing/models/error.py
 
+
 class Error:
     def __init__(self, timestamp, message, file, line_number, raw_log):
         self.timestamp = timestamp

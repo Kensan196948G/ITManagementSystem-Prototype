@@ -1,23 +1,33 @@
-from flask import Blueprint, request, jsonify
-from pydantic import ValidationError
 from typing import Optional
-from packages.backend.schemas.problem import ProblemCreateSchema, ProblemUpdateSchema, ProblemResponseSchema
-from packages.backend.models.problem import Problem
+
+from flask import Blueprint, jsonify, request
+from pydantic import ValidationError
+
 from packages.backend.database import SessionLocal
+from packages.backend.models.problem import Problem
+from packages.backend.schemas.problem import (
+    ProblemCreateSchema,
+    ProblemResponseSchema,
+    ProblemUpdateSchema,
+)
 
-problems_bp = Blueprint('problems', __name__, url_prefix='/api/problems')
+problems_bp = Blueprint("problems", __name__, url_prefix="/api/problems")
 
-@problems_bp.route('/', methods=['GET'])
+
+@problems_bp.route("/", methods=["GET"])
 def list_problems():
     db = SessionLocal()
     try:
         problems = db.query(Problem).all()
-        response = [ProblemResponseSchema.from_orm(problem).dict() for problem in problems]
+        response = [
+            ProblemResponseSchema.from_orm(problem).dict() for problem in problems
+        ]
     finally:
         db.close()
     return jsonify(response), 200
 
-@problems_bp.route('/<int:problem_id>', methods=['GET'])
+
+@problems_bp.route("/<int:problem_id>", methods=["GET"])
 def get_problem(problem_id: int):
     db = SessionLocal()
     try:
@@ -29,7 +39,8 @@ def get_problem(problem_id: int):
         db.close()
     return jsonify(response), 200
 
-@problems_bp.route('/', methods=['POST'])
+
+@problems_bp.route("/", methods=["POST"])
 def create_problem():
     try:
         data = ProblemCreateSchema.parse_obj(request.json)
@@ -48,7 +59,8 @@ def create_problem():
     response = ProblemResponseSchema.from_orm(problem).dict()
     return jsonify(response), 201
 
-@problems_bp.route('/<int:problem_id>', methods=['PUT'])
+
+@problems_bp.route("/<int:problem_id>", methods=["PUT"])
 def update_problem(problem_id: int):
     db = SessionLocal()
     try:
@@ -71,7 +83,8 @@ def update_problem(problem_id: int):
     response = ProblemResponseSchema.from_orm(problem).dict()
     return jsonify(response), 200
 
-@problems_bp.route('/<int:problem_id>', methods=['DELETE'])
+
+@problems_bp.route("/<int:problem_id>", methods=["DELETE"])
 def delete_problem(problem_id: int):
     db = SessionLocal()
     try:

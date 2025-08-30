@@ -2,10 +2,10 @@
 # Import schemas as needed from individual modules
 
 from .problem import (
+    Problem,
     ProblemBase,
     ProblemCreate,
-    ProblemUpdate,
-    Problem,
+    ProblemPriority,
     ProblemStatus,
-    ProblemPriority
+    ProblemUpdate,
 )
