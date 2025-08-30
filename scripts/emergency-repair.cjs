@@ -184,11 +184,15 @@ class EmergencyAutoRepair {
     // npm cache clean
     const cacheResult = this.execSafe('npm cache clean --force', 'Clean npm cache');
     
-    // 複数の依存関係インストール戦略
+    // 複数の依存関係インストール戦略（GitHub Actions対応）
     const strategies = [
-      { cmd: 'npm ci --silent', desc: 'npm ci silent' },
+      { cmd: 'npm ci --prefer-offline --no-audit', desc: 'npm ci prefer offline no audit' },
+      { cmd: 'npm ci --legacy-peer-deps --prefer-offline', desc: 'npm ci legacy peer deps prefer offline' },
       { cmd: 'npm ci --legacy-peer-deps', desc: 'npm ci legacy peer deps' },
+      { cmd: 'npm ci --silent', desc: 'npm ci silent' },
+      { cmd: 'npm install --legacy-peer-deps --prefer-offline', desc: 'npm install legacy peer deps prefer offline' },
       { cmd: 'npm install --legacy-peer-deps', desc: 'npm install legacy peer deps' },
+      { cmd: 'npm install --force --legacy-peer-deps', desc: 'npm install force legacy peer deps' },
       { cmd: 'npm install --force', desc: 'npm install force' },
       { cmd: 'npm install', desc: 'npm install standard' }
     ];

@@ -170,34 +170,74 @@ jobs:
           echo "📦 Phase 2: Dependency Installation & Repair"
           npm cache clean --force || true
           
-          # Strategy progression based on repair intensity
+          # Check and fix package-lock.json corruption
+          if [ -f "package-lock.json" ]; then
+            if ! jq empty package-lock.json 2>/dev/null; then
+              echo "❌ package-lock.json corrupted - removing"
+              rm -f package-lock.json
+              CURRENT_ERRORS=$((CURRENT_ERRORS + 1))
+            fi
+          fi
+          
+          # Strategy progression based on repair intensity  
           INSTALL_SUCCESS=false
           
           if [ "$REPAIR_MODE" = "nuclear" ]; then
             echo "☢️ Nuclear mode: Force installation with all flags"
             rm -rf node_modules package-lock.json || true
-            npm install --force --legacy-peer-deps --no-audit --no-fund && INSTALL_SUCCESS=true
+            npm cache clean --force || true
+            if npm install --force --legacy-peer-deps --no-audit --no-fund --prefer-offline; then
+              INSTALL_SUCCESS=true
+            elif npm install --force --legacy-peer-deps --no-audit; then
+              INSTALL_SUCCESS=true  
+            elif npm install --force --legacy-peer-deps; then
+              INSTALL_SUCCESS=true
+            elif npm install --force; then
+              INSTALL_SUCCESS=true
+            fi
           elif [ "$REPAIR_MODE" = "aggressive" ]; then
             echo "🔥 Aggressive mode: Multiple installation strategies"
-            if npm ci --silent; then
+            if npm ci --prefer-offline --no-audit; then
               INSTALL_SUCCESS=true
-            elif npm ci --legacy-peer-deps; then
+            elif npm ci --legacy-peer-deps --prefer-offline; then
               INSTALL_SUCCESS=true  
+            elif npm ci --legacy-peer-deps; then
+              INSTALL_SUCCESS=true
+            elif npm install --legacy-peer-deps --prefer-offline; then
+              INSTALL_SUCCESS=true
             elif npm install --legacy-peer-deps; then
+              INSTALL_SUCCESS=true
+            elif npm install --force --legacy-peer-deps; then
               INSTALL_SUCCESS=true
             elif npm install --force; then
               INSTALL_SUCCESS=true
             fi
           elif [ "$REPAIR_MODE" = "standard" ]; then
             echo "🔧 Standard mode: Safe installation strategies"
-            if npm ci; then
+            if npm ci --prefer-offline; then
+              INSTALL_SUCCESS=true
+            elif npm ci --legacy-peer-deps; then
+              INSTALL_SUCCESS=true
+            elif npm install --prefer-offline; then
+              INSTALL_SUCCESS=true
+            elif npm install --legacy-peer-deps; then
               INSTALL_SUCCESS=true
             elif npm install; then
               INSTALL_SUCCESS=true
             fi
           else
-            echo "🛡️ Conservative mode: Basic installation"
-            npm install && INSTALL_SUCCESS=true
+            echo "🛡️ Conservative mode: Multiple fallback strategies"
+            if npm ci --prefer-offline; then
+              INSTALL_SUCCESS=true
+            elif npm ci; then
+              INSTALL_SUCCESS=true
+            elif npm install --prefer-offline; then
+              INSTALL_SUCCESS=true
+            elif npm install --legacy-peer-deps; then
+              INSTALL_SUCCESS=true
+            elif npm install; then
+              INSTALL_SUCCESS=true
+            fi
           fi
           
           if [ "$INSTALL_SUCCESS" = false ]; then
