@@ -109,7 +109,14 @@
     "dependencies:check": "npm ls --depth=0 && echo 'Dependencies check completed'",
     "config:validate": "node -e \"console.log('Configuration validation passed')\" && npm run platform:detect",
     "health:check": "npm run status && npm run context7:layer-status",
-    "reset:complete": "rm -rf node_modules package-lock.json frontend/node_modules backend/venv itsm.db && npm cache clean --force && echo 'Complete reset performed'"
+    "reset:complete": "rm -rf node_modules package-lock.json frontend/node_modules backend/venv itsm.db && npm cache clean --force && echo 'Complete reset performed'",
+    "emergency:repair": "node scripts/emergency-repair.cjs",
+    "emergency:repair:debug": "node scripts/emergency-repair.cjs --verbose",
+    "emergency:repair:force": "node scripts/emergency-repair.cjs --max-iterations=30",
+    "emergency:repair:nuclear": "node scripts/emergency-repair.cjs --mode=nuclear",
+    "infinite:repair": "node scripts/emergency-repair.cjs --max-iterations=50",
+    "validate:all": "node scripts/emergency-repair.cjs --validate-only",
+    "fix:github-actions": "node scripts/emergency-repair.cjs --github-actions-only"
   },
   "engines": {
     "node": ">=18.0.0",
