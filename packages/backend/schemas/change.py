@@ -2,10 +2,12 @@
 変更要求関連のPydanticスキーマ
 """
 
-from pydantic import BaseModel, ConfigDict
-from typing import Optional, List
 from datetime import datetime
 from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict
+
 
 class ChangeStatus(str, Enum):
     DRAFT = "draft"
@@ -17,16 +19,19 @@ class ChangeStatus(str, Enum):
     COMPLETE = "complete"
     CANCELLED = "cancelled"
 
+
 class ChangePriority(str, Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
 
+
 class ChangeRisk(str, Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
+
 
 class ChangeBase(BaseModel):
     title: str
@@ -42,9 +47,11 @@ class ChangeBase(BaseModel):
     scheduled_start: Optional[datetime] = None
     scheduled_end: Optional[datetime] = None
 
+
 class ChangeCreate(ChangeBase):
     requester_id: int
     assignee_id: Optional[int] = None
+
 
 class ChangeUpdate(BaseModel):
     title: Optional[str] = None
@@ -62,6 +69,7 @@ class ChangeUpdate(BaseModel):
     status: Optional[ChangeStatus] = None
     assignee_id: Optional[int] = None
 
+
 class ChangeInDB(ChangeBase):
     id: int
     change_id: str
@@ -72,12 +80,14 @@ class ChangeInDB(ChangeBase):
     updated_at: datetime
     actual_start: Optional[datetime] = None
     actual_end: Optional[datetime] = None
-    
+
     model_config = ConfigDict(from_attributes=True)
+
 
 class Change(ChangeInDB):
     requester: Optional[dict] = None
     assignee: Optional[dict] = None
+
 
 class ChangeList(BaseModel):
     items: List[Change]

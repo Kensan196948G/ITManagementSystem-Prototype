@@ -2,9 +2,11 @@
 ユーザー関連のPydanticスキーマ
 """
 
-from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr
+
 
 class UserBase(BaseModel):
     username: str
@@ -17,8 +19,10 @@ class UserBase(BaseModel):
     is_active: bool = True
     is_system_user: bool = False
 
+
 class UserCreate(UserBase):
     password: str
+
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
@@ -30,9 +34,11 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     is_system_user: Optional[bool] = None
 
+
 class UserLogin(BaseModel):
     username: str
     password: str
+
 
 class UserInDB(UserBase):
     id: int
@@ -40,18 +46,22 @@ class UserInDB(UserBase):
     updated_at: datetime
     last_login: Optional[datetime] = None
     mfa_enabled: bool = False
-    
+
     model_config = ConfigDict(from_attributes=True)
+
 
 class User(UserInDB):
     pass
+
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 class TokenData(BaseModel):
     username: Optional[str] = None
+
 
 class UserMe(BaseModel):
     id: int
@@ -63,8 +73,9 @@ class UserMe(BaseModel):
     job_title: Optional[str] = None
     is_active: bool
     roles: List[str] = []
-    
+
     model_config = ConfigDict(from_attributes=True)
+
 
 class UserList(BaseModel):
     items: List[User]

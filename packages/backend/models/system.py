@@ -1,8 +1,10 @@
 from sqlalchemy import Column, Integer, String, Text
+
 from ..database import Base
 
+
 class System(Base):
-    __tablename__ = 'systems'
+    __tablename__ = "systems"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(128), nullable=False, unique=True)

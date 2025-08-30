@@ -1,6 +1,7 @@
 """
 Flask-SQLAlchemy database setup
 """
+
 from flask_sqlalchemy import SQLAlchemy
 
 # Flask-SQLAlchemy instance

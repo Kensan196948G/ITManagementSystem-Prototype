@@ -1,4 +1,5 @@
-from .error_detector import ErrorDetector # エラー検出モジュールを再利用
+from .error_detector import ErrorDetector  # エラー検出モジュールを再利用
+
 
 class VerificationModule:
     def __init__(self, log_file_path):
@@ -17,11 +18,11 @@ class VerificationModule:
 
         if not detected_errors:
             print("Verification successful: No errors detected in the log.")
-            return True # エラーがなければ成功
+            return True  # エラーがなければ成功
         else:
             print(f"Verification failed: {len(detected_errors)} errors still detected.")
             # TODO: 検出されたエラーの詳細をログに出力するなど
-            return False # エラーがあれば失敗
+            return False  # エラーがあれば失敗
 
     # TODO: 将来的にシステム状態の確認やテスト実行ロジックを追加
     # def check_system_state(self):
