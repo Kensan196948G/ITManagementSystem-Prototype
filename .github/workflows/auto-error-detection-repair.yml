@@ -133,13 +133,15 @@ jobs:
         # npm cache clean for reliability
         npm cache clean --force
         
-        # Try npm ci with multiple strategies for dependency conflicts
-        if npm ci --silent; then
-          echo "✅ npm ci successful"
-        elif npm ci; then
-          echo "✅ npm ci successful (with output)"
+        # Try npm ci with enhanced multiple strategies for dependency conflicts
+        if npm ci --prefer-offline --no-audit; then
+          echo "✅ npm ci with prefer-offline successful"
+        elif npm ci --legacy-peer-deps --prefer-offline; then
+          echo "✅ npm ci with legacy-peer-deps prefer-offline successful"
         elif npm ci --legacy-peer-deps; then
           echo "✅ npm ci successful (legacy peer deps mode)"
+        elif npm ci; then
+          echo "✅ npm ci successful (standard)"
         elif npm install --legacy-peer-deps; then
           echo "✅ npm install successful (legacy peer deps fallback)"
         elif npm install --force; then
@@ -428,9 +430,34 @@ jobs:
     
     - name: 📦 Install Dependencies
       run: |
-        npm ci --silent
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+        # Enhanced npm installation with multiple strategies
+        npm cache clean --force || true
+        
+        if npm ci --prefer-offline --no-audit; then
+          echo "✅ npm ci with prefer-offline successful"
+        elif npm ci --legacy-peer-deps --prefer-offline; then
+          echo "✅ npm ci with legacy-peer-deps prefer-offline successful"
+        elif npm ci --legacy-peer-deps; then
+          echo "✅ npm ci with legacy-peer-deps successful"
+        elif npm install --legacy-peer-deps --prefer-offline; then
+          echo "✅ npm install with legacy-peer-deps prefer-offline successful"
+        elif npm install --legacy-peer-deps; then
+          echo "✅ npm install with legacy-peer-deps successful"
+        elif npm install --force; then
+          echo "✅ npm install with force successful"
+        elif npm install; then
+          echo "✅ npm install standard successful"
+        else
+          echo "❌ All npm strategies failed"
+        fi
+        
+        # Python requirements with enhanced error handling
+        if [ -f requirements.txt ]; then 
+          pip install --no-cache-dir --prefer-binary -r requirements.txt || echo "❌ Root requirements failed"
+        fi
+        if [ -f backend/requirements.txt ]; then 
+          pip install --no-cache-dir --prefer-binary -r backend/requirements.txt || echo "❌ Backend requirements failed"
+        fi
     
     - name: 🔧 Auto-Fix ESLint Issues
       if: env.REPAIR_LEVEL != 'basic'

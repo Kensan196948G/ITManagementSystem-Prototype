@@ -98,10 +98,19 @@ jobs:
         echo "📦 Node.js依存関係インストール中..."
         npm cache clean --force
         
-        if npm ci --silent; then
-          echo "✅ npm ci successful"
+        # Enhanced npm installation with multiple strategies
+        if npm ci --prefer-offline --no-audit; then
+          echo "✅ npm ci with prefer-offline successful"
+        elif npm ci --legacy-peer-deps --prefer-offline; then
+          echo "✅ npm ci with legacy-peer-deps prefer-offline successful"
+        elif npm ci --legacy-peer-deps; then
+          echo "✅ npm ci with legacy-peer-deps successful"
         elif npm ci; then
-          echo "✅ npm ci successful (with output)"  
+          echo "✅ npm ci successful (standard)"  
+        elif npm install --legacy-peer-deps --prefer-offline; then
+          echo "✅ npm install with legacy-peer-deps prefer-offline successful"
+        elif npm install --legacy-peer-deps; then
+          echo "✅ npm install with legacy-peer-deps successful"
         elif npm install; then
           echo "✅ npm install successful (fallback)"
         else
@@ -332,11 +341,17 @@ jobs:
         # プロジェクト依存関係 - 堅牢なインストール
         echo "📦 Project dependencies installation..."
         
-        # Node.js dependencies with multiple fallback options
-        if npm ci --silent; then
-          echo "✅ npm ci successful"
+        # Node.js dependencies with enhanced multiple fallback options
+        if npm ci --prefer-offline --no-audit; then
+          echo "✅ npm ci with prefer-offline successful"
+        elif npm ci --legacy-peer-deps --prefer-offline; then
+          echo "✅ npm ci with legacy-peer-deps prefer-offline successful"
+        elif npm ci --legacy-peer-deps; then
+          echo "✅ npm ci with legacy-peer-deps successful"
         elif npm ci; then
-          echo "✅ npm ci successful (with output)"
+          echo "✅ npm ci successful (standard)"
+        elif npm install --legacy-peer-deps --prefer-offline; then
+          echo "✅ npm install with legacy-peer-deps prefer-offline successful"
         elif npm install --legacy-peer-deps; then
           echo "✅ npm install successful (legacy mode)"
         elif npm install; then
