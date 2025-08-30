@@ -329,6 +329,8 @@ jobs:
       contents: read
       issues: write
       discussions: write
+      actions: write
+      id-token: write
     
     steps:
     - name: 📥 Checkout Repository

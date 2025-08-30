@@ -115,6 +115,11 @@ jobs:
   git-sync:
     name: Git Synchronization
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      actions: read
     timeout-minutes: 15
     needs: pre-check
     if: needs.pre-check.outputs.should_sync == 'true'

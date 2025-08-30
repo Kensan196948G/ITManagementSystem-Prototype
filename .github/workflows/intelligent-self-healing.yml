@@ -300,6 +300,7 @@ jobs:
       pull-requests: write
       issues: write
       actions: write
+      id-token: write
     
     steps:
     - name: 📥 Checkout Repository
